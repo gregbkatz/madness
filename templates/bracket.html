@@ -322,12 +322,12 @@
                             Winner East
                         </div>
                         <div class="team empty-team" data-round="5" data-position="2">
-                            Winner South
+                            Winner West
                         </div>
                     </div>
                     <div class="matchup" data-matchup-id="final-four-2">
                         <div class="team empty-team" data-round="5" data-position="3">
-                            Winner West
+                            Winner South
                         </div>
                         <div class="team empty-team" data-round="5" data-position="4">
                             Winner Midwest
@@ -483,11 +483,11 @@
                     nextPos = 1;
                     teamPos = 0;  // Top position in first semifinal
                 } else if (team.region === 'West') {
-                    nextPos = 3;
-                    teamPos = 0;  // Top position in second semifinal
-                } else if (team.region === 'South') {
                     nextPos = 1;
                     teamPos = 1;  // Bottom position in first semifinal
+                } else if (team.region === 'South') {
+                    nextPos = 3;
+                    teamPos = 0;  // Top position in second semifinal
                 } else if (team.region === 'Midwest') {
                     nextPos = 3;
                     teamPos = 1;  // Bottom position in second semifinal
