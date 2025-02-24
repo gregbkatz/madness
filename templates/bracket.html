@@ -326,8 +326,24 @@
             if (!team) return;
 
             // Find the next round matchup
-            const region = team.region === 'Final' ? '.final-four' : `.region h2:contains('${team.region}')`;
-            const roundElem = document.querySelector(`${region}`).closest('div').querySelector(`.round[data-round="${nextRound}"]`);
+            let roundElem;
+            if (team.region === 'Final') {
+                // Handle Final Four differently
+                roundElem = document.querySelector('.final-four .round[data-round="' + nextRound + '"]');
+            } else {
+                // Find the region heading and then the next round
+                const regions = document.querySelectorAll('.region h2');
+                let regionElem;
+                for (const regionHeading of regions) {
+                    if (regionHeading.textContent.includes(team.region)) {
+                        regionElem = regionHeading.closest('.region');
+                        break;
+                    }
+                }
+                if (!regionElem) return;
+                roundElem = regionElem.querySelector('.round[data-round="' + nextRound + '"]');
+            }
+
             if (!roundElem) return;
 
             const matchupIndex = Math.ceil(nextPos / 2) - 1;
