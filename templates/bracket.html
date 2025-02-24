@@ -120,22 +120,150 @@
                     <!-- Round 1 (16 teams - 8 matchups) -->
                     <div class="round" data-round="1">
                         <h3>Round 1</h3>
-                        {% for i in range(0, 16, 2) %}
-                        <div class="matchup" data-matchup-id="{{ region }}-1-{{ loop.index }}">
-                            <div class="team" data-team-id="{{ teams[region][i].id }}"
-                                data-seed="{{ teams[region][i].seed }}" data-round="1"
-                                data-position="{{ loop.index*2-1 }}">
-                                <span class="seed">{{ teams[region][i].seed }}</span>
-                                <span class="name">{{ teams[region][i].name }}</span>
+
+                        <!-- 1 vs 16 -->
+                        <div class="matchup" data-matchup-id="{{ region }}-1-1">
+                            <div class="team"
+                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 1)|first|attr('id') }}"
+                                data-seed="1" data-round="1" data-position="1">
+                                <span class="seed">1</span>
+                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 1)|first|attr('name')
+                                    }}</span>
                             </div>
-                            <div class="team" data-team-id="{{ teams[region][i+1].id }}"
-                                data-seed="{{ teams[region][i+1].seed }}" data-round="1"
-                                data-position="{{ loop.index*2 }}">
-                                <span class="seed">{{ teams[region][i+1].seed }}</span>
-                                <span class="name">{{ teams[region][i+1].name }}</span>
+                            <div class="team"
+                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 16)|first|attr('id') }}"
+                                data-seed="16" data-round="1" data-position="2">
+                                <span class="seed">16</span>
+                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 16)|first|attr('name')
+                                    }}</span>
                             </div>
                         </div>
-                        {% endfor %}
+
+                        <!-- 8 vs 9 -->
+                        <div class="matchup" data-matchup-id="{{ region }}-1-2">
+                            <div class="team"
+                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 8)|first|attr('id') }}"
+                                data-seed="8" data-round="1" data-position="3">
+                                <span class="seed">8</span>
+                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 8)|first|attr('name')
+                                    }}</span>
+                            </div>
+                            <div class="team"
+                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 9)|first|attr('id') }}"
+                                data-seed="9" data-round="1" data-position="4">
+                                <span class="seed">9</span>
+                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 9)|first|attr('name')
+                                    }}</span>
+                            </div>
+                        </div>
+
+                        <!-- 5 vs 12 -->
+                        <div class="matchup" data-matchup-id="{{ region }}-1-3">
+                            <div class="team"
+                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 5)|first|attr('id') }}"
+                                data-seed="5" data-round="1" data-position="5">
+                                <span class="seed">5</span>
+                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 5)|first|attr('name')
+                                    }}</span>
+                            </div>
+                            <div class="team"
+                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 12)|first|attr('id') }}"
+                                data-seed="12" data-round="1" data-position="6">
+                                <span class="seed">12</span>
+                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 12)|first|attr('name')
+                                    }}</span>
+                            </div>
+                        </div>
+
+                        <!-- 4 vs 13 -->
+                        <div class="matchup" data-matchup-id="{{ region }}-1-4">
+                            <div class="team"
+                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 4)|first|attr('id') }}"
+                                data-seed="4" data-round="1" data-position="7">
+                                <span class="seed">4</span>
+                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 4)|first|attr('name')
+                                    }}</span>
+                            </div>
+                            <div class="team"
+                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 13)|first|attr('id') }}"
+                                data-seed="13" data-round="1" data-position="8">
+                                <span class="seed">13</span>
+                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 13)|first|attr('name')
+                                    }}</span>
+                            </div>
+                        </div>
+
+                        <!-- 6 vs 11 -->
+                        <div class="matchup" data-matchup-id="{{ region }}-1-5">
+                            <div class="team"
+                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 6)|first|attr('id') }}"
+                                data-seed="6" data-round="1" data-position="9">
+                                <span class="seed">6</span>
+                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 6)|first|attr('name')
+                                    }}</span>
+                            </div>
+                            <div class="team"
+                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 11)|first|attr('id') }}"
+                                data-seed="11" data-round="1" data-position="10">
+                                <span class="seed">11</span>
+                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 11)|first|attr('name')
+                                    }}</span>
+                            </div>
+                        </div>
+
+                        <!-- 3 vs 14 -->
+                        <div class="matchup" data-matchup-id="{{ region }}-1-6">
+                            <div class="team"
+                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 3)|first|attr('id') }}"
+                                data-seed="3" data-round="1" data-position="11">
+                                <span class="seed">3</span>
+                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 3)|first|attr('name')
+                                    }}</span>
+                            </div>
+                            <div class="team"
+                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 14)|first|attr('id') }}"
+                                data-seed="14" data-round="1" data-position="12">
+                                <span class="seed">14</span>
+                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 14)|first|attr('name')
+                                    }}</span>
+                            </div>
+                        </div>
+
+                        <!-- 7 vs 10 -->
+                        <div class="matchup" data-matchup-id="{{ region }}-1-7">
+                            <div class="team"
+                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 7)|first|attr('id') }}"
+                                data-seed="7" data-round="1" data-position="13">
+                                <span class="seed">7</span>
+                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 7)|first|attr('name')
+                                    }}</span>
+                            </div>
+                            <div class="team"
+                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 10)|first|attr('id') }}"
+                                data-seed="10" data-round="1" data-position="14">
+                                <span class="seed">10</span>
+                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 10)|first|attr('name')
+                                    }}</span>
+                            </div>
+                        </div>
+
+                        <!-- 2 vs 15 -->
+                        <div class="matchup" data-matchup-id="{{ region }}-1-8">
+                            <div class="team"
+                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 2)|first|attr('id') }}"
+                                data-seed="2" data-round="1" data-position="15">
+                                <span class="seed">2</span>
+                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 2)|first|attr('name')
+                                    }}</span>
+                            </div>
+                            <div class="team"
+                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 15)|first|attr('id') }}"
+                                data-seed="15" data-round="1" data-position="16">
+                                <span class="seed">15</span>
+                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 15)|first|attr('name')
+                                    }}</span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Round 2 (8 teams - 4 matchups) -->
@@ -320,18 +448,66 @@
             if (round >= 6) return; // No more rounds after championship
 
             const nextRound = round + 1;
-            const nextPos = Math.ceil(position / 2);
-            const team = bracketData.teams[teamId] || bracketData.selectedTeams[`${round}-${nextPos}`];
+            let nextPos, nextMatchup, teamPos;
 
+            // Map positions properly for NCAA tournament bracket style
+            if (round === 1) {
+                // Round 1 to Round 2 follows this pattern:
+                // Positions 1-2 vs 3-4 go to matchup 1 in round 2
+                // Positions 5-6 vs 7-8 go to matchup 2 in round 2
+                // Positions 9-10 vs 11-12 go to matchup 3 in round 2
+                // Positions 13-14 vs 15-16 go to matchup 4 in round 2
+                nextMatchup = Math.ceil(position / 4);
+                nextPos = nextMatchup * 2 - (position % 2 === 1 ? 1 : 0);
+                teamPos = (Math.ceil(position / 2) % 2 === 1) ? 0 : 1;
+            }
+            else if (round === 2) {
+                // Round 2 to Sweet 16
+                nextMatchup = Math.ceil(position / 4);
+                nextPos = nextMatchup * 2 - (position % 2 === 1 ? 1 : 0);
+                teamPos = (Math.ceil(position / 2) % 2 === 1) ? 0 : 1;
+            }
+            else if (round === 3) {
+                // Sweet 16 to Elite 8
+                nextMatchup = Math.ceil(position / 4);
+                nextPos = nextMatchup * 2 - (position % 2 === 1 ? 1 : 0);
+                teamPos = (Math.ceil(position / 2) % 2 === 1) ? 0 : 1;
+            }
+            else if (round === 4) {
+                // Elite 8 to Final Four
+                if (position === 1) {         // East region winner
+                    nextPos = 1;
+                    teamPos = 0;  // Top position in first semifinal
+                } else if (position === 2) {  // West region winner
+                    nextPos = 2;
+                    teamPos = 0;  // Top position in second semifinal
+                } else if (position === 3) {  // South region winner
+                    nextPos = 1;
+                    teamPos = 1;  // Bottom position in first semifinal
+                } else {                      // Midwest region winner
+                    nextPos = 2;
+                    teamPos = 1;  // Bottom position in second semifinal
+                }
+            }
+            else if (round === 5) {
+                // Final Four to Championship
+                nextPos = 1;  // Only one matchup in championship
+                teamPos = (position <= 2) ? 0 : 1;  // First matchup winners to top, second to bottom
+            }
+
+            const team = bracketData.teams[teamId] || bracketData.selectedTeams[`${round}-${position}`];
             if (!team) return;
 
-            // Find the next round matchup
+            // Find the next round element
             let roundElem;
-            if (team.region === 'Final') {
-                // Handle Final Four differently
+            if (round === 4) {
+                // Region winners go to Final Four
+                roundElem = document.querySelector('.final-four .round[data-round="' + nextRound + '"]');
+            } else if (round === 5) {
+                // Final Four winners go to Championship
                 roundElem = document.querySelector('.final-four .round[data-round="' + nextRound + '"]');
             } else {
-                // Find the region heading and then the next round
+                // Find within the same region
                 const regions = document.querySelectorAll('.region h2');
                 let regionElem;
                 for (const regionHeading of regions) {
@@ -346,27 +522,27 @@
 
             if (!roundElem) return;
 
+            // Find the correct matchup in the next round
             const matchupIndex = Math.ceil(nextPos / 2) - 1;
             const matchups = roundElem.querySelectorAll('.matchup');
 
             if (matchups.length > matchupIndex) {
                 const matchup = matchups[matchupIndex];
-                const teamPos = position % 2; // 0 for odd positions, 1 for even
-                const teamElem = matchup.querySelectorAll('.team')[teamPos];
+                const teamElement = matchup.querySelectorAll('.team')[teamPos];
 
-                if (teamElem) {
+                if (teamElement) {
                     // Replace placeholder with actual team
-                    teamElem.innerHTML = `
+                    teamElement.innerHTML = `
                         <span class="seed">${team.seed}</span>
                         <span class="name">${team.name}</span>
                     `;
-                    teamElem.dataset.teamId = teamId;
-                    teamElem.classList.remove('empty-team');
+                    teamElement.dataset.teamId = teamId;
+                    teamElement.classList.remove('empty-team');
 
                     // Check if this team was previously selected to advance further
                     const nextPickKey = `${nextRound}-${nextPos}`;
                     if (picks[nextPickKey] === teamId) {
-                        teamElem.classList.add('selected');
+                        teamElement.classList.add('selected');
                         advanceTeam(nextRound, nextPos, teamId);
                     }
                 }
