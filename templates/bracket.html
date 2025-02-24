@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>March Madness Bracket</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .bracket-container {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .region {
+            flex: 1;
+            margin: 0 10px;
+        }
+
+        .round {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .matchup {
+            border: 1px solid #ccc;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 4px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .team {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .team:hover {
+            background-color: #f0f0f0;
+        }
+
+        .team.selected {
+            background-color: #e3f2fd;
+        }
+
+        .team.eliminated {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+
+        .seed {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .final-four {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .save-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .save-button:hover {
+            background-color: #45a049;
+        }
+
+        .connector {
+            height: 20px;
+            border-right: 2px solid #ccc;
+            margin-right: -10px;
+        }
+
+        .rounds-container {
+            display: flex;
+        }
+
+        .empty-team {
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <h1>March Madness Bracket</h1>
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('bracket') }}">My Bracket</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="bracket-container">
+            {% for region in ['East', 'West', 'South', 'Midwest'] %}
+            <div class="region">
+                <h2>{{ region }} Region</h2>
+                <div class="rounds-container">
+                    <!-- Round 1 (16 teams - 8 matchups) -->
+                    <div class="round" data-round="1">
+                        <h3>Round 1</h3>
+                        {% for i in range(0, 16, 2) %}
+                        <div class="matchup" data-matchup-id="{{ region }}-1-{{ loop.index }}">
+                            <div class="team" data-team-id="{{ teams[region][i].id }}"
+                                data-seed="{{ teams[region][i].seed }}" data-round="1"
+                                data-position="{{ loop.index*2-1 }}">
+                                <span class="seed">{{ teams[region][i].seed }}</span>
+                                <span class="name">{{ teams[region][i].name }}</span>
+                            </div>
+                            <div class="team" data-team-id="{{ teams[region][i+1].id }}"
+                                data-seed="{{ teams[region][i+1].seed }}" data-round="1"
+                                data-position="{{ loop.index*2 }}">
+                                <span class="seed">{{ teams[region][i+1].seed }}</span>
+                                <span class="name">{{ teams[region][i+1].name }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Round 2 (8 teams - 4 matchups) -->
+                    <div class="round" data-round="2">
+                        <h3>Round 2</h3>
+                        {% for i in range(1, 5) %}
+                        <div class="matchup" data-matchup-id="{{ region }}-2-{{ loop.index }}">
+                            <div class="team empty-team" data-round="2" data-position="{{ loop.index*2-1 }}">
+                                Winner Game {{ i*2-1 }}
+                            </div>
+                            <div class="team empty-team" data-round="2" data-position="{{ loop.index*2 }}">
+                                Winner Game {{ i*2 }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Sweet 16 (4 teams - 2 matchups) -->
+                    <div class="round" data-round="3">
+                        <h3>Sweet 16</h3>
+                        {% for i in range(1, 3) %}
+                        <div class="matchup" data-matchup-id="{{ region }}-3-{{ loop.index }}">
+                            <div class="team empty-team" data-round="3" data-position="{{ loop.index*2-1 }}">
+                                Winner Game {{ i*2-1 }}
+                            </div>
+                            <div class="team empty-team" data-round="3" data-position="{{ loop.index*2 }}">
+                                Winner Game {{ i*2 }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Elite 8 (2 teams - 1 matchup) -->
+                    <div class="round" data-round="4">
+                        <h3>Elite 8</h3>
+                        <div class="matchup" data-matchup-id="{{ region }}-4-1">
+                            <div class="team empty-team" data-round="4" data-position="1">
+                                Winner Game 1
+                            </div>
+                            <div class="team empty-team" data-round="4" data-position="2">
+                                Winner Game 2
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="final-four">
+                <h2>Final Four</h2>
+                <!-- Final Four (4 teams - 2 matchups) -->
+                <div class="round" data-round="5">
+                    <h3>Semifinals</h3>
+                    <div class="matchup" data-matchup-id="final-four-1">
+                        <div class="team empty-team" data-round="5" data-position="1">
+                            Winner East
+                        </div>
+                        <div class="team empty-team" data-round="5" data-position="2">
+                            Winner West
+                        </div>
+                    </div>
+                    <div class="matchup" data-matchup-id="final-four-2">
+                        <div class="team empty-team" data-round="5" data-position="3">
+                            Winner South
+                        </div>
+                        <div class="team empty-team" data-round="5" data-position="4">
+                            Winner Midwest
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Championship (2 teams - 1 matchup) -->
+                <div class="round" data-round="6">
+                    <h3>Championship</h3>
+                    <div class="matchup" data-matchup-id="championship">
+                        <div class="team empty-team" data-round="6" data-position="1">
+                            Winner Semifinal 1
+                        </div>
+                        <div class="team empty-team" data-round="6" data-position="2">
+                            Winner Semifinal 2
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="save-button" onclick="saveBracket()">Save Bracket</button>
+    </main>
+
+    <script>
+        const picks = JSON.parse('{{ picks|tojson|safe }}');
+        const bracketData = {
+            teams: {},
+            selectedTeams: {}
+        };
+
+        // Initialize bracket data
+        function initBracket() {
+            // Get all teams from round 1
+            document.querySelectorAll('.round[data-round="1"] .team').forEach(team => {
+                const teamId = team.dataset.teamId;
+                const teamName = team.querySelector('.name').textContent;
+                const teamSeed = team.dataset.seed;
+                const region = team.closest('.region').querySelector('h2').textContent.split(' ')[0];
+
+                bracketData.teams[teamId] = {
+                    id: teamId,
+                    name: teamName,
+                    seed: teamSeed,
+                    region: region
+                };
+            });
+
+            // Load existing picks
+            Object.entries(picks).forEach(([key, teamId]) => {
+                const [round, position] = key.split('-').map(Number);
+                selectTeamById(teamId, round, position);
+            });
+        }
+
+        function selectTeam(teamElement) {
+            const matchup = teamElement.closest('.matchup');
+            const round = parseInt(teamElement.dataset.round);
+            const position = parseInt(teamElement.dataset.position);
+            const teamId = teamElement.dataset.teamId;
+            const region = teamElement.closest('.region')?.querySelector('h2')?.textContent.split(' ')[0] || 'Final';
+
+            // Don't select empty placeholders
+            if (teamElement.classList.contains('empty-team')) return;
+
+            // Highlight the selected team in current matchup
+            matchup.querySelectorAll('.team').forEach(t => {
+                t.classList.remove('selected');
+            });
+            teamElement.classList.add('selected');
+
+            // Store the pick
+            const pickKey = `${round}-${Math.ceil(position / 2)}`;
+            picks[pickKey] = teamId;
+            bracketData.selectedTeams[pickKey] = {
+                id: teamId,
+                name: bracketData.teams[teamId]?.name || teamElement.querySelector('.name').textContent,
+                seed: bracketData.teams[teamId]?.seed || teamElement.dataset.seed,
+                region: region
+            };
+
+            // Advance the selected team to the next round
+            advanceTeam(round, position, teamId);
+        }
+
+        function selectTeamById(teamId, round, matchupPosition) {
+            // Find the team element and select it
+            const team = document.querySelector(`.team[data-team-id="${teamId}"][data-round="${round}"]`);
+            if (team) {
+                selectTeam(team);
+            } else {
+                // Team might be in a later round that doesn't have real team ids yet
+                const roundElem = document.querySelector(`.round[data-round="${round}"]`);
+                const matchupIndex = Math.ceil(matchupPosition / 2) - 1;
+                const matchups = roundElem.querySelectorAll('.matchup');
+
+                if (matchups.length > matchupIndex) {
+                    const matchup = matchups[matchupIndex];
+                    const teamPos = matchupPosition % 2 === 0 ? 1 : 0; // Convert to 0-based index
+                    const teamElem = matchup.querySelectorAll('.team')[teamPos];
+
+                    // Replace placeholder with actual team info
+                    if (teamElem && bracketData.teams[teamId]) {
+                        teamElem.innerHTML = `
+                            <span class="seed">${bracketData.teams[teamId].seed}</span>
+                            <span class="name">${bracketData.teams[teamId].name}</span>
+                        `;
+                        teamElem.dataset.teamId = teamId;
+                        teamElem.classList.remove('empty-team');
+                        teamElem.classList.add('selected');
+                    }
+                }
+            }
+        }
+
+        function advanceTeam(round, position, teamId) {
+            if (round >= 6) return; // No more rounds after championship
+
+            const nextRound = round + 1;
+            const nextPos = Math.ceil(position / 2);
+            const team = bracketData.teams[teamId] || bracketData.selectedTeams[`${round}-${nextPos}`];
+
+            if (!team) return;
+
+            // Find the next round matchup
+            const region = team.region === 'Final' ? '.final-four' : `.region h2:contains('${team.region}')`;
+            const roundElem = document.querySelector(`${region}`).closest('div').querySelector(`.round[data-round="${nextRound}"]`);
+            if (!roundElem) return;
+
+            const matchupIndex = Math.ceil(nextPos / 2) - 1;
+            const matchups = roundElem.querySelectorAll('.matchup');
+
+            if (matchups.length > matchupIndex) {
+                const matchup = matchups[matchupIndex];
+                const teamPos = position % 2; // 0 for odd positions, 1 for even
+                const teamElem = matchup.querySelectorAll('.team')[teamPos];
+
+                if (teamElem) {
+                    // Replace placeholder with actual team
+                    teamElem.innerHTML = `
+                        <span class="seed">${team.seed}</span>
+                        <span class="name">${team.name}</span>
+                    `;
+                    teamElem.dataset.teamId = teamId;
+                    teamElem.classList.remove('empty-team');
+
+                    // Check if this team was previously selected to advance further
+                    const nextPickKey = `${nextRound}-${nextPos}`;
+                    if (picks[nextPickKey] === teamId) {
+                        teamElem.classList.add('selected');
+                        advanceTeam(nextRound, nextPos, teamId);
+                    }
+                }
+            }
+        }
+
+        function saveBracket() {
+            const picksArray = Object.entries(picks).map(([key, teamId]) => {
+                const [round, position] = key.split('-');
+                return {
+                    team_id: parseInt(teamId),
+                    round: parseInt(round),
+                    position: parseInt(position)
+                };
+            });
+
+            fetch('/bracket/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(picksArray)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('Bracket saved successfully!');
+                    } else {
+                        alert('Error saving bracket: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error saving bracket');
+                });
+        }
+
+        // Add click event listeners to all teams
+        document.querySelectorAll('.team').forEach(team => {
+            team.addEventListener('click', () => {
+                if (!team.classList.contains('empty-team')) {
+                    selectTeam(team);
+                }
+            });
+        });
+
+        // Initialize the bracket on page load
+        window.addEventListener('load', initBracket);
+    </script>
+</body>
+
+</html>
