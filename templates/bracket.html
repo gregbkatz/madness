@@ -322,12 +322,12 @@
                             Winner East
                         </div>
                         <div class="team empty-team" data-round="5" data-position="2">
-                            Winner West
+                            Winner South
                         </div>
                     </div>
                     <div class="matchup" data-matchup-id="final-four-2">
                         <div class="team empty-team" data-round="5" data-position="3">
-                            Winner South
+                            Winner West
                         </div>
                         <div class="team empty-team" data-round="5" data-position="4">
                             Winner Midwest
@@ -474,18 +474,22 @@
                 teamPos = (Math.ceil(position / 2) % 2 === 1) ? 0 : 1;
             }
             else if (round === 4) {
-                // Elite 8 to Final Four
-                if (position === 1) {         // East region winner
+                // Elite 8 to Final Four - Region-based advancement
+                // Use the team's region rather than position
+                const team = bracketData.teams[teamId] || bracketData.selectedTeams[`${round}-${position}`];
+                if (!team) return;
+
+                if (team.region === 'East') {
                     nextPos = 1;
                     teamPos = 0;  // Top position in first semifinal
-                } else if (position === 2) {  // West region winner
-                    nextPos = 2;
+                } else if (team.region === 'West') {
+                    nextPos = 3;
                     teamPos = 0;  // Top position in second semifinal
-                } else if (position === 3) {  // South region winner
+                } else if (team.region === 'South') {
                     nextPos = 1;
                     teamPos = 1;  // Bottom position in first semifinal
-                } else {                      // Midwest region winner
-                    nextPos = 2;
+                } else if (team.region === 'Midwest') {
+                    nextPos = 3;
                     teamPos = 1;  // Bottom position in second semifinal
                 }
             }
