@@ -76,76 +76,143 @@ function MarchMadnessBracket() {
         // Ensure a team was selected
         if (!selectedTeam) return;
 
-        // Determine next round and game index
+        // Get the team that was previously selected at this position (if any)
+        const previousTeam = bracket[region][round][gameIndex * 2 + teamIndex];
+
+        // If we're selecting the same team, no need to do anything
+        if (previousTeam === selectedTeam) return;
+
+        // Determine next round and game position
         const nextRound = round + 1;
         const nextGameIndex = Math.floor(gameIndex / 2);
         const nextTeamIndex = gameIndex % 2;
+        const nextSlot = nextGameIndex * 2 + nextTeamIndex;
 
-        // Update the next round with the selected team if within regional rounds (0-3)
-        if (nextRound < 4) {
-            // Store the currently selected team at this position (if any)
-            const previousSelectedTeam = bracket[region][nextRound][nextGameIndex * 2 + nextTeamIndex];
+        // STEP 1: Handle rounds 0-2 (First Round through Sweet 16)
+        if (round < 3) {
+            // Set the team in the next round
+            newBracket[region][nextRound][nextSlot] = selectedTeam;
 
-            // Update with the newly selected team
-            newBracket[region][nextRound][nextGameIndex * 2 + nextTeamIndex] = selectedTeam;
-
-            // Clear subsequent rounds that might be affected by this change
+            // STEP 2: Clear ALL subsequent rounds that might be affected
             for (let r = nextRound + 1; r < 4; r++) {
-                const gameIdx = Math.floor(nextGameIndex / Math.pow(2, r - nextRound));
-                const teamIdx = (nextGameIndex / Math.pow(2, r - nextRound)) % 1 > 0 ? 1 : 0;
-                newBracket[region][r][gameIdx * 2 + teamIdx] = null;
+                // Calculate the affected positions in each subsequent round
+                const affectedGameIdx = Math.floor(nextGameIndex / Math.pow(2, r - nextRound));
+                const affectedTeamIdx = (nextGameIndex / Math.pow(2, r - nextRound)) % 1 > 0 ? 1 : 0;
+                const affectedSlot = affectedGameIdx * 2 + affectedTeamIdx;
+
+                // Always clear any team at this position
+                newBracket[region][r][affectedSlot] = null;
             }
 
-            // Check if the previously selected team reached the Final Four
-            const regionFinalFourIndex = getRegionFinalFourIndex(region);
-            if (previousSelectedTeam && nextRound === 3 && bracket[region][3][0] === previousSelectedTeam) {
-                // Clear the team from Final Four
-                newBracket.finalFour[regionFinalFourIndex] = null;
+            // STEP 3: Check if this affects Elite Eight
+            // If we're changing a pick in Sweet 16 (round 2), it directly affects Elite Eight
+            if (round === 2 || nextRound === 3) {
+                // Map region to its Final Four position
+                const ffIndex = getRegionFinalFourIndex(region);
 
-                // Clear championship if necessary
-                if (bracket.championship[0] === previousSelectedTeam) {
-                    newBracket.championship[0] = null;
-                } else if (bracket.championship[1] === previousSelectedTeam) {
-                    newBracket.championship[1] = null;
-                }
+                // Calculate which Elite Eight team might be affected
+                const eliteEightSlot = nextRound === 3 ? nextSlot : Math.floor(nextGameIndex / 2) * 2 + (nextGameIndex % 2);
+                const currentEliteEightTeam = bracket[region][3][eliteEightSlot];
 
-                // Clear champion if necessary
-                if (bracket.champion === previousSelectedTeam) {
-                    newBracket.champion = null;
+                // If there's a team in Elite Eight that will be affected, clear Final Four
+                if (currentEliteEightTeam) {
+                    // Clear the Final Four slot for this region
+                    newBracket.finalFour[ffIndex] = null;
+
+                    // Check if championship needs clearing
+                    const champIndex = ffIndex < 2 ? 0 : 1;
+                    if (bracket.championship[champIndex] === bracket.finalFour[ffIndex]) {
+                        newBracket.championship[champIndex] = null;
+
+                        // Clear champion if needed
+                        if (bracket.champion === bracket.championship[champIndex]) {
+                            newBracket.champion = null;
+                        }
+                    }
                 }
             }
 
-            // If team in Elite Eight changes, ensure Final Four is cleared
-            if (nextRound === 3 || round === 3) {
-                const regionFinalFourIndex = getRegionFinalFourIndex(region);
-                newBracket.finalFour[regionFinalFourIndex] = null;
+            // If we're changing a pick in an earlier round, check for cascading effects through all rounds
+            if (round < 2) {
+                // Get the Final Four index for this region
+                const ffIndex = getRegionFinalFourIndex(region);
 
-                // Clear championship and champion if affected
-                if (regionFinalFourIndex === 0 || regionFinalFourIndex === 1) {
-                    newBracket.championship[0] = null;
-                } else {
-                    newBracket.championship[1] = null;
+                // Check if our change affects the Elite Eight
+                let affectsEliteEight = false;
+
+                // Check each round to see if our previously selected team made it to Elite Eight
+                let teamToTrack = bracket[region][nextRound][nextSlot];
+                if (teamToTrack) {
+                    // Track the team through subsequent rounds
+                    for (let r = nextRound + 1; r <= 3; r++) {
+                        // Calculate where this team would be in each round
+                        const rGameIdx = Math.floor(nextGameIndex / Math.pow(2, r - nextRound));
+                        const rTeamIdx = (nextGameIndex / Math.pow(2, r - nextRound)) % 1 > 0 ? 1 : 0;
+                        const rSlot = rGameIdx * 2 + rTeamIdx;
+
+                        // If the team is present in this round
+                        if (bracket[region][r][rSlot] === teamToTrack) {
+                            // Update the team to track
+                            teamToTrack = bracket[region][r][rSlot];
+
+                            // If we've reached Elite Eight, our change affects it
+                            if (r === 3) {
+                                affectsEliteEight = true;
+                            }
+
+                            // Clear this position in the new bracket
+                            newBracket[region][r][rSlot] = null;
+                        } else {
+                            // Team didn't make it this far, stop tracking
+                            break;
+                        }
+                    }
                 }
 
-                // Always clear champion when Elite Eight changes
-                newBracket.champion = null;
+                // If our change affects Elite Eight, also clear Final Four and beyond
+                if (affectsEliteEight && bracket.finalFour[ffIndex]) {
+                    // Clear the Final Four slot for this region
+                    newBracket.finalFour[ffIndex] = null;
+
+                    // Check if championship needs clearing
+                    const champIndex = ffIndex < 2 ? 0 : 1;
+                    if (bracket.championship[champIndex] === bracket.finalFour[ffIndex]) {
+                        newBracket.championship[champIndex] = null;
+
+                        // Clear champion if needed
+                        if (bracket.champion === bracket.championship[champIndex]) {
+                            newBracket.champion = null;
+                        }
+                    }
+                }
             }
         }
-        // Handle Elite Eight to Final Four advancement
+        // STEP 4: Handle Elite Eight (round 3) to Final Four advancement
         else if (round === 3) {
-            // Update Final Four based on region
-            const regionFinalFourIndex = getRegionFinalFourIndex(region);
-            newBracket.finalFour[regionFinalFourIndex] = selectedTeam;
+            // Get the Final Four slot for this region
+            const ffIndex = getRegionFinalFourIndex(region);
 
-            // Clear championship if relevant Final Four team changes
-            if (regionFinalFourIndex === 0 || regionFinalFourIndex === 1) {
-                newBracket.championship[0] = null;
-            } else {
-                newBracket.championship[1] = null;
+            // Get the current team in this Final Four slot
+            const currentFinalFourTeam = bracket.finalFour[ffIndex];
+
+            // Update the Final Four with the selected Elite Eight winner
+            newBracket.finalFour[ffIndex] = selectedTeam;
+
+            // If there was a different team in Final Four, clear championship and champion
+            if (currentFinalFourTeam && currentFinalFourTeam !== selectedTeam) {
+                // Determine which championship slot is affected
+                const champIndex = ffIndex < 2 ? 0 : 1;
+
+                // Clear championship slot if it contains the affected team
+                if (bracket.championship[champIndex] === currentFinalFourTeam) {
+                    newBracket.championship[champIndex] = null;
+
+                    // Clear champion if it's the affected team
+                    if (bracket.champion === currentFinalFourTeam) {
+                        newBracket.champion = null;
+                    }
+                }
             }
-
-            // Clear champion
-            newBracket.champion = null;
         }
 
         setBracket(newBracket);
@@ -164,26 +231,36 @@ function MarchMadnessBracket() {
 
     // Handle Final Four team selection
     const handleFinalFourSelect = (semifinalIndex, teamIndex) => {
-        // Create a copy of the bracket state
+        // Create a deep copy of the bracket state
         const newBracket = JSON.parse(JSON.stringify(bracket));
 
         // Get the selected team from the Final Four
         let selectedTeam;
+        let champIndex;
 
         if (semifinalIndex === 0) {
             // Left semifinal (South/East)
             selectedTeam = teamIndex === 0 ? bracket.finalFour[2] : bracket.finalFour[1];
-            newBracket.championship[0] = selectedTeam;
+            champIndex = 0;
         } else {
             // Right semifinal (Midwest/West)
             selectedTeam = teamIndex === 0 ? bracket.finalFour[3] : bracket.finalFour[0];
-            newBracket.championship[1] = selectedTeam;
+            champIndex = 1;
         }
 
         if (!selectedTeam) return;
 
-        // Clear champion if championship teams change
-        newBracket.champion = null;
+        // Get the current team in the championship slot
+        const currentChampionshipTeam = bracket.championship[champIndex];
+
+        // Update championship
+        newBracket.championship[champIndex] = selectedTeam;
+
+        // If changing a selection, clear champion if affected
+        if (currentChampionshipTeam !== null && currentChampionshipTeam !== selectedTeam &&
+            bracket.champion === currentChampionshipTeam) {
+            newBracket.champion = null;
+        }
 
         setBracket(newBracket);
     };
@@ -192,7 +269,7 @@ function MarchMadnessBracket() {
     const handleChampionshipSelect = (teamIndex) => {
         if (!bracket.championship[teamIndex]) return;
 
-        const newBracket = { ...bracket };
+        const newBracket = JSON.parse(JSON.stringify(bracket));
         newBracket.champion = bracket.championship[teamIndex];
         setBracket(newBracket);
     };
@@ -423,52 +500,64 @@ function MarchMadnessBracket() {
             <div className="bracket-content">
                 {renderRoundHeaders()}
 
-                <div className="bracket">
-                    <div className="bracket-left">
-                        <div className="region south">
-                            <div className="region-label">South</div>
-                            <div className="region-rounds">
-                                {renderRound('south', 0, 'left')}
-                                {renderRound('south', 1, 'left')}
-                                {renderRound('south', 2, 'left')}
-                                {renderRound('south', 3, 'left')}
+                <div className="brackets-wrapper" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <div className="bracket">
+                        <div className="bracket-left">
+                            <div className="region south">
+                                <div className="region-label">South</div>
+                                <div className="region-rounds">
+                                    {renderRound('south', 0, 'left')}
+                                    {renderRound('south', 1, 'left')}
+                                    {renderRound('south', 2, 'left')}
+                                    {renderRound('south', 3, 'left')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bracket-center">
+                            <div className="center-wrapper" style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                height: '100%',
+                                position: 'relative',
+                                top: '15px' // Move down a bit to improve vertical alignment
+                            }}>
+                                {renderFinalFour()}
+                            </div>
+                        </div>
+
+                        <div className="bracket-right">
+                            <div className="region midwest">
+                                <div className="region-label">Midwest</div>
+                                {renderRightRegion('midwest', 'Midwest')}
                             </div>
                         </div>
                     </div>
 
-                    <div className="bracket-center">
-                        {renderFinalFour()}
-                    </div>
-
-                    <div className="bracket-right">
-                        <div className="region midwest">
-                            <div className="region-label">Midwest</div>
-                            {renderRightRegion('midwest', 'Midwest')}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bracket">
-                    <div className="bracket-left">
-                        <div className="region east">
-                            <div className="region-label">East</div>
-                            <div className="region-rounds">
-                                {renderRound('east', 0, 'left')}
-                                {renderRound('east', 1, 'left')}
-                                {renderRound('east', 2, 'left')}
-                                {renderRound('east', 3, 'left')}
+                    <div className="bracket">
+                        <div className="bracket-left">
+                            <div className="region east">
+                                <div className="region-label">East</div>
+                                <div className="region-rounds">
+                                    {renderRound('east', 0, 'left')}
+                                    {renderRound('east', 1, 'left')}
+                                    {renderRound('east', 2, 'left')}
+                                    {renderRound('east', 3, 'left')}
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="bracket-center">
-                        {/* Empty center space to align with top bracket */}
-                    </div>
+                        <div className="bracket-center">
+                            {/* Empty center space to align with top bracket */}
+                        </div>
 
-                    <div className="bracket-right">
-                        <div className="region west">
-                            <div className="region-label">West</div>
-                            {renderRightRegion('west', 'West')}
+                        <div className="bracket-right">
+                            <div className="region west">
+                                <div className="region-label">West</div>
+                                {renderRightRegion('west', 'West')}
+                            </div>
                         </div>
                     </div>
                 </div>

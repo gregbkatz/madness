@@ -45,8 +45,18 @@ body {
 }
 
 .bracket-content {
-    min-width: 1200px;
-    /* Ensure enough width for all rounds */
+    min-width: 1500px;
+    /* Increased from 1400px for more space */
+    margin: 0 auto;
+}
+
+.brackets-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 750px;
+    /* Increased from 720px */
+    justify-content: space-between;
+    /* Distribute space evenly */
 }
 
 /* Round headers */
@@ -67,7 +77,6 @@ body {
     max-width: 140px;
     padding: 0 5px;
     color: #333;
-    /* Standardize header color */
 }
 
 /* Styles for different header positions */
@@ -77,21 +86,22 @@ body {
 
 .round-header-center {
     color: #003478;
-    /* Keep center headers blue */
     font-weight: bold;
 }
 
 .round-header-right {
     text-align: center;
     color: #333;
-    /* Match left headers */
 }
 
 /* Main bracket */
 .bracket {
     display: flex;
     width: 100%;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
+    /* Increased from 20px */
+    min-height: 340px;
+    position: relative;
 }
 
 /* Left and right bracket sides */
@@ -118,7 +128,6 @@ body {
     display: flex;
     width: 100%;
     justify-content: flex-end;
-    /* Align rounds to the right edge */
 }
 
 /* Center section */
@@ -129,9 +138,19 @@ body {
     align-items: center;
     flex: 1;
     padding: 0 5px;
-    min-width: 200px;
-    margin: 0 20px;
-    /* Add horizontal margin to prevent overlap */
+    min-width: 320px;
+    /* Increased from 280px */
+    margin: 0 60px;
+    /* Increased from 40px to avoid overlap */
+    position: relative;
+}
+
+.center-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 /* Round columns */
@@ -141,9 +160,7 @@ body {
     justify-content: space-around;
     position: relative;
     min-width: 140px;
-    /* Fixed width that matches the team width */
     max-width: 140px;
-    /* Ensure consistent width */
     padding: 0 5px;
 }
 
@@ -168,7 +185,6 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    /* Center the game in its allocated space */
 }
 
 /* Team styling */
@@ -238,11 +254,11 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    /* Center vertically */
     width: 100%;
     padding: 10px 0;
-    margin-top: 140px;
-    /* Add vertical spacing to center it */
+    position: relative;
+    margin-top: 30px;
+    /* Added to push Final Four down a bit */
 }
 
 .final-four-content {
@@ -257,7 +273,8 @@ body {
     justify-content: center;
     width: 100%;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    /* Increased from 15px */
 }
 
 .semifinal-matchup {
@@ -268,22 +285,26 @@ body {
 
 .left-semifinal {
     align-items: flex-end;
-    margin-right: 20px;
+    margin-right: 30px;
+    /* Increased from 25px */
 }
 
 .right-semifinal {
     align-items: flex-start;
-    margin-left: 20px;
+    margin-left: 30px;
+    /* Increased from 25px */
 }
 
 .championship-matchup {
     width: 140px;
-    margin: 0 20px;
+    margin: 0 30px;
+    /* Increased from 25px */
 }
 
 /* Champion display */
 .champion-display {
-    margin-top: 15px;
+    margin-top: 20px;
+    /* Increased from 15px */
     padding: 10px;
     background-color: #f5f5f5;
     border: 1px solid #ddd;
@@ -304,7 +325,6 @@ body {
     font-weight: bold;
     color: #003478;
     min-height: 20px;
-    /* Ensure space even when empty */
 }
 
 /* Region labels */
@@ -330,17 +350,19 @@ body {
     /* Normal styling for team elements */
 }
 
-/* Remove old margin overrides */
 /* Reduce the bottom margins only for the 1st round */
 .round[data-round="1"] .game-wrapper {
     margin-bottom: 5px;
 }
 
 /* Fix for horizontal alignment in larger screens */
-@media (min-width: 1400px) {
+@media (min-width: 1500px) {
+
+    /* Increased from 1400px */
     .bracket-content {
         margin: 0 auto;
-        max-width: 1800px;
+        max-width: 1900px;
+        /* Increased from 1800px */
     }
 
     /* Ensure rounds maintain fixed width */
@@ -362,7 +384,8 @@ body {
 
     /* Round headers alignment */
     .round-headers {
-        max-width: 1800px;
+        max-width: 1900px;
+        /* Increased from 1800px */
         margin: 0 auto;
         display: flex;
         justify-content: space-between;
@@ -382,4 +405,39 @@ body {
     left: 0;
     right: 0;
     margin: 0 auto;
+}
+
+/* Override for empty center in second bracket row - improves spacing */
+.bracket:nth-child(2) {
+    /* Changed from :nth-child(3) */
+    margin-top: 30px;
+    /* Added space between brackets */
+}
+
+.bracket:nth-child(2) .bracket-center {
+    min-height: 250px;
+    /* Increased from 220px */
+}
+
+/* Ensure vertical alignment */
+.bracket:first-child {
+    margin-bottom: 30px;
+    /* Increased from 10px */
+}
+
+/* Adjust the center positions for narrow screens */
+@media (max-width: 1500px) {
+
+    /* Increased from 1400px */
+    .bracket-center {
+        margin: 0 70px;
+        /* Increased from 45px */
+        min-width: 340px;
+        /* Increased from 300px */
+    }
+
+    .bracket-content {
+        min-width: 1600px;
+        /* Increased from 1500px */
+    }
 }
