@@ -245,6 +245,14 @@ def create_test_user():
 def init_teams_page():
     return render_template('init_teams.html')
 
+@app.route('/minimal-bracket')
+def minimal_bracket():
+    return render_template('minimal_bracket.html')
+
+@app.route('/vanilla-bracket')
+def vanilla_bracket():
+    return render_template('vanilla_bracket.html')
+
 if __name__ == '__main__':
     # Only create tables if running locally
     if app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite'):

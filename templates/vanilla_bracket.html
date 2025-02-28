@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>March Madness Bracket</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #0057b7;
+            margin-bottom: 10px;
+        }
+
+        .bracket-container {
+            display: grid;
+            grid-template-columns: 1fr 200px 1fr;
+            grid-template-rows: 1fr 1fr;
+            grid-template-areas:
+                "west finalfour east"
+                "south champion midwest";
+            gap: 20px;
+            min-height: 700px;
+        }
+
+        .region {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            padding: 10px;
+            overflow: auto;
+        }
+
+        .west {
+            grid-area: west;
+        }
+
+        .east {
+            grid-area: east;
+        }
+
+        .south {
+            grid-area: south;
+        }
+
+        .midwest {
+            grid-area: midwest;
+        }
+
+        .finalfour {
+            grid-area: finalfour;
+        }
+
+        .champion {
+            grid-area: champion;
+        }
+
+        .center-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .region-header {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #0057b7;
+            padding: 5px;
+            background-color: #f0f7ff;
+            border-radius: 4px;
+        }
+
+        /* Horizontal bracket layout */
+        .rounds-container {
+            display: flex;
+            flex-direction: row;
+            height: 100%;
+        }
+
+        .rounds-container-right {
+            flex-direction: row-reverse;
+        }
+
+        .bracket-round {
+            display: flex;
+            flex-direction: column;
+            min-width: 180px;
+            position: relative;
+        }
+
+        .round-header {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #777;
+            font-size: 0.8rem;
+        }
+
+        /* Spacing for matchups in different rounds */
+        .bracket-round:nth-child(1) .bracket-game {
+            margin-bottom: 0px;
+        }
+
+        .bracket-round:nth-child(2) .bracket-game {
+            margin-bottom: 30px;
+            margin-top: 15px;
+        }
+
+        .bracket-round:nth-child(3) .bracket-game {
+            margin-bottom: 95px;
+            margin-top: 47px;
+        }
+
+        .bracket-round:nth-child(4) .bracket-game {
+            margin-bottom: 225px;
+            margin-top: 112px;
+        }
+
+        .bracket-game {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            margin: 2px 5px;
+        }
+
+        .team {
+            display: flex;
+            align-items: center;
+            height: 30px;
+            padding: 0 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 1px;
+            background-color: #fff;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+            z-index: 2;
+        }
+
+        .team:hover {
+            background-color: #f0f7ff;
+        }
+
+        .team.winner {
+            font-weight: bold;
+            background-color: #e6f2ff;
+            border-left: 3px solid #0057b7;
+        }
+
+        .seed {
+            display: inline-block;
+            width: 20px;
+            margin-right: 5px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .team-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 130px;
+        }
+
+        /* Connectors for traditional bracket look */
+        .bracket-game {
+            position: relative;
+        }
+
+        /* West and South connectors (flowing right) */
+        .west .bracket-game::after,
+        .south .bracket-game::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            right: -5px;
+            width: 10px;
+            height: 2px;
+            background-color: #ccc;
+            z-index: 1;
+        }
+
+        /* East and Midwest connectors (flowing left) */
+        .east .bracket-game::after,
+        .midwest .bracket-game::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: -5px;
+            width: 10px;
+            height: 2px;
+            background-color: #ccc;
+            z-index: 1;
+        }
+
+        /* Vertical connectors for regions */
+        .west .bracket-round:nth-child(2) .bracket-game::before,
+        .west .bracket-round:nth-child(3) .bracket-game::before,
+        .west .bracket-round:nth-child(4) .bracket-game::before,
+        .south .bracket-round:nth-child(2) .bracket-game::before,
+        .south .bracket-round:nth-child(3) .bracket-game::before,
+        .south .bracket-round:nth-child(4) .bracket-game::before {
+            content: "";
+            position: absolute;
+            top: -15px;
+            right: -5px;
+            width: 2px;
+            height: calc(100% + 30px);
+            background-color: #ccc;
+            z-index: 1;
+        }
+
+        .east .bracket-round:nth-child(2) .bracket-game::before,
+        .east .bracket-round:nth-child(3) .bracket-game::before,
+        .east .bracket-round:nth-child(4) .bracket-game::before,
+        .midwest .bracket-round:nth-child(2) .bracket-game::before,
+        .midwest .bracket-round:nth-child(3) .bracket-game::before,
+        .midwest .bracket-round:nth-child(4) .bracket-game::before {
+            content: "";
+            position: absolute;
+            top: -15px;
+            left: -5px;
+            width: 2px;
+            height: calc(100% + 30px);
+            background-color: #ccc;
+            z-index: 1;
+        }
+
+        .final-four-header,
+        .championship-header {
+            text-align: center;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #0057b7;
+        }
+
+        .final-four,
+        .championship {
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .championship {
+            border-color: #ffd700;
+        }
+
+        .champion-team {
+            font-weight: bold;
+            padding: 10px;
+            border: 2px solid #ffd700;
+            border-radius: 5px;
+            text-align: center;
+            background-color: #fffde7;
+        }
+
+        @media (max-width: 1400px) {
+            .bracket-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+                grid-template-areas:
+                    "east"
+                    "west"
+                    "finalfour"
+                    "champion"
+                    "midwest"
+                    "south";
+                height: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>NCAA March Madness Bracket</h1>
+        </header>
+
+        <div id="bracket-app"></div>
+    </div>
+
+    <script type="text/babel">
+        // Team data structure
+        const generateTeams = () => {
+            const regions = ['East', 'West', 'South', 'Midwest'];
+            const allTeams = {};
+
+            regions.forEach(region => {
+                allTeams[region] = [];
+                for (let seed = 1; seed <= 16; seed++) {
+                    allTeams[region].push({
+                        id: `${region}-${seed}`,
+                        name: `${seed}. ${region} Team ${seed}`,
+                        seed: seed,
+                        region: region
+                    });
+                }
+            });
+
+            return allTeams;
+        };
+
+        // Component for displaying a single matchup
+        const Matchup = ({ team1, team2, onClick, round }) => (
+            <div className="bracket-game">
+                <div
+                    className={`team ${team1.winner ? 'winner' : ''}`}
+                    onClick={() => onClick(team1.id, team2.id, round)}
+                >
+                    <span className="seed">{team1.seed}</span>
+                    <span className="team-name">{team1.name.split('.')[1]}</span>
+                </div>
+                <div
+                    className={`team ${team2.winner ? 'winner' : ''}`}
+                    onClick={() => onClick(team2.id, team1.id, round)}
+                >
+                    <span className="seed">{team2.seed}</span>
+                    <span className="team-name">{team2.name.split('.')[1]}</span>
+                </div>
+            </div>
+        );
+
+        // Component for displaying a region's bracket
+        const RegionBracket = ({ region, teams, winners, handleWinner, isFlipped }) => {
+            // Create proper seed matchups for first round: 1 vs 16, 8 vs 9, etc.
+            const firstRoundMatchups = [
+                [1, 16], [8, 9], [5, 12], [4, 13], [6, 11], [3, 14], [7, 10], [2, 15]
+            ];
+
+            const getTeamById = (id) => {
+                if (!id) return null;
+                const [teamRegion, seedStr] = id.split('-');
+                const seed = parseInt(seedStr);
+                return teams.find(t => t.region === teamRegion && t.seed === seed) || {
+                    id,
+                    name: winners[id] && winners[id].name ? winners[id].name : `${seed}. ${teamRegion} Team ${seed}`,
+                    seed,
+                    region: teamRegion,
+                    winner: winners[id] && winners[id].winner ? winners[id].winner : false
+                };
+            };
+
+            // Generate matchups for each round
+            const rounds = [];
+            const roundNames = ['First Round', 'Second Round', 'Sweet 16', 'Elite 8'];
+
+            for (let round = 1; round <= 4; round++) {
+                const matchupsInRound = 8 / Math.pow(2, round - 1);
+                const matchups = [];
+
+                for (let i = 0; i < matchupsInRound; i++) {
+                    if (round === 1) {
+                        // First round matchups
+                        const [seed1, seed2] = firstRoundMatchups[i];
+                        const team1 = teams.find(t => t.seed === seed1) || { name: '', seed: '', empty: true };
+                        const team2 = teams.find(t => t.seed === seed2) || { name: '', seed: '', empty: true };
+
+                        const winnerKey = `${region}-R${round}-${i}`;
+                        team1.winner = winners[winnerKey] === team1.id;
+                        team2.winner = winners[winnerKey] === team2.id;
+
+                        matchups.push({ team1, team2, position: i });
+                    } else {
+                        // Later rounds - find winners from previous round
+                        const prevRoundPos = i * 2;
+                        const prevWinnerKey1 = `${region}-R${round - 1}-${prevRoundPos}`;
+                        const prevWinnerKey2 = `${region}-R${round - 1}-${prevRoundPos + 1}`;
+
+                        const team1Id = winners[prevWinnerKey1];
+                        const team2Id = winners[prevWinnerKey2];
+
+                        const team1 = team1Id ? getTeamById(team1Id) : { name: '', seed: '', empty: true };
+                        const team2 = team2Id ? getTeamById(team2Id) : { name: '', seed: '', empty: true };
+
+                        const winnerKey = `${region}-R${round}-${i}`;
+                        team1.winner = winners[winnerKey] === team1.id;
+                        team2.winner = winners[winnerKey] === team2.id;
+
+                        matchups.push({ team1, team2, position: i });
+                    }
+                }
+
+                rounds.push({ round, name: roundNames[round - 1], matchups });
+            }
+
+            return (
+                <div className={`rounds-container ${isFlipped ? 'rounds-container-right' : ''}`}>
+                    {rounds.map((round, i) => (
+                        <div key={i} className="bracket-round">
+                            <div className="round-header">{round.name}</div>
+                            {round.matchups.map((matchup, j) => (
+                                <Matchup
+                                    key={j}
+                                    team1={matchup.team1}
+                                    team2={matchup.team2}
+                                    onClick={(winnerId, loserId, roundNum) => handleWinner(
+                                        region,
+                                        round.round,
+                                        matchup.position,
+                                        winnerId,
+                                        loserId
+                                    )}
+                                    round={round.round}
+                                />
+                            ))}
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        // Main Application Component
+        const BracketApp = () => {
+            const [teams, setTeams] = React.useState(generateTeams());
+            const [winners, setWinners] = React.useState({});
+
+            const handleWinner = (region, round, position, winnerId, loserId) => {
+                const winnerKey = `${region}-R${round}-${position}`;
+
+                // Update winner for this matchup
+                setWinners(prev => ({
+                    ...prev,
+                    [winnerKey]: winnerId
+                }));
+            };
+
+            // Handle winners for Final Four and Championship
+            const handleFinalFourWinner = (side, winnerId, loserId) => {
+                setWinners(prev => ({
+                    ...prev,
+                    [`FinalFour-${side}`]: winnerId
+                }));
+            };
+
+            const handleChampionshipWinner = (winnerId) => {
+                setWinners(prev => ({
+                    ...prev,
+                    'Champion': winnerId
+                }));
+            };
+
+            // Get Final Four teams
+            const getFinalFourTeam = (region) => {
+                const winnerId = winners[`${region}-R4-0`]; // Elite 8 winner
+                if (!winnerId) return { name: '', seed: '', empty: true };
+
+                const [teamRegion, seedStr] = winnerId.split('-');
+                const seed = parseInt(seedStr);
+
+                const allTeamsList = Object.values(teams).flat();
+                const team = allTeamsList.find(t => t.region === teamRegion && t.seed === seed);
+
+                if (team) {
+                    return {
+                        ...team,
+                        winner: winners[`FinalFour-${region === 'East' || region === 'West' ? 'Left' : 'Right'}`] === winnerId
+                    };
+                }
+
+                return {
+                    id: winnerId,
+                    name: `${seed}. ${teamRegion} Team ${seed}`,
+                    seed,
+                    region: teamRegion,
+                    winner: winners[`FinalFour-${region === 'East' || region === 'West' ? 'Left' : 'Right'}`] === winnerId
+                };
+            };
+
+            // Get Championship teams
+            const getChampionshipTeam = (side) => {
+                const winnerId = winners[`FinalFour-${side}`];
+                if (!winnerId) return { name: '', seed: '', empty: true };
+
+                const [teamRegion, seedStr] = winnerId.split('-');
+                const seed = parseInt(seedStr);
+
+                const allTeamsList = Object.values(teams).flat();
+                const team = allTeamsList.find(t => t.region === teamRegion && t.seed === seed);
+
+                if (team) {
+                    return {
+                        ...team,
+                        winner: winners['Champion'] === winnerId
+                    };
+                }
+
+                return {
+                    id: winnerId,
+                    name: `${seed}. ${teamRegion} Team ${seed}`,
+                    seed,
+                    region: teamRegion,
+                    winner: winners['Champion'] === winnerId
+                };
+            };
+
+            // Get Champion
+            const getChampion = () => {
+                const championId = winners['Champion'];
+                if (!championId) return { name: '', seed: '', empty: true };
+
+                const [teamRegion, seedStr] = championId.split('-');
+                const seed = parseInt(seedStr);
+
+                const allTeamsList = Object.values(teams).flat();
+                const team = allTeamsList.find(t => t.region === teamRegion && t.seed === seed);
+
+                if (team) return team;
+
+                return {
+                    id: championId,
+                    name: `${seed}. ${teamRegion} Team ${seed}`,
+                    seed,
+                    region: teamRegion
+                };
+            };
+
+            return (
+                <div className="bracket-container">
+                    <div className="region west">
+                        <h2 className="region-header">West Region</h2>
+                        <RegionBracket
+                            region="West"
+                            teams={teams['West']}
+                            winners={winners}
+                            handleWinner={handleWinner}
+                        />
+                    </div>
+
+                    <div className="center-column finalfour">
+                        <h3 className="final-four-header">Final Four</h3>
+                        <div className="final-four">
+                            <Matchup
+                                team1={getFinalFourTeam('East')}
+                                team2={getFinalFourTeam('West')}
+                                onClick={(winnerId, loserId) => handleFinalFourWinner('Left', winnerId, loserId)}
+                                round="finalfour"
+                            />
+                            <Matchup
+                                team1={getFinalFourTeam('South')}
+                                team2={getFinalFourTeam('Midwest')}
+                                onClick={(winnerId, loserId) => handleFinalFourWinner('Right', winnerId, loserId)}
+                                round="finalfour"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="region east">
+                        <h2 className="region-header">East Region</h2>
+                        <RegionBracket
+                            region="East"
+                            teams={teams['East']}
+                            winners={winners}
+                            handleWinner={handleWinner}
+                            isFlipped={true}
+                        />
+                    </div>
+
+                    <div className="region south">
+                        <h2 className="region-header">South Region</h2>
+                        <RegionBracket
+                            region="South"
+                            teams={teams['South']}
+                            winners={winners}
+                            handleWinner={handleWinner}
+                        />
+                    </div>
+
+                    <div className="center-column champion">
+                        <h3 className="championship-header">Championship</h3>
+                        <div className="championship">
+                            <Matchup
+                                team1={getChampionshipTeam('Left')}
+                                team2={getChampionshipTeam('Right')}
+                                onClick={(winnerId) => handleChampionshipWinner(winnerId)}
+                                round="championship"
+                            />
+                        </div>
+
+                        <div className="champion-container">
+                            <h3 className="championship-header">Champion</h3>
+                            {winners['Champion'] && (
+                                <div className="champion-team">
+                                    {getChampion().name}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="region midwest">
+                        <h2 className="region-header">Midwest Region</h2>
+                        <RegionBracket
+                            region="Midwest"
+                            teams={teams['Midwest']}
+                            winners={winners}
+                            handleWinner={handleWinner}
+                            isFlipped={true}
+                        />
+                    </div>
+                </div>
+            );
+        };
+
+        // Render the application
+        ReactDOM.render(<BracketApp />, document.getElementById('bracket-app'));
+    </script>
+</body>
+
+</html>

@@ -6,65 +6,279 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>March Madness Bracket</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/1.0.0/jquery.bracket.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/1.0.0/jquery.bracket.min.js"></script>
     <style>
-        .bracket-container {
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        header {
+            background-color: #003478;
+            color: white;
+            padding: 15px 0;
+        }
+
+        header nav {
+            max-width: 1800px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
-            padding: 20px;
-            overflow-x: auto;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        header ul {
+            display: flex;
+            list-style: none;
+        }
+
+        header li {
+            margin-left: 20px;
+        }
+
+        header a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .bracket-container {
+            display: grid;
+            grid-template-areas:
+                "east  center-top    south"
+                "west  center-bottom midwest";
+            grid-template-columns: 1fr auto 1fr;
+            grid-template-rows: auto auto;
+            gap: 20px;
+            padding: 30px;
+            background-color: #f9f9f9;
+            max-width: 1800px;
+            margin: 0 auto;
+            min-height: 90vh;
         }
 
         .region {
-            flex: 1;
-            margin: 0 10px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            background-color: #fff;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .east-region {
+            grid-area: east;
+        }
+
+        .south-region {
+            grid-area: south;
+        }
+
+        .west-region {
+            grid-area: west;
+        }
+
+        .midwest-region {
+            grid-area: midwest;
+        }
+
+        .final-four {
+            grid-area: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin: 20px;
+        }
+
+        .region-header {
+            text-align: center;
+            font-size: 18px;
+            color: #003478;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+
+        .rounds-container {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .rounds-container-right {
+            flex-direction: row-reverse;
         }
 
         .round {
-            margin-bottom: 20px;
             display: flex;
             flex-direction: column;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .round-header {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
         }
 
         .matchup {
-            border: 1px solid #ccc;
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 4px;
-            height: 80px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            margin: 5px 15px;
+            position: relative;
+        }
+
+        /* Progressive spacing between matchups */
+        .round[data-round="1"] .matchup {
+            margin-bottom: 15px;
+        }
+
+        .round[data-round="2"] .matchup {
+            margin-bottom: 40px;
+        }
+
+        .round[data-round="3"] .matchup {
+            margin-bottom: 90px;
+        }
+
+        .round[data-round="4"] .matchup {
+            margin-bottom: 150px;
         }
 
         .team {
             display: flex;
-            justify-content: space-between;
-            padding: 5px;
+            align-items: center;
+            padding: 6px 8px;
+            margin: 2px 0;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            position: relative;
+            min-height: 24px;
+            max-width: 180px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
         }
 
         .team:hover {
-            background-color: #f0f0f0;
+            background-color: #f0f7ff;
+            border-color: #99c2ff;
         }
 
         .team.selected {
             background-color: #e3f2fd;
-        }
-
-        .team.eliminated {
-            opacity: 0.5;
-            text-decoration: line-through;
+            border-left: 3px solid #2196F3;
+            font-weight: bold;
         }
 
         .seed {
+            display: inline-block;
+            min-width: 20px;
+            margin-right: 8px;
             font-weight: bold;
-            margin-right: 10px;
+            text-align: center;
+            font-size: 12px;
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
         }
 
-        .final-four {
-            text-align: center;
+        .name {
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 130px;
+        }
+
+        .empty-team {
+            color: #999;
+            font-style: italic;
+            background-color: #f9f9f9;
+        }
+
+        /* Connectors - East and West flow right */
+        .east-region .matchup::after,
+        .west-region .matchup::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            right: -15px;
+            width: 15px;
+            height: 2px;
+            background-color: #ccc;
+        }
+
+        /* Connectors - South and Midwest flow left */
+        .south-region .matchup::after,
+        .midwest-region .matchup::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: -15px;
+            width: 15px;
+            height: 2px;
+            background-color: #ccc;
+        }
+
+        /* Vertical connectors */
+        .east-region .round[data-round="2"] .matchup::before,
+        .east-region .round[data-round="3"] .matchup::before,
+        .east-region .round[data-round="4"] .matchup::before,
+        .west-region .round[data-round="2"] .matchup::before,
+        .west-region .round[data-round="3"] .matchup::before,
+        .west-region .round[data-round="4"] .matchup::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: -15px;
+            width: 2px;
+            height: 100%;
+            background-color: #ccc;
+        }
+
+        .south-region .round[data-round="2"] .matchup::before,
+        .south-region .round[data-round="3"] .matchup::before,
+        .south-region .round[data-round="4"] .matchup::before,
+        .midwest-region .round[data-round="2"] .matchup::before,
+        .midwest-region .round[data-round="3"] .matchup::before,
+        .midwest-region .round[data-round="4"] .matchup::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -15px;
+            width: 2px;
+            height: 100%;
+            background-color: #ccc;
+        }
+
+        /* Championship section */
+        .championship-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             margin-top: 20px;
+            padding: 15px;
+            border: 2px solid #gold;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .trophy-icon {
+            font-size: 30px;
+            margin-bottom: 15px;
+            color: gold;
         }
 
         .save-button {
@@ -77,25 +291,45 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
         }
 
         .save-button:hover {
             background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        .connector {
-            height: 20px;
-            border-right: 2px solid #ccc;
-            margin-right: -10px;
+        /* Final Four styling */
+        .final-four-header {
+            font-size: 24px;
+            font-weight: bold;
+            color: #003478;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
         }
 
-        .rounds-container {
+        .championship-header {
+            font-size: 18px;
+            color: #c47c00;
+            margin: 15px 0;
+        }
+
+        .final-round {
             display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .empty-team {
-            color: #999;
-            font-style: italic;
+        .final-matchup {
+            margin: 10px 0;
+            width: 220px;
+        }
+
+        #bracket {
+            margin: 20px;
         }
     </style>
 </head>
@@ -112,243 +346,7 @@
     </header>
 
     <main>
-        <div class="bracket-container">
-            {% for region in ['East', 'West', 'South', 'Midwest'] %}
-            <div class="region">
-                <h2>{{ region }} Region</h2>
-                <div class="rounds-container">
-                    <!-- Round 1 (16 teams - 8 matchups) -->
-                    <div class="round" data-round="1">
-                        <h3>Round 1</h3>
-
-                        <!-- 1 vs 16 -->
-                        <div class="matchup" data-matchup-id="{{ region }}-1-1">
-                            <div class="team"
-                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 1)|first|attr('id') }}"
-                                data-seed="1" data-round="1" data-position="1">
-                                <span class="seed">1</span>
-                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 1)|first|attr('name')
-                                    }}</span>
-                            </div>
-                            <div class="team"
-                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 16)|first|attr('id') }}"
-                                data-seed="16" data-round="1" data-position="2">
-                                <span class="seed">16</span>
-                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 16)|first|attr('name')
-                                    }}</span>
-                            </div>
-                        </div>
-
-                        <!-- 8 vs 9 -->
-                        <div class="matchup" data-matchup-id="{{ region }}-1-2">
-                            <div class="team"
-                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 8)|first|attr('id') }}"
-                                data-seed="8" data-round="1" data-position="3">
-                                <span class="seed">8</span>
-                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 8)|first|attr('name')
-                                    }}</span>
-                            </div>
-                            <div class="team"
-                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 9)|first|attr('id') }}"
-                                data-seed="9" data-round="1" data-position="4">
-                                <span class="seed">9</span>
-                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 9)|first|attr('name')
-                                    }}</span>
-                            </div>
-                        </div>
-
-                        <!-- 5 vs 12 -->
-                        <div class="matchup" data-matchup-id="{{ region }}-1-3">
-                            <div class="team"
-                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 5)|first|attr('id') }}"
-                                data-seed="5" data-round="1" data-position="5">
-                                <span class="seed">5</span>
-                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 5)|first|attr('name')
-                                    }}</span>
-                            </div>
-                            <div class="team"
-                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 12)|first|attr('id') }}"
-                                data-seed="12" data-round="1" data-position="6">
-                                <span class="seed">12</span>
-                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 12)|first|attr('name')
-                                    }}</span>
-                            </div>
-                        </div>
-
-                        <!-- 4 vs 13 -->
-                        <div class="matchup" data-matchup-id="{{ region }}-1-4">
-                            <div class="team"
-                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 4)|first|attr('id') }}"
-                                data-seed="4" data-round="1" data-position="7">
-                                <span class="seed">4</span>
-                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 4)|first|attr('name')
-                                    }}</span>
-                            </div>
-                            <div class="team"
-                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 13)|first|attr('id') }}"
-                                data-seed="13" data-round="1" data-position="8">
-                                <span class="seed">13</span>
-                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 13)|first|attr('name')
-                                    }}</span>
-                            </div>
-                        </div>
-
-                        <!-- 6 vs 11 -->
-                        <div class="matchup" data-matchup-id="{{ region }}-1-5">
-                            <div class="team"
-                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 6)|first|attr('id') }}"
-                                data-seed="6" data-round="1" data-position="9">
-                                <span class="seed">6</span>
-                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 6)|first|attr('name')
-                                    }}</span>
-                            </div>
-                            <div class="team"
-                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 11)|first|attr('id') }}"
-                                data-seed="11" data-round="1" data-position="10">
-                                <span class="seed">11</span>
-                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 11)|first|attr('name')
-                                    }}</span>
-                            </div>
-                        </div>
-
-                        <!-- 3 vs 14 -->
-                        <div class="matchup" data-matchup-id="{{ region }}-1-6">
-                            <div class="team"
-                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 3)|first|attr('id') }}"
-                                data-seed="3" data-round="1" data-position="11">
-                                <span class="seed">3</span>
-                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 3)|first|attr('name')
-                                    }}</span>
-                            </div>
-                            <div class="team"
-                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 14)|first|attr('id') }}"
-                                data-seed="14" data-round="1" data-position="12">
-                                <span class="seed">14</span>
-                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 14)|first|attr('name')
-                                    }}</span>
-                            </div>
-                        </div>
-
-                        <!-- 7 vs 10 -->
-                        <div class="matchup" data-matchup-id="{{ region }}-1-7">
-                            <div class="team"
-                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 7)|first|attr('id') }}"
-                                data-seed="7" data-round="1" data-position="13">
-                                <span class="seed">7</span>
-                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 7)|first|attr('name')
-                                    }}</span>
-                            </div>
-                            <div class="team"
-                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 10)|first|attr('id') }}"
-                                data-seed="10" data-round="1" data-position="14">
-                                <span class="seed">10</span>
-                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 10)|first|attr('name')
-                                    }}</span>
-                            </div>
-                        </div>
-
-                        <!-- 2 vs 15 -->
-                        <div class="matchup" data-matchup-id="{{ region }}-1-8">
-                            <div class="team"
-                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 2)|first|attr('id') }}"
-                                data-seed="2" data-round="1" data-position="15">
-                                <span class="seed">2</span>
-                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 2)|first|attr('name')
-                                    }}</span>
-                            </div>
-                            <div class="team"
-                                data-team-id="{{ teams[region]|selectattr('seed', 'eq', 15)|first|attr('id') }}"
-                                data-seed="15" data-round="1" data-position="16">
-                                <span class="seed">15</span>
-                                <span class="name">{{ teams[region]|selectattr('seed', 'eq', 15)|first|attr('name')
-                                    }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Round 2 (8 teams - 4 matchups) -->
-                    <div class="round" data-round="2">
-                        <h3>Round 2</h3>
-                        {% for i in range(1, 5) %}
-                        <div class="matchup" data-matchup-id="{{ region }}-2-{{ loop.index }}">
-                            <div class="team empty-team" data-round="2" data-position="{{ loop.index*2-1 }}">
-                                Winner Game {{ i*2-1 }}
-                            </div>
-                            <div class="team empty-team" data-round="2" data-position="{{ loop.index*2 }}">
-                                Winner Game {{ i*2 }}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-
-                    <!-- Sweet 16 (4 teams - 2 matchups) -->
-                    <div class="round" data-round="3">
-                        <h3>Sweet 16</h3>
-                        {% for i in range(1, 3) %}
-                        <div class="matchup" data-matchup-id="{{ region }}-3-{{ loop.index }}">
-                            <div class="team empty-team" data-round="3" data-position="{{ loop.index*2-1 }}">
-                                Winner Game {{ i*2-1 }}
-                            </div>
-                            <div class="team empty-team" data-round="3" data-position="{{ loop.index*2 }}">
-                                Winner Game {{ i*2 }}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-
-                    <!-- Elite 8 (2 teams - 1 matchup) -->
-                    <div class="round" data-round="4">
-                        <h3>Elite 8</h3>
-                        <div class="matchup" data-matchup-id="{{ region }}-4-1">
-                            <div class="team empty-team" data-round="4" data-position="1">
-                                Winner Game 1
-                            </div>
-                            <div class="team empty-team" data-round="4" data-position="2">
-                                Winner Game 2
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-
-            <div class="final-four">
-                <h2>Final Four</h2>
-                <!-- Final Four (4 teams - 2 matchups) -->
-                <div class="round" data-round="5">
-                    <h3>Semifinals</h3>
-                    <div class="matchup" data-matchup-id="final-four-1">
-                        <div class="team empty-team" data-round="5" data-position="1">
-                            Winner East
-                        </div>
-                        <div class="team empty-team" data-round="5" data-position="2">
-                            Winner West
-                        </div>
-                    </div>
-                    <div class="matchup" data-matchup-id="final-four-2">
-                        <div class="team empty-team" data-round="5" data-position="3">
-                            Winner South
-                        </div>
-                        <div class="team empty-team" data-round="5" data-position="4">
-                            Winner Midwest
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Championship (2 teams - 1 matchup) -->
-                <div class="round" data-round="6">
-                    <h3>Championship</h3>
-                    <div class="matchup" data-matchup-id="championship">
-                        <div class="team empty-team" data-round="6" data-position="1">
-                            Winner Semifinal 1
-                        </div>
-                        <div class="team empty-team" data-round="6" data-position="2">
-                            Winner Semifinal 2
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div id="bracket"></div>
 
         <button class="save-button" onclick="saveBracket()">Save Bracket</button>
     </main>
@@ -595,6 +593,23 @@
 
         // Initialize the bracket on page load
         window.addEventListener('load', initBracket);
+
+        $(document).ready(function () {
+            var data = {
+                teams: [
+                    { name: "Team A" },
+                    { name: "Team B" },
+                ],
+                matchups: [
+                    { team1: 0, team2: 1 },
+                ]
+            };
+
+            $('#bracket').bracket({
+                init: data,
+                // Additional options here
+            });
+        });
     </script>
 </body>
 
