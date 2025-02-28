@@ -26,12 +26,12 @@
             width: 100%;
             max-width: 1800px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 10px;
         }
 
         header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         h1 {
@@ -39,63 +39,68 @@
             margin-bottom: 10px;
         }
 
+        /* Unified bracket layout */
         .bracket-container {
-            display: grid;
-            grid-template-columns: 1fr 200px 1fr;
-            grid-template-rows: 1fr 1fr;
-            grid-template-areas:
-                "west finalfour east"
-                "south champion midwest";
-            gap: 20px;
-            min-height: 700px;
-        }
-
-        .region {
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background-color: #fff;
-            padding: 10px;
-            overflow: auto;
-        }
-
-        .west {
-            grid-area: west;
-        }
-
-        .east {
-            grid-area: east;
-        }
-
-        .south {
-            grid-area: south;
-        }
-
-        .midwest {
-            grid-area: midwest;
-        }
-
-        .finalfour {
-            grid-area: finalfour;
-        }
-
-        .champion {
-            grid-area: champion;
-        }
-
-        .center-column {
             display: flex;
             flex-direction: column;
-            align-items: center;
+            min-height: 800px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 15px;
+            overflow-x: auto;
+        }
+
+        /* The main bracket area */
+        .main-bracket {
+            display: flex;
             justify-content: center;
+            align-items: center;
+            height: 700px;
+            position: relative;
+        }
+
+        /* Left side of the bracket (West and South) */
+        .bracket-left {
+            display: flex;
+            flex-direction: column;
+            flex: 4;
+        }
+
+        /* Right side of the bracket (East and Midwest) */
+        .bracket-right {
+            display: flex;
+            flex-direction: column;
+            flex: 4;
+        }
+
+        /* Center area for Final Four and Championship */
+        .bracket-center {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            flex: 2;
+            min-width: 250px;
+            margin: 0 15px;
+            position: relative;
+        }
+
+        /* Region sections */
+        .region-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .region-header {
-            text-align: center;
+            font-size: 14px;
             font-weight: bold;
-            margin-bottom: 15px;
-            color: #0057b7;
-            padding: 5px;
-            background-color: #f0f7ff;
+            color: #666;
+            text-align: center;
+            margin-bottom: 10px;
+            background-color: #f5f8ff;
+            padding: 3px;
             border-radius: 4px;
         }
 
@@ -104,6 +109,7 @@
             display: flex;
             flex-direction: row;
             height: 100%;
+            flex: 1;
         }
 
         .rounds-container-right {
@@ -115,12 +121,13 @@
             flex-direction: column;
             min-width: 180px;
             position: relative;
+            flex: 1;
         }
 
         .round-header {
             text-align: center;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             color: #777;
             font-size: 0.8rem;
         }
@@ -197,9 +204,8 @@
             position: relative;
         }
 
-        /* West and South connectors (flowing right) */
-        .west .bracket-game::after,
-        .south .bracket-game::after {
+        /* Left side connectors (flowing right) */
+        .bracket-left .bracket-game::after {
             content: "";
             position: absolute;
             top: 50%;
@@ -210,9 +216,8 @@
             z-index: 1;
         }
 
-        /* East and Midwest connectors (flowing left) */
-        .east .bracket-game::after,
-        .midwest .bracket-game::after {
+        /* Right side connectors (flowing left) */
+        .bracket-right .bracket-game::after {
             content: "";
             position: absolute;
             top: 50%;
@@ -223,13 +228,10 @@
             z-index: 1;
         }
 
-        /* Vertical connectors for regions */
-        .west .bracket-round:nth-child(2) .bracket-game::before,
-        .west .bracket-round:nth-child(3) .bracket-game::before,
-        .west .bracket-round:nth-child(4) .bracket-game::before,
-        .south .bracket-round:nth-child(2) .bracket-game::before,
-        .south .bracket-round:nth-child(3) .bracket-game::before,
-        .south .bracket-round:nth-child(4) .bracket-game::before {
+        /* Vertical connectors */
+        .bracket-left .bracket-round:nth-child(2) .bracket-game::before,
+        .bracket-left .bracket-round:nth-child(3) .bracket-game::before,
+        .bracket-left .bracket-round:nth-child(4) .bracket-game::before {
             content: "";
             position: absolute;
             top: -15px;
@@ -240,12 +242,9 @@
             z-index: 1;
         }
 
-        .east .bracket-round:nth-child(2) .bracket-game::before,
-        .east .bracket-round:nth-child(3) .bracket-game::before,
-        .east .bracket-round:nth-child(4) .bracket-game::before,
-        .midwest .bracket-round:nth-child(2) .bracket-game::before,
-        .midwest .bracket-round:nth-child(3) .bracket-game::before,
-        .midwest .bracket-round:nth-child(4) .bracket-game::before {
+        .bracket-right .bracket-round:nth-child(2) .bracket-game::before,
+        .bracket-right .bracket-round:nth-child(3) .bracket-game::before,
+        .bracket-right .bracket-round:nth-child(4) .bracket-game::before {
             content: "";
             position: absolute;
             top: -15px;
@@ -256,25 +255,47 @@
             z-index: 1;
         }
 
-        .final-four-header,
-        .championship-header {
+        /* Final Four and Championship integrated structure */
+        .final-four-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            justify-content: space-around;
+        }
+
+        .final-four-top,
+        .final-four-bottom {
+            position: relative;
+            margin: 30px 0;
+        }
+
+        .championship-container {
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .champion-container {
+            margin-top: 15px;
             text-align: center;
+        }
+
+        .final-four-text,
+        .championship-text {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: -25px;
+            font-size: 14px;
             font-weight: bold;
-            margin: 10px 0;
             color: #0057b7;
+            white-space: nowrap;
         }
 
-        .final-four,
-        .championship {
-            border: 1px solid #ccc;
-            background-color: #fff;
-            border-radius: 5px;
-            padding: 10px;
-            margin-bottom: 20px;
-        }
-
-        .championship {
-            border-color: #ffd700;
+        .champion-text {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #0057b7;
         }
 
         .champion-team {
@@ -284,20 +305,117 @@
             border-radius: 5px;
             text-align: center;
             background-color: #fffde7;
+            margin-top: 5px;
+        }
+
+        /* Connecting lines to final four */
+        .connector-to-final-four-left {
+            position: absolute;
+            top: 50%;
+            right: 0;
+            width: 30px;
+            height: 2px;
+            background-color: #ccc;
+        }
+
+        .connector-to-final-four-right {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 30px;
+            height: 2px;
+            background-color: #ccc;
+        }
+
+        .connector-to-championship-top,
+        .connector-to-championship-bottom {
+            position: absolute;
+            left: 50%;
+            width: 2px;
+            height: 30px;
+            background-color: #ccc;
+        }
+
+        .connector-to-championship-top {
+            bottom: -30px;
+        }
+
+        .connector-to-championship-bottom {
+            top: -30px;
+        }
+
+        .connector-to-champion {
+            position: absolute;
+            left: 50%;
+            bottom: -15px;
+            width: 2px;
+            height: 15px;
+            background-color: #ccc;
+        }
+
+        /* Final Four connector lines */
+        .final-four-game::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 15px;
+            height: 2px;
+            background-color: #ccc;
+            z-index: 1;
+        }
+
+        .final-four-left::after {
+            right: -15px;
+        }
+
+        .final-four-right::after {
+            left: -15px;
+        }
+
+        /* Championship connector */
+        .championship-game::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: -20px;
+            width: 2px;
+            height: 20px;
+            background-color: #ccc;
+            z-index: 1;
+        }
+
+        .championship-game::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -20px;
+            width: 2px;
+            height: 20px;
+            background-color: #ccc;
+            z-index: 1;
         }
 
         @media (max-width: 1400px) {
-            .bracket-container {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto;
-                grid-template-areas:
-                    "east"
-                    "west"
-                    "finalfour"
-                    "champion"
-                    "midwest"
-                    "south";
+            .main-bracket {
+                flex-direction: column;
                 height: auto;
+            }
+
+            .bracket-left,
+            .bracket-right,
+            .bracket-center {
+                width: 100%;
+                flex: none;
+            }
+
+            .bracket-center {
+                margin: 40px 0;
+            }
+
+            .final-four-top,
+            .final-four-bottom,
+            .championship-container {
+                margin: 15px 0;
             }
         }
     </style>
@@ -334,8 +452,8 @@
         };
 
         // Component for displaying a single matchup
-        const Matchup = ({ team1, team2, onClick, round }) => (
-            <div className="bracket-game">
+        const Matchup = ({ team1, team2, onClick, round, className = "" }) => (
+            <div className={`bracket-game ${className}`}>
                 <div
                     className={`team ${team1.winner ? 'winner' : ''}`}
                     onClick={() => onClick(team1.id, team2.id, round)}
@@ -549,85 +667,100 @@
 
             return (
                 <div className="bracket-container">
-                    <div className="region west">
-                        <h2 className="region-header">West Region</h2>
-                        <RegionBracket
-                            region="West"
-                            teams={teams['West']}
-                            winners={winners}
-                            handleWinner={handleWinner}
-                        />
-                    </div>
+                    <div className="main-bracket">
+                        {/* Left side of bracket (West and South regions) */}
+                        <div className="bracket-left">
+                            <div className="region-section">
+                                <div className="region-header">West Region</div>
+                                <RegionBracket
+                                    region="West"
+                                    teams={teams['West']}
+                                    winners={winners}
+                                    handleWinner={handleWinner}
+                                />
+                            </div>
 
-                    <div className="center-column finalfour">
-                        <h3 className="final-four-header">Final Four</h3>
-                        <div className="final-four">
-                            <Matchup
-                                team1={getFinalFourTeam('East')}
-                                team2={getFinalFourTeam('West')}
-                                onClick={(winnerId, loserId) => handleFinalFourWinner('Left', winnerId, loserId)}
-                                round="finalfour"
-                            />
-                            <Matchup
-                                team1={getFinalFourTeam('South')}
-                                team2={getFinalFourTeam('Midwest')}
-                                onClick={(winnerId, loserId) => handleFinalFourWinner('Right', winnerId, loserId)}
-                                round="finalfour"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="region east">
-                        <h2 className="region-header">East Region</h2>
-                        <RegionBracket
-                            region="East"
-                            teams={teams['East']}
-                            winners={winners}
-                            handleWinner={handleWinner}
-                            isFlipped={true}
-                        />
-                    </div>
-
-                    <div className="region south">
-                        <h2 className="region-header">South Region</h2>
-                        <RegionBracket
-                            region="South"
-                            teams={teams['South']}
-                            winners={winners}
-                            handleWinner={handleWinner}
-                        />
-                    </div>
-
-                    <div className="center-column champion">
-                        <h3 className="championship-header">Championship</h3>
-                        <div className="championship">
-                            <Matchup
-                                team1={getChampionshipTeam('Left')}
-                                team2={getChampionshipTeam('Right')}
-                                onClick={(winnerId) => handleChampionshipWinner(winnerId)}
-                                round="championship"
-                            />
+                            <div className="region-section">
+                                <div className="region-header">South Region</div>
+                                <RegionBracket
+                                    region="South"
+                                    teams={teams['South']}
+                                    winners={winners}
+                                    handleWinner={handleWinner}
+                                />
+                            </div>
                         </div>
 
-                        <div className="champion-container">
-                            <h3 className="championship-header">Champion</h3>
+                        {/* Center area with Final Four and Championship integrated into bracket structure */}
+                        <div className="bracket-center">
+                            <div className="final-four-container">
+                                <div className="final-four-top">
+                                    <div className="final-four-text">Final Four</div>
+                                    <Matchup
+                                        team1={getFinalFourTeam('East')}
+                                        team2={getFinalFourTeam('West')}
+                                        onClick={(winnerId, loserId) => handleFinalFourWinner('Left', winnerId, loserId)}
+                                        round="finalfour"
+                                        className="final-four-game final-four-left"
+                                    />
+                                </div>
+
+                                <div className="championship-container">
+                                    <div className="championship-text">Championship</div>
+                                    <Matchup
+                                        team1={getChampionshipTeam('Left')}
+                                        team2={getChampionshipTeam('Right')}
+                                        onClick={(winnerId) => handleChampionshipWinner(winnerId)}
+                                        round="championship"
+                                        className="championship-game"
+                                    />
+                                </div>
+
+                                <div className="final-four-bottom">
+                                    <Matchup
+                                        team1={getFinalFourTeam('South')}
+                                        team2={getFinalFourTeam('Midwest')}
+                                        onClick={(winnerId, loserId) => handleFinalFourWinner('Right', winnerId, loserId)}
+                                        round="finalfour"
+                                        className="final-four-game final-four-right"
+                                    />
+                                </div>
+                            </div>
+
                             {winners['Champion'] && (
-                                <div className="champion-team">
-                                    {getChampion().name}
+                                <div className="champion-container">
+                                    <div className="champion-text">Champion</div>
+                                    <div className="champion-team">
+                                        {getChampion().name}
+                                    </div>
                                 </div>
                             )}
                         </div>
-                    </div>
 
-                    <div className="region midwest">
-                        <h2 className="region-header">Midwest Region</h2>
-                        <RegionBracket
-                            region="Midwest"
-                            teams={teams['Midwest']}
-                            winners={winners}
-                            handleWinner={handleWinner}
-                            isFlipped={true}
-                        />
+                        {/* Right side of bracket (East and Midwest regions) */}
+                        <div className="bracket-right">
+                            <div className="region-section">
+                                <div className="region-header">East Region</div>
+                                <RegionBracket
+                                    region="East"
+                                    teams={teams['East']}
+                                    winners={winners}
+                                    handleWinner={handleWinner}
+                                    isFlipped={true}
+                                />
+                            </div>
+
+                            <div className="region-section">
+                                <div className="region-header">Midwest Region</div>
+                                <RegionBracket
+                                    region="Midwest"
+                                    teams={teams['Midwest']}
+                                    winners={winners}
+                                    handleWinner={handleWinner}
+                                    isFlipped={true}
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             );
