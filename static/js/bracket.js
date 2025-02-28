@@ -147,7 +147,7 @@ function MarchMadnessBracket() {
     };
 
     // Render a single team box
-    const renderTeam = (team, onClick, isWinner = false) => {
+    const renderTeam = (team, onClick, isWinner = false, isRightRegion = false) => {
         if (!team) {
             return (
                 <div className="team tbd">
@@ -169,7 +169,7 @@ function MarchMadnessBracket() {
     };
 
     // Render a single game matchup
-    const renderGame = (region, round, gameIndex, topTeam, bottomTeam) => {
+    const renderGame = (region, round, gameIndex, topTeam, bottomTeam, isRightRegion = false) => {
         const isWinnerTop = round < 3 && bracket[region][round + 1] &&
             bracket[region][round + 1][Math.floor(gameIndex / 2) * 2 + gameIndex % 2] === topTeam;
 
@@ -181,32 +181,49 @@ function MarchMadnessBracket() {
                 {renderTeam(
                     topTeam,
                     () => handleTeamSelect(region, round, gameIndex, 0),
-                    isWinnerTop
+                    isWinnerTop,
+                    isRightRegion
                 )}
                 {renderTeam(
                     bottomTeam,
                     () => handleTeamSelect(region, round, gameIndex, 1),
-                    isWinnerBottom
+                    isWinnerBottom,
+                    isRightRegion
                 )}
             </div>
         );
     };
 
     // Calculate the appropriate spacing for games in each round
-    const getGameWrapperStyle = (round) => {
+    const getGameWrapperStyle = (round, alignment) => {
         // Returns empty object for first round, appropriate margins for later rounds
         if (round === 0) return {};
 
         const spacingFactor = Math.pow(2, round);
-        return {
-            marginBottom: `${spacingFactor * 20}px`
-        };
+        const isRightRegion = alignment === 'right';
+
+        // Adjust spacing based on whether it's a right or left region
+        if (isRightRegion) {
+            // For right regions with reverse round order
+            // (Elite 8 is now at position 0, Sweet 16 at 1, etc.)
+            const reverseRound = 3 - round; // Convert to right region round order
+            const rightSpacingFactor = Math.pow(2, reverseRound);
+            return {
+                marginBottom: `${rightSpacingFactor * 20}px`
+            };
+        } else {
+            // For left regions with standard order
+            return {
+                marginBottom: `${spacingFactor * 20}px`
+            };
+        }
     };
 
     // Render a full round of games for a region
     const renderRound = (region, round, alignment) => {
         const games = [];
         const gamesInRound = Math.pow(2, 3 - round);
+        const isRightRegion = alignment === 'right';
 
         for (let i = 0; i < gamesInRound; i++) {
             const gameIndex = i;
@@ -214,13 +231,14 @@ function MarchMadnessBracket() {
             const bottomTeamIndex = gameIndex * 2 + 1;
 
             games.push(
-                <div key={`${region}-${round}-${i}`} className="game-wrapper" style={getGameWrapperStyle(round)}>
+                <div key={`${region}-${round}-${i}`} className="game-wrapper" style={getGameWrapperStyle(round, alignment)}>
                     {renderGame(
                         region,
                         round,
                         gameIndex,
                         bracket[region][round][topTeamIndex],
-                        bracket[region][round][bottomTeamIndex]
+                        bracket[region][round][bottomTeamIndex],
+                        isRightRegion
                     )}
                 </div>
             );
@@ -282,17 +300,41 @@ function MarchMadnessBracket() {
     const renderRoundHeaders = () => {
         return (
             <div className="round-headers">
+                {/* Left side (South & East) - left to right flow */}
                 <div className="round-header">1st Round</div>
                 <div className="round-header">2nd Round</div>
                 <div className="round-header">Sweet 16</div>
                 <div className="round-header">Elite Eight</div>
+
+                {/* Center */}
                 <div className="round-header">Final Four</div>
                 <div className="round-header">Championship</div>
                 <div className="round-header">Final Four</div>
+
+                {/* Right side (Midwest & West) - right to left flow */}
                 <div className="round-header">Elite Eight</div>
                 <div className="round-header">Sweet 16</div>
                 <div className="round-header">2nd Round</div>
                 <div className="round-header">1st Round</div>
+            </div>
+        );
+    };
+
+    // Render the right regions (Midwest and West) with rounds in reverse order
+    const renderRightRegion = (region, regionName) => {
+        return (
+            <div className="region-rounds">
+                {/* Render Elite 8 (Round 3) first - leftmost */}
+                {renderRound(region, 3, 'right')}
+
+                {/* Then Sweet 16 (Round 2) */}
+                {renderRound(region, 2, 'right')}
+
+                {/* Then 2nd Round (Round 1) */}
+                {renderRound(region, 1, 'right')}
+
+                {/* Then 1st Round (Round 0) last - rightmost */}
+                {renderRound(region, 0, 'right')}
             </div>
         );
     };
@@ -323,12 +365,7 @@ function MarchMadnessBracket() {
                     <div className="bracket-right">
                         <div className="region midwest">
                             <div className="region-label">Midwest</div>
-                            <div className="region-rounds">
-                                {renderRound('midwest', 0, 'right')}
-                                {renderRound('midwest', 1, 'right')}
-                                {renderRound('midwest', 2, 'right')}
-                                {renderRound('midwest', 3, 'right')}
-                            </div>
+                            {renderRightRegion('midwest', 'Midwest')}
                         </div>
                     </div>
                 </div>
@@ -353,12 +390,7 @@ function MarchMadnessBracket() {
                     <div className="bracket-right">
                         <div className="region west">
                             <div className="region-label">West</div>
-                            <div className="region-rounds">
-                                {renderRound('west', 0, 'right')}
-                                {renderRound('west', 1, 'right')}
-                                {renderRound('west', 2, 'right')}
-                                {renderRound('west', 3, 'right')}
-                            </div>
+                            {renderRightRegion('west', 'West')}
                         </div>
                     </div>
                 </div>

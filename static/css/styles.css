@@ -65,6 +65,11 @@ body {
     font-size: 10px;
 }
 
+/* Create a clear visual distinction for right side headers */
+.round-header-right {
+    color: #003478;
+}
+
 /* Main bracket */
 .bracket {
     display: flex;
@@ -88,12 +93,14 @@ body {
 /* For left regions (South and East) */
 .bracket-left .region-rounds {
     flex-direction: row;
+    /* Normal flow: left to right */
 }
 
 /* For right regions (Midwest and West) */
 .bracket-right .region-rounds {
-    flex-direction: row-reverse;
-    /* Reverse the order for right-side regions */
+    display: flex;
+    width: 100%;
+    /* React control for right-to-left flow in renderRightRegion */
 }
 
 /* Center section */
@@ -124,23 +131,6 @@ body {
 
 .round-right {
     align-items: flex-start;
-}
-
-/* Make Midwest and West regions have inverse ordering of rounds */
-.bracket-right .region-rounds .round:nth-child(1) {
-    order: 4;
-}
-
-.bracket-right .region-rounds .round:nth-child(2) {
-    order: 3;
-}
-
-.bracket-right .region-rounds .round:nth-child(3) {
-    order: 2;
-}
-
-.bracket-right .region-rounds .round:nth-child(4) {
-    order: 1;
 }
 
 /* Game matchups */
@@ -206,11 +196,12 @@ body {
     width: 1px;
 }
 
-/* West/East specific alignments */
+/* South/East specific alignments */
 .bracket-left .connector-horizontal {
     right: 0;
 }
 
+/* West/Midwest specific alignments */
 .bracket-right .connector-horizontal {
     left: 0;
 }
@@ -271,46 +262,45 @@ body {
     font-weight: bold;
 }
 
+/* These spacing rules are now handled in JavaScript */
+/* Remove these rules as they could be interfering with our new approach */
+
 /* Make round-specific spacing adjustments for proper pyramid structure */
 /* First round (32 teams per side, 16 games) */
 .round:nth-child(1) .game-wrapper {
-    margin: 0;
+    /* No special margin needed - handled in JS */
 }
 
 /* Second round (16 teams per side, 8 games) */
 .round:nth-child(2) .game-wrapper {
-    margin-bottom: 20px;
+    /* No special margin needed - handled in JS */
 }
 
 /* Sweet 16 (8 teams per side, 4 games) */
 .round:nth-child(3) .game-wrapper {
-    margin-bottom: 60px;
+    /* No special margin needed - handled in JS */
 }
 
 /* Elite 8 (4 teams per side, 2 games) */
 .round:nth-child(4) .game-wrapper {
-    margin-bottom: 140px;
+    /* No special margin needed - handled in JS */
 }
 
 /* Reduce vertical spacing for Midwest and West regions */
 .bracket-right .region-rounds .round .game-wrapper {
-    margin-bottom: 2px;
-    /* Minimal margin for all rounds initially */
+    /* No special margin needed - handled in JS */
 }
 
 .bracket-right .region-rounds .round:nth-child(2) .game-wrapper {
-    margin-bottom: 15px;
-    /* Second round spacing */
+    /* No special margin needed - handled in JS */
 }
 
 .bracket-right .region-rounds .round:nth-child(3) .game-wrapper {
-    margin-bottom: 50px;
-    /* Sweet 16 spacing */
+    /* No special margin needed - handled in JS */
 }
 
 .bracket-right .region-rounds .round:nth-child(4) .game-wrapper {
-    margin-bottom: 120px;
-    /* Elite 8 spacing */
+    /* No special margin needed - handled in JS */
 }
 
 /* Region labels */
@@ -352,4 +342,16 @@ body {
     color: #999;
     font-style: italic;
     cursor: default;
+}
+
+/* Remove round-specific spacing overrides since we manage this in JS now */
+/* Specific styling for teams in the right regions */
+.bracket-right .team {
+    /* Normal styling for team elements */
+}
+
+/* Remove old margin overrides */
+/* Reduce the bottom margins only for the 1st round */
+.round[data-round="1"] .game-wrapper {
+    margin-bottom: 5px;
 }
