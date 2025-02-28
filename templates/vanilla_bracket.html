@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>March Madness Bracket</title>
+    <title>March Madness Bracket v1.2</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.js"></script>
@@ -40,6 +40,13 @@
             color: #0057b7;
             margin-bottom: 0;
             font-size: 20px;
+        }
+
+        .instructions {
+            text-align: center;
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 10px;
         }
 
         /* Unified tournament bracket layout */
@@ -241,11 +248,18 @@
             height: auto !important;
             min-height: 14px !important;
             margin-bottom: 1px !important;
+            cursor: pointer !important;
+            transition: background-color 0.2s ease !important;
+        }
+
+        .jQBracket .team:hover {
+            background-color: #e3f2fd !important;
         }
 
         .jQBracket .team.win {
             background-color: #e3f2fd !important;
             border-left: 2px solid #0057b7 !important;
+            font-weight: bold !important;
         }
 
         .jQBracket .connector {
@@ -285,6 +299,44 @@
         .center-bracket {
             max-width: 400px;
         }
+
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            gap: 10px;
+        }
+
+        .btn {
+            background-color: #0057b7;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #003d82;
+        }
+
+        .btn-reset {
+            background-color: #6c757d;
+        }
+
+        .btn-reset:hover {
+            background-color: #5a6268;
+        }
+
+        #save-message {
+            text-align: center;
+            margin-top: 5px;
+            font-size: 11px;
+            color: #28a745;
+            min-height: 15px;
+        }
     </style>
 </head>
 
@@ -293,6 +345,10 @@
         <header>
             <h1>NCAA March Madness Bracket</h1>
         </header>
+        <div class="instructions">
+            Click on teams to advance them through the bracket. Pick your champion by clicking all the way through to
+            the final game.
+        </div>
 
         <div class="tournament-container">
             <!-- West Region (top left) -->
@@ -374,28 +430,112 @@
                 <div id="midwest-bracket" class="bracket"></div>
             </div>
         </div>
+
+        <div class="buttons-container">
+            <button id="save-bracket" class="btn">Save Bracket</button>
+            <button id="reset-bracket" class="btn btn-reset">Reset Bracket</button>
+        </div>
+        <div id="save-message"></div>
     </div>
 
     <script>
         $(document).ready(function () {
             // Generate teams for each region
             function generateTeams(region) {
-                let teams = [];
-                for (let i = 1; i <= 16; i++) {
-                    teams.push([`${i}. ${region}`, ""]);
-                }
+                // Define 2024 March Madness teams by region
+                const teamsByRegion = {
+                    'East': [
+                        { name: 'UConn', seed: 1 },
+                        { name: 'Iowa State', seed: 2 },
+                        { name: 'Illinois', seed: 3 },
+                        { name: 'Auburn', seed: 4 },
+                        { name: 'San Diego State', seed: 5 },
+                        { name: 'BYU', seed: 6 },
+                        { name: 'Washington State', seed: 7 },
+                        { name: 'FAU', seed: 8 },
+                        { name: 'Northwestern', seed: 9 },
+                        { name: 'Drake', seed: 10 },
+                        { name: 'Duquesne', seed: 11 },
+                        { name: 'UAB', seed: 12 },
+                        { name: 'Yale', seed: 13 },
+                        { name: 'Morehead State', seed: 14 },
+                        { name: 'South Dakota State', seed: 15 },
+                        { name: 'Stetson', seed: 16 }
+                    ],
+                    'West': [
+                        { name: 'North Carolina', seed: 1 },
+                        { name: 'Arizona', seed: 2 },
+                        { name: 'Baylor', seed: 3 },
+                        { name: 'Alabama', seed: 4 },
+                        { name: "Saint Mary's", seed: 5 },
+                        { name: 'Clemson', seed: 6 },
+                        { name: 'Dayton', seed: 7 },
+                        { name: 'Mississippi State', seed: 8 },
+                        { name: 'Michigan State', seed: 9 },
+                        { name: 'Nevada', seed: 10 },
+                        { name: 'New Mexico', seed: 11 },
+                        { name: 'Grand Canyon', seed: 12 },
+                        { name: 'Charleston', seed: 13 },
+                        { name: 'Colgate', seed: 14 },
+                        { name: 'Long Beach State', seed: 15 },
+                        { name: 'Wagner', seed: 16 }
+                    ],
+                    'South': [
+                        { name: 'Houston', seed: 1 },
+                        { name: 'Marquette', seed: 2 },
+                        { name: 'Kentucky', seed: 3 },
+                        { name: 'Duke', seed: 4 },
+                        { name: 'Wisconsin', seed: 5 },
+                        { name: 'Texas Tech', seed: 6 },
+                        { name: 'Florida', seed: 7 },
+                        { name: 'Nebraska', seed: 8 },
+                        { name: 'Texas A&M', seed: 9 },
+                        { name: 'Colorado', seed: 10 },
+                        { name: 'NC State', seed: 11 },
+                        { name: 'James Madison', seed: 12 },
+                        { name: 'Vermont', seed: 13 },
+                        { name: 'Oakland', seed: 14 },
+                        { name: 'Western Kentucky', seed: 15 },
+                        { name: 'Longwood', seed: 16 }
+                    ],
+                    'Midwest': [
+                        { name: 'Purdue', seed: 1 },
+                        { name: 'Tennessee', seed: 2 },
+                        { name: 'Creighton', seed: 3 },
+                        { name: 'Kansas', seed: 4 },
+                        { name: 'Gonzaga', seed: 5 },
+                        { name: 'South Carolina', seed: 6 },
+                        { name: 'Texas', seed: 7 },
+                        { name: 'Utah State', seed: 8 },
+                        { name: 'TCU', seed: 9 },
+                        { name: 'Virginia', seed: 10 },
+                        { name: 'Oregon', seed: 11 },
+                        { name: 'McNeese', seed: 12 },
+                        { name: 'Samford', seed: 13 },
+                        { name: 'Akron', seed: 14 },
+                        { name: "Saint Peter's", seed: 15 },
+                        { name: 'Montana State', seed: 16 }
+                    ]
+                };
 
-                // Create first round matchups (1 vs 16, 8 vs 9, etc.)
-                return [
-                    [teams[0], teams[15]],  // 1 vs 16
-                    [teams[7], teams[8]],   // 8 vs 9
-                    [teams[4], teams[11]],  // 5 vs 12
-                    [teams[3], teams[12]],  // 4 vs 13
-                    [teams[5], teams[10]],  // 6 vs 11
-                    [teams[2], teams[13]],  // 3 vs 14
-                    [teams[6], teams[9]],   // 7 vs 10
-                    [teams[1], teams[14]]   // 2 vs 15
-                ];
+                const regionTeams = teamsByRegion[region];
+
+                // Create the matchups in the correct format for jquery-bracket
+                const teams = [];
+                // First Round: 1 vs 16, 8 vs 9, etc.
+                teams.push([regionTeams[0].seed + '. ' + regionTeams[0].name, regionTeams[15].seed + '. ' + regionTeams[15].name]);
+                teams.push([regionTeams[7].seed + '. ' + regionTeams[7].name, regionTeams[8].seed + '. ' + regionTeams[8].name]);
+                teams.push([regionTeams[4].seed + '. ' + regionTeams[4].name, regionTeams[11].seed + '. ' + regionTeams[11].name]);
+                teams.push([regionTeams[3].seed + '. ' + regionTeams[3].name, regionTeams[12].seed + '. ' + regionTeams[12].name]);
+                teams.push([regionTeams[5].seed + '. ' + regionTeams[5].name, regionTeams[10].seed + '. ' + regionTeams[10].name]);
+                teams.push([regionTeams[2].seed + '. ' + regionTeams[2].name, regionTeams[13].seed + '. ' + regionTeams[13].name]);
+                teams.push([regionTeams[6].seed + '. ' + regionTeams[6].name, regionTeams[9].seed + '. ' + regionTeams[9].name]);
+                teams.push([regionTeams[1].seed + '. ' + regionTeams[1].name, regionTeams[14].seed + '. ' + regionTeams[14].name]);
+
+                // Create empty results array for the bracket
+                const results = [[], [], [], []];
+
+                return { teams: teams, results: results };
             }
 
             // Initialize regional brackets
@@ -406,82 +546,171 @@
                 champion: null
             };
 
-            // Super compact options for regional brackets
-            const regionOptions = {
-                skipConsolationRound: true,
-                teamWidth: 80,
-                scoreWidth: 15,
-                matchMargin: 15,
-                roundMargin: 20,
-                centerConnectors: true
-            };
+            // Create a custom render function for team display
+            function renderTeam(container, team, score) {
+                if (team) {
+                    container.text(''); // Clear existing content
+                    container.append(document.createTextNode(team));
+                }
+            }
 
             // West and South go left to right
             $('#west-bracket').bracket({
-                ...regionOptions,
-                init: {
-                    teams: generateTeams('West'),
-                    results: [[], [], [], []]
-                },
+                skipConsolationRound: true,
+                teamWidth: 100,
+                scoreWidth: 0,
+                matchMargin: 15,
+                roundMargin: 20,
+                centerConnectors: true,
+                disableHighlight: false,
+                disableTeamEdit: true,
+                disableToolbar: true,
+                disableScoreEdit: true,
+                init: generateTeams('West'),
                 save: function (data) {
                     handleRegionWinner('west', data);
+                },
+                decorator: {
+                    edit: function () { return ""; },
+                    render: renderTeam
                 }
             });
 
             $('#south-bracket').bracket({
-                ...regionOptions,
-                init: {
-                    teams: generateTeams('South'),
-                    results: [[], [], [], []]
-                },
+                skipConsolationRound: true,
+                teamWidth: 100,
+                scoreWidth: 0,
+                matchMargin: 15,
+                roundMargin: 20,
+                centerConnectors: true,
+                disableHighlight: false,
+                disableTeamEdit: true,
+                disableToolbar: true,
+                disableScoreEdit: true,
+                init: generateTeams('South'),
                 save: function (data) {
                     handleRegionWinner('south', data);
+                },
+                decorator: {
+                    edit: function () { return ""; },
+                    render: renderTeam
                 }
             });
 
             // East and Midwest go right to left
             $('#east-bracket').bracket({
-                ...regionOptions,
-                dir: "rl", // Right to left direction
-                init: {
-                    teams: generateTeams('East'),
-                    results: [[], [], [], []]
-                },
+                skipConsolationRound: true,
+                teamWidth: 100,
+                scoreWidth: 0,
+                matchMargin: 15,
+                roundMargin: 20,
+                centerConnectors: true,
+                disableHighlight: false,
+                disableTeamEdit: true,
+                disableToolbar: true,
+                disableScoreEdit: true,
+                dir: "rl",
+                init: generateTeams('East'),
                 save: function (data) {
                     handleRegionWinner('east', data);
+                },
+                decorator: {
+                    edit: function () { return ""; },
+                    render: renderTeam
                 }
             });
 
             $('#midwest-bracket').bracket({
-                ...regionOptions,
-                dir: "rl", // Right to left direction
-                init: {
-                    teams: generateTeams('Midwest'),
-                    results: [[], [], [], []]
-                },
+                skipConsolationRound: true,
+                teamWidth: 100,
+                scoreWidth: 0,
+                matchMargin: 15,
+                roundMargin: 20,
+                centerConnectors: true,
+                disableHighlight: false,
+                disableTeamEdit: true,
+                disableToolbar: true,
+                disableScoreEdit: true,
+                dir: "rl",
+                init: generateTeams('Midwest'),
                 save: function (data) {
                     handleRegionWinner('midwest', data);
+                },
+                decorator: {
+                    edit: function () { return ""; },
+                    render: renderTeam
                 }
             });
 
             // Handler for region winners
             function handleRegionWinner(region, data) {
-                // Store the Elite 8 winner (Final Four qualifier)
-                if (data.results[3] && data.results[3][0] !== undefined) {
-                    const winnerIdx = data.results[3][0];
-                    const teamData = data.teams[0][winnerIdx][0].split('.');
-                    const winnerSeed = parseInt(teamData[0]);
-                    const winnerName = teamData[1] ? teamData[1].trim() : region.charAt(0).toUpperCase() + region.slice(1);
+                // Check for results in all rounds and update accordingly
+                if (data.results && data.results.length > 0) {
+                    // Process all rounds - the last round (Elite 8) determines the region winner
+                    const lastRoundIndex = data.results.length - 1;
 
-                    regionWinners[region] = {
-                        name: winnerName,
-                        seed: winnerSeed,
-                        fullName: data.teams[0][winnerIdx][0],
-                        region: region.charAt(0).toUpperCase() + region.slice(1)
-                    };
+                    // If we have a region winner (Elite 8 result)
+                    if (data.results[lastRoundIndex] && data.results[lastRoundIndex][0] !== undefined) {
+                        const winnerIdx = data.results[lastRoundIndex][0];
 
-                    // Update the Final Four display
-                    updateFinalFourDisplay();
+                        // The winning team name from the data
+                        let winnerTeam = '';
+
+                        // Try to find the winning team by tracing back through rounds
+                        if (lastRoundIndex > 0 && data.results[lastRoundIndex - 1] && data.results[lastRoundIndex - 1][winnerIdx * 2] !== undefined) {
+                            // Get from the previous round
+                            const previousRoundIdx = winnerIdx * 2;
+                            const teamIdx = data.results[lastRoundIndex - 1][previousRoundIdx];
+
+                            // If we're still not at the first round, keep working back
+                            if (lastRoundIndex > 1 && data.results[lastRoundIndex - 2] && data.results[lastRoundIndex - 2][teamIdx * 2] !== undefined) {
+                                const secondPrevRoundIdx = teamIdx * 2;
+                                const firstRoundTeamIdx = data.results[lastRoundIndex - 2][secondPrevRoundIdx];
+
+                                // Now we can get the team from the first round
+                                if (data.teams && data.teams[firstRoundTeamIdx]) {
+                                    winnerTeam = data.teams[firstRoundTeamIdx][0];
+                                }
+                            } else if (data.teams && data.teams[teamIdx]) {
+                                // If we're at the second round
+                                winnerTeam = data.teams[teamIdx][0];
+                            }
+                        } else if (data.teams && data.teams[winnerIdx]) {
+                            // If we're at the first round
+                            winnerTeam = data.teams[winnerIdx][0];
+                        }
+
+                        // Fallback if we couldn't trace through rounds
+                        if (!winnerTeam && data.teams) {
+                            // Try to search all teams for a match
+                            for (let i = 0; i < data.teams.length; i++) {
+                                // Check if this is the winning team in the final round
+                                const maybeWinner = data.teams[i][data.results[0][i]];
+                                if (maybeWinner && maybeWinner.includes(region)) {
+                                    winnerTeam = maybeWinner;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Extract team info
+                        if (winnerTeam) {
+                            // Parse "1. North Carolina" format
+                            const teamParts = winnerTeam.split('.');
+                            const winnerSeed = parseInt(teamParts[0]);
+                            const winnerName = teamParts[1] ? teamParts[1].trim() : region.charAt(0).toUpperCase() + region.slice(1);
+
+                            regionWinners[region] = {
+                                name: winnerName,
+                                seed: winnerSeed,
+                                fullName: winnerTeam,
+                                region: region.charAt(0).toUpperCase() + region.slice(1)
+                            };
+
+                            // Update the Final Four display
+                            updateFinalFourDisplay();
+                        }
+                    }
                 }
             }
 
@@ -610,6 +839,107 @@
                 if (i === 2) $(this).text('Sweet 16');
                 if (i === 3) $(this).text('Elite 8');
             });
+
+            // Load saved bracket if available
+            loadSavedBracket();
+
+            // Save bracket handler
+            $('#save-bracket').click(function () {
+                saveBracketToStorage();
+            });
+
+            // Reset bracket handler
+            $('#reset-bracket').click(function () {
+                if (confirm('Are you sure you want to reset your bracket? All picks will be cleared.')) {
+                    localStorage.removeItem('ncaaBracketData');
+                    location.reload();
+                }
+            });
+
+            // Function to save bracket data to localStorage
+            function saveBracketToStorage() {
+                // Get data from all regional brackets
+                const bracketData = {
+                    west: $('#west-bracket').bracket('data'),
+                    east: $('#east-bracket').bracket('data'),
+                    south: $('#south-bracket').bracket('data'),
+                    midwest: $('#midwest-bracket').bracket('data'),
+                    finalFourWinners: finalFourWinners,
+                    regionWinners: regionWinners
+                };
+
+                try {
+                    localStorage.setItem('ncaaBracketData', JSON.stringify(bracketData));
+                    $('#save-message').text('Bracket saved successfully!');
+                    setTimeout(() => {
+                        $('#save-message').text('');
+                    }, 3000);
+                } catch (e) {
+                    console.error('Error saving bracket data:', e);
+                    $('#save-message').text('Error saving bracket data!');
+                }
+            }
+
+            // Function to load bracket data from localStorage
+            function loadSavedBracket() {
+                try {
+                    const savedData = localStorage.getItem('ncaaBracketData');
+                    if (savedData) {
+                        const bracketData = JSON.parse(savedData);
+
+                        // Restore regional brackets
+                        if (bracketData.west) {
+                            $('#west-bracket').bracket('reload', bracketData.west);
+                            handleRegionWinner('west', bracketData.west);
+                        }
+
+                        if (bracketData.east) {
+                            $('#east-bracket').bracket('reload', bracketData.east);
+                            handleRegionWinner('east', bracketData.east);
+                        }
+
+                        if (bracketData.south) {
+                            $('#south-bracket').bracket('reload', bracketData.south);
+                            handleRegionWinner('south', bracketData.south);
+                        }
+
+                        if (bracketData.midwest) {
+                            $('#midwest-bracket').bracket('reload', bracketData.midwest);
+                            handleRegionWinner('midwest', bracketData.midwest);
+                        }
+
+                        // Restore Final Four selections
+                        if (bracketData.finalFourWinners && bracketData.regionWinners) {
+                            regionWinners = bracketData.regionWinners;
+                            finalFourWinners = bracketData.finalFourWinners;
+
+                            // Update displays
+                            updateFinalFourDisplay();
+
+                            // Add winner classes to Final Four teams
+                            if (finalFourWinners.left) {
+                                $(`.final-four-team.${finalFourWinners.left}-winner`).addClass('winner');
+                            }
+
+                            if (finalFourWinners.right) {
+                                $(`.final-four-team.${finalFourWinners.right}-winner`).addClass('winner');
+                            }
+
+                            // Update championship teams
+                            updateChampionshipTeams();
+
+                            // If we have a champion, select them
+                            if (finalFourWinners.champion) {
+                                const side = finalFourWinners.champion === finalFourWinners.left ? 'left' : 'right';
+                                $(`.${side}-winner`).addClass('winner');
+                                updateChampion();
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error loading saved bracket:', e);
+                }
+            }
         });
     </script>
 </body>
