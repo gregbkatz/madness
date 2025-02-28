@@ -19,78 +19,233 @@
             font-family: 'Arial', sans-serif;
             background-color: #f8f9fa;
             color: #333;
-            line-height: 1.6;
-            padding: 20px;
+            line-height: 1.4;
+            padding: 5px;
+            overflow-x: hidden;
         }
 
         .container {
             width: 100%;
-            max-width: 1800px;
+            max-width: 100%;
             margin: 0 auto;
-            padding: 10px;
+            padding: 0;
         }
 
         header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 5px;
         }
 
         h1 {
             color: #0057b7;
-            margin-bottom: 10px;
+            margin-bottom: 0;
+            font-size: 20px;
         }
 
-        /* NCAA bracket layout */
-        .bracket-container {
+        /* Unified tournament bracket layout */
+        .tournament-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto auto;
+            grid-template-areas:
+                "west east"
+                "center center"
+                "south midwest";
+            gap: 1px;
+            margin: 0 auto;
+        }
+
+        .west-region {
+            grid-area: west;
+        }
+
+        .east-region {
+            grid-area: east;
+        }
+
+        .south-region {
+            grid-area: south;
+        }
+
+        .midwest-region {
+            grid-area: midwest;
+        }
+
+        .center-area {
+            grid-area: center;
+            margin: 0 auto;
+            width: 100%;
             display: flex;
-            flex-direction: column;
-            margin: 20px 0;
-        }
-
-        .regions-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 30px;
-        }
-
-        .region {
-            width: 48%;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+            position: relative;
         }
 
         .region-title {
             text-align: center;
-            font-size: 18px;
+            font-size: 14px;
             font-weight: bold;
             color: #0057b7;
-            margin-bottom: 10px;
-        }
-
-        .final-four-container {
-            width: 70%;
-            margin: 0 auto;
-            text-align: center;
-        }
-
-        .final-four-title {
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-            color: #0057b7;
-            margin-bottom: 15px;
+            margin-bottom: 0;
         }
 
         .bracket {
-            overflow-x: auto;
-            padding-bottom: 20px;
+            overflow-x: visible;
+            padding: 0;
         }
 
-        /* Customizing jquery-bracket styles */
+        /* Final Four custom layout */
+        .final-four-layout {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .final-four-team {
+            background-color: #f5f8ff;
+            border: 1px solid #ddd;
+            padding: 2px 4px;
+            width: 90px;
+            font-size: 10px;
+            margin: 1px 0;
+            cursor: pointer;
+        }
+
+        .final-four-team.winner {
+            background-color: #e3f2fd;
+            font-weight: bold;
+            border-left: 2px solid #0057b7;
+        }
+
+        .final-four-team.right.winner {
+            border-left: none;
+            border-right: 2px solid #0057b7;
+        }
+
+        .final-four-matchup {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .final-four-matchup.left {
+            margin-right: 40px;
+        }
+
+        .final-four-matchup.right {
+            margin-left: 40px;
+        }
+
+        .championship-matchup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .champion-display {
+            margin-top: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 11px;
+            color: #c47c00;
+            padding: 3px 6px;
+            background-color: #fff8e0;
+            border: 1px solid #f0d78c;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .connector-horizontal {
+            position: absolute;
+            height: 2px;
+            background-color: #0057b7;
+            top: 50%;
+        }
+
+        .connector-left {
+            right: 50%;
+            width: 40px;
+            margin-right: 45px;
+        }
+
+        .connector-right {
+            left: 50%;
+            width: 40px;
+            margin-left: 45px;
+        }
+
+        .connector-vertical {
+            position: absolute;
+            width: 2px;
+            background-color: #0057b7;
+        }
+
+        .connector-left-vertical {
+            right: calc(50% + 85px);
+            height: 32px;
+            top: calc(50% - 16px);
+        }
+
+        .connector-right-vertical {
+            left: calc(50% + 85px);
+            height: 32px;
+            top: calc(50% - 16px);
+        }
+
+        .round-label {
+            position: absolute;
+            font-size: 9px;
+            color: #666;
+        }
+
+        .final-four-label-left {
+            left: calc(50% - 130px);
+            top: -10px;
+        }
+
+        .final-four-label-right {
+            right: calc(50% - 130px);
+            top: -10px;
+        }
+
+        .championship-label {
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Make connectors more prominent between regions and final four */
+        .connector-line {
+            position: absolute;
+            background-color: #0057b7;
+            z-index: 10;
+        }
+
+        /* Customizing jquery-bracket styles for a more compact view */
+        .jQBracket {
+            font-size: 10px !important;
+            font-family: 'Arial', sans-serif !important;
+        }
+
         .jQBracket .team {
             background-color: #f5f8ff !important;
+            padding: 2px 4px !important;
+            height: auto !important;
+            min-height: 14px !important;
+            margin-bottom: 1px !important;
         }
 
         .jQBracket .team.win {
             background-color: #e3f2fd !important;
+            border-left: 2px solid #0057b7 !important;
         }
 
         .jQBracket .connector {
@@ -101,10 +256,34 @@
             height: auto !important;
         }
 
-        /* Add this to ensure the bracket has enough vertical space */
         .jQBracket .round {
-            margin-top: 15px;
-            margin-bottom: 15px;
+            margin-top: 2px !important;
+            margin-bottom: 2px !important;
+        }
+
+        .jQBracket .matchContainer {
+            padding: 0 !important;
+            margin-top: -1px !important;
+        }
+
+        .jQBracket .label {
+            color: #666 !important;
+            font-size: 9px !important;
+        }
+
+        /* Fix for right-to-left brackets */
+        .jQBracket.rl .connector.filled {
+            border-color: #0057b7 !important;
+        }
+
+        .jQBracket.rl .team.win {
+            border-right: 2px solid #0057b7 !important;
+            border-left: none !important;
+        }
+
+        /* Unified center bracket for Final Four */
+        .center-bracket {
+            max-width: 400px;
         }
     </style>
 </head>
@@ -115,32 +294,84 @@
             <h1>NCAA March Madness Bracket</h1>
         </header>
 
-        <div class="bracket-container">
-            <div class="regions-row">
-                <div class="region">
-                    <h2 class="region-title">West Region</h2>
-                    <div id="west-bracket" class="bracket"></div>
-                </div>
-                <div class="region">
-                    <h2 class="region-title">East Region</h2>
-                    <div id="east-bracket" class="bracket"></div>
+        <div class="tournament-container">
+            <!-- West Region (top left) -->
+            <div class="west-region">
+                <h2 class="region-title">West Region</h2>
+                <div id="west-bracket" class="bracket"></div>
+            </div>
+
+            <!-- East Region (top right) -->
+            <div class="east-region">
+                <h2 class="region-title">East Region</h2>
+                <div id="east-bracket" class="bracket"></div>
+            </div>
+
+            <!-- Center area with Final Four and Championship -->
+            <div class="center-area">
+                <div class="final-four-layout">
+                    <!-- Final Four Labels -->
+                    <div class="round-label final-four-label-left">Final Four</div>
+                    <div class="round-label championship-label">Championship</div>
+                    <div class="round-label final-four-label-right">Final Four</div>
+
+                    <!-- Left side matchup (East vs West) -->
+                    <div class="final-four-matchup left">
+                        <div class="final-four-team east-winner" data-region="east">
+                            <span class="seed"></span>
+                            <span class="name">East Region</span>
+                        </div>
+                        <div class="final-four-team west-winner" data-region="west">
+                            <span class="seed"></span>
+                            <span class="name">West Region</span>
+                        </div>
+                    </div>
+
+                    <!-- Championship matchup -->
+                    <div class="championship-matchup">
+                        <div class="final-four-team left-winner">
+                            <span class="seed"></span>
+                            <span class="name">TBD</span>
+                        </div>
+                        <div class="final-four-team right-winner">
+                            <span class="seed"></span>
+                            <span class="name">TBD</span>
+                        </div>
+                        <div class="champion-display" style="display: none;">
+                            <span class="champion-name">Champion</span>
+                        </div>
+                    </div>
+
+                    <!-- Right side matchup (South vs Midwest) -->
+                    <div class="final-four-matchup right">
+                        <div class="final-four-team south-winner right" data-region="south">
+                            <span class="seed"></span>
+                            <span class="name">South Region</span>
+                        </div>
+                        <div class="final-four-team midwest-winner right" data-region="midwest">
+                            <span class="seed"></span>
+                            <span class="name">Midwest Region</span>
+                        </div>
+                    </div>
+
+                    <!-- Connector lines -->
+                    <div class="connector-horizontal connector-left"></div>
+                    <div class="connector-horizontal connector-right"></div>
+                    <div class="connector-vertical connector-left-vertical"></div>
+                    <div class="connector-vertical connector-right-vertical"></div>
                 </div>
             </div>
 
-            <div class="regions-row">
-                <div class="region">
-                    <h2 class="region-title">South Region</h2>
-                    <div id="south-bracket" class="bracket"></div>
-                </div>
-                <div class="region">
-                    <h2 class="region-title">Midwest Region</h2>
-                    <div id="midwest-bracket" class="bracket"></div>
-                </div>
+            <!-- South Region (bottom left) -->
+            <div class="south-region">
+                <h2 class="region-title">South Region</h2>
+                <div id="south-bracket" class="bracket"></div>
             </div>
 
-            <div class="final-four-container">
-                <h2 class="final-four-title">Final Four & Championship</h2>
-                <div id="final-four-bracket" class="bracket"></div>
+            <!-- Midwest Region (bottom right) -->
+            <div class="midwest-region">
+                <h2 class="region-title">Midwest Region</h2>
+                <div id="midwest-bracket" class="bracket"></div>
             </div>
         </div>
     </div>
@@ -151,7 +382,7 @@
             function generateTeams(region) {
                 let teams = [];
                 for (let i = 1; i <= 16; i++) {
-                    teams.push([`${i}. ${region} Team ${i}`, ""]);
+                    teams.push([`${i}. ${region}`, ""]);
                 }
 
                 // Create first round matchups (1 vs 16, 8 vs 9, etc.)
@@ -168,76 +399,216 @@
             }
 
             // Initialize regional brackets
-            const regions = ['west', 'east', 'south', 'midwest'];
             let regionWinners = {};
+            let finalFourWinners = {
+                left: null,
+                right: null,
+                champion: null
+            };
 
-            regions.forEach(region => {
-                $(`#${region}-bracket`).bracket({
-                    skipConsolationRound: true,
-                    teamWidth: 150,
-                    scoreWidth: 30,
-                    matchMargin: 40,
-                    roundMargin: 50,
-                    init: {
-                        teams: generateTeams(region.charAt(0).toUpperCase() + region.slice(1)),
-                        results: [[], [], [], []]  // Empty results for each round
-                    },
-                    save: function (data) {
-                        // Store the Elite 8 winner (Final Four qualifier)
-                        if (data.results[3] && data.results[3][0] !== undefined) {
-                            const winnerIdx = data.results[3][0];
-                            const winnerSeed = parseInt(data.teams[0][winnerIdx][0].split('.')[0]);
-                            regionWinners[region] = {
-                                name: data.teams[0][winnerIdx][0],
-                                seed: winnerSeed,
-                                region: region.charAt(0).toUpperCase() + region.slice(1)
-                            };
+            // Super compact options for regional brackets
+            const regionOptions = {
+                skipConsolationRound: true,
+                teamWidth: 80,
+                scoreWidth: 15,
+                matchMargin: 15,
+                roundMargin: 20,
+                centerConnectors: true
+            };
 
-                            // Update Final Four bracket when all regions have a winner
-                            if (Object.keys(regionWinners).length === 4) {
-                                updateFinalFour();
-                            }
-                        }
-                    }
-                });
+            // West and South go left to right
+            $('#west-bracket').bracket({
+                ...regionOptions,
+                init: {
+                    teams: generateTeams('West'),
+                    results: [[], [], [], []]
+                },
+                save: function (data) {
+                    handleRegionWinner('west', data);
+                }
             });
 
-            // Initialize Final Four and Championship bracket
-            function updateFinalFour() {
-                const finalFourTeams = [
-                    [[regionWinners.east.name, ""], [regionWinners.west.name, ""]],
-                    [[regionWinners.south.name, ""], [regionWinners.midwest.name, ""]]
-                ];
+            $('#south-bracket').bracket({
+                ...regionOptions,
+                init: {
+                    teams: generateTeams('South'),
+                    results: [[], [], [], []]
+                },
+                save: function (data) {
+                    handleRegionWinner('south', data);
+                }
+            });
 
-                $('#final-four-bracket').bracket({
-                    skipConsolationRound: true,
-                    teamWidth: 150,
-                    scoreWidth: 30,
-                    matchMargin: 40,
-                    roundMargin: 50,
-                    init: {
-                        teams: finalFourTeams,
-                        results: [[], []] // Empty results for semifinals and final
-                    }
-                });
+            // East and Midwest go right to left
+            $('#east-bracket').bracket({
+                ...regionOptions,
+                dir: "rl", // Right to left direction
+                init: {
+                    teams: generateTeams('East'),
+                    results: [[], [], [], []]
+                },
+                save: function (data) {
+                    handleRegionWinner('east', data);
+                }
+            });
+
+            $('#midwest-bracket').bracket({
+                ...regionOptions,
+                dir: "rl", // Right to left direction
+                init: {
+                    teams: generateTeams('Midwest'),
+                    results: [[], [], [], []]
+                },
+                save: function (data) {
+                    handleRegionWinner('midwest', data);
+                }
+            });
+
+            // Handler for region winners
+            function handleRegionWinner(region, data) {
+                // Store the Elite 8 winner (Final Four qualifier)
+                if (data.results[3] && data.results[3][0] !== undefined) {
+                    const winnerIdx = data.results[3][0];
+                    const teamData = data.teams[0][winnerIdx][0].split('.');
+                    const winnerSeed = parseInt(teamData[0]);
+                    const winnerName = teamData[1] ? teamData[1].trim() : region.charAt(0).toUpperCase() + region.slice(1);
+
+                    regionWinners[region] = {
+                        name: winnerName,
+                        seed: winnerSeed,
+                        fullName: data.teams[0][winnerIdx][0],
+                        region: region.charAt(0).toUpperCase() + region.slice(1)
+                    };
+
+                    // Update the Final Four display
+                    updateFinalFourDisplay();
+                }
             }
 
-            // Initialize with mock data for Final Four
-            const mockFinalFour = [
-                [["East Champion", ""], ["West Champion", ""]],
-                [["South Champion", ""], ["Midwest Champion", ""]]
-            ];
-
-            $('#final-four-bracket').bracket({
-                skipConsolationRound: true,
-                teamWidth: 150,
-                scoreWidth: 30,
-                matchMargin: 40,
-                roundMargin: 50,
-                init: {
-                    teams: mockFinalFour,
-                    results: [[], []] // Empty results for semifinals and final
+            // Update the Final Four display with winners from the regions
+            function updateFinalFourDisplay() {
+                // Update East winner
+                if (regionWinners.east) {
+                    $('.east-winner').html(
+                        `<span class="seed">${regionWinners.east.seed}</span> ` +
+                        `<span class="name">${regionWinners.east.name}</span>`
+                    );
                 }
+
+                // Update West winner
+                if (regionWinners.west) {
+                    $('.west-winner').html(
+                        `<span class="seed">${regionWinners.west.seed}</span> ` +
+                        `<span class="name">${regionWinners.west.name}</span>`
+                    );
+                }
+
+                // Update South winner
+                if (regionWinners.south) {
+                    $('.south-winner').html(
+                        `<span class="seed">${regionWinners.south.seed}</span> ` +
+                        `<span class="name">${regionWinners.south.name}</span>`
+                    );
+                }
+
+                // Update Midwest winner
+                if (regionWinners.midwest) {
+                    $('.midwest-winner').html(
+                        `<span class="seed">${regionWinners.midwest.seed}</span> ` +
+                        `<span class="name">${regionWinners.midwest.name}</span>`
+                    );
+                }
+            }
+
+            // Add click handlers for Final Four teams
+            $('.final-four-team.east-winner, .final-four-team.west-winner').click(function () {
+                const region = $(this).data('region');
+
+                // Don't do anything if region winner is not set yet
+                if (!regionWinners[region]) return;
+
+                // Remove winner class from both teams
+                $('.final-four-team.east-winner, .final-four-team.west-winner').removeClass('winner');
+
+                // Add winner class to clicked team
+                $(this).addClass('winner');
+
+                // Store the winner and update championship
+                finalFourWinners.left = region;
+                updateChampionshipTeams();
+            });
+
+            $('.final-four-team.south-winner, .final-four-team.midwest-winner').click(function () {
+                const region = $(this).data('region');
+
+                // Don't do anything if region winner is not set yet
+                if (!regionWinners[region]) return;
+
+                // Remove winner class from both teams
+                $('.final-four-team.south-winner, .final-four-team.midwest-winner').removeClass('winner');
+
+                // Add winner class to clicked team
+                $(this).addClass('winner');
+
+                // Store the winner and update championship
+                finalFourWinners.right = region;
+                updateChampionshipTeams();
+            });
+
+            // Update championship teams
+            function updateChampionshipTeams() {
+                // Update left side championship team
+                if (finalFourWinners.left && regionWinners[finalFourWinners.left]) {
+                    $('.left-winner').html(
+                        `<span class="seed">${regionWinners[finalFourWinners.left].seed}</span> ` +
+                        `<span class="name">${regionWinners[finalFourWinners.left].name}</span>`
+                    );
+                }
+
+                // Update right side championship team
+                if (finalFourWinners.right && regionWinners[finalFourWinners.right]) {
+                    $('.right-winner').html(
+                        `<span class="seed">${regionWinners[finalFourWinners.right].seed}</span> ` +
+                        `<span class="name">${regionWinners[finalFourWinners.right].name}</span>`
+                    );
+                }
+            }
+
+            // Add click handlers for Championship teams
+            $('.left-winner, .right-winner').click(function () {
+                const isLeft = $(this).hasClass('left-winner');
+                const side = isLeft ? 'left' : 'right';
+
+                // Don't do anything if final four winner is not set yet
+                if (!finalFourWinners[side] || !regionWinners[finalFourWinners[side]]) return;
+
+                // Remove winner class from both teams
+                $('.left-winner, .right-winner').removeClass('winner');
+
+                // Add winner class to clicked team
+                $(this).addClass('winner');
+
+                // Store the champion and update display
+                finalFourWinners.champion = finalFourWinners[side];
+                updateChampion();
+            });
+
+            // Update champion display
+            function updateChampion() {
+                if (finalFourWinners.champion && regionWinners[finalFourWinners.champion]) {
+                    $('.champion-display').show();
+                    $('.champion-name').html(
+                        `CHAMPION:<br>${regionWinners[finalFourWinners.champion].seed} ${regionWinners[finalFourWinners.champion].name}`
+                    );
+                }
+            }
+
+            // Set round labels with more compact text
+            $('.west-region .jQBracket .label, .east-region .jQBracket .label, .south-region .jQBracket .label, .midwest-region .jQBracket .label').each(function (i) {
+                if (i === 0) $(this).text('1st Rd');
+                if (i === 1) $(this).text('2nd Rd');
+                if (i === 2) $(this).text('Sweet 16');
+                if (i === 3) $(this).text('Elite 8');
             });
         });
     </script>
