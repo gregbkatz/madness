@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>March Madness Bracket v1.2</title>
+    <title>March Madness Bracket v1.4 - Updated 12:45</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.js"></script>
@@ -244,10 +244,10 @@
 
         .jQBracket .team {
             background-color: #f5f8ff !important;
-            padding: 2px 4px !important;
+            padding: 1px 4px !important;
             height: auto !important;
-            min-height: 14px !important;
-            margin-bottom: 1px !important;
+            min-height: 12px !important;
+            margin-bottom: 0 !important;
             cursor: pointer !important;
             transition: background-color 0.2s ease !important;
         }
@@ -271,18 +271,21 @@
         }
 
         .jQBracket .round {
-            margin-top: 2px !important;
-            margin-bottom: 2px !important;
+            margin-top: 1px !important;
+            margin-bottom: 1px !important;
         }
 
         .jQBracket .matchContainer {
             padding: 0 !important;
-            margin-top: -1px !important;
+            margin-top: 0 !important;
         }
 
         .jQBracket .label {
             color: #666 !important;
-            font-size: 9px !important;
+            font-size: 8px !important;
+            position: relative !important;
+            top: -2px !important;
+            margin-bottom: 2px !important;
         }
 
         /* Fix for right-to-left brackets */
@@ -343,7 +346,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>NCAA March Madness Bracket</h1>
+            <h1>NCAA March Madness Bracket v1.4 - Updated 12:45</h1>
         </header>
         <div class="instructions">
             Click on teams to advance them through the bracket. Pick your champion by clicking all the way through to
@@ -559,8 +562,8 @@
                 skipConsolationRound: true,
                 teamWidth: 100,
                 scoreWidth: 0,
-                matchMargin: 15,
-                roundMargin: 20,
+                matchMargin: 5,
+                roundMargin: 10,
                 centerConnectors: true,
                 disableHighlight: false,
                 disableTeamEdit: true,
@@ -580,8 +583,8 @@
                 skipConsolationRound: true,
                 teamWidth: 100,
                 scoreWidth: 0,
-                matchMargin: 15,
-                roundMargin: 20,
+                matchMargin: 5,
+                roundMargin: 10,
                 centerConnectors: true,
                 disableHighlight: false,
                 disableTeamEdit: true,
@@ -602,8 +605,8 @@
                 skipConsolationRound: true,
                 teamWidth: 100,
                 scoreWidth: 0,
-                matchMargin: 15,
-                roundMargin: 20,
+                matchMargin: 5,
+                roundMargin: 10,
                 centerConnectors: true,
                 disableHighlight: false,
                 disableTeamEdit: true,
@@ -624,8 +627,8 @@
                 skipConsolationRound: true,
                 teamWidth: 100,
                 scoreWidth: 0,
-                matchMargin: 15,
-                roundMargin: 20,
+                matchMargin: 5,
+                roundMargin: 10,
                 centerConnectors: true,
                 disableHighlight: false,
                 disableTeamEdit: true,
@@ -832,12 +835,72 @@
                 }
             }
 
-            // Set round labels with more compact text
-            $('.west-region .jQBracket .label, .east-region .jQBracket .label, .south-region .jQBracket .label, .midwest-region .jQBracket .label').each(function (i) {
-                if (i === 0) $(this).text('1st Rd');
-                if (i === 1) $(this).text('2nd Rd');
-                if (i === 2) $(this).text('Sweet 16');
-                if (i === 3) $(this).text('Elite 8');
+            // Set round labels with more compact text - using a more specific approach
+            // Remove the old version of setting round labels
+            // $('.west-region .jQBracket .round .label, .east-region .jQBracket .round .label, .south-region .jQBracket .round .label, .midwest-region .jQBracket .round .label').each(function (i) {
+            //    if (i === 0) $(this).text('1st Rd');
+            //    if (i === 1) $(this).text('2nd Rd');
+            //    if (i === 2) $(this).text('Sweet 16');
+            //    if (i === 3) $(this).text('Elite 8');
+            //});
+
+            // Instead, directly set the round label texts for each region
+            function setRoundLabels() {
+                const regions = ['west', 'east', 'south', 'midwest'];
+                const roundNames = ['1st Rd', '2nd Rd', 'Sweet 16', 'Elite 8'];
+
+                regions.forEach(region => {
+                    $(`#${region}-bracket .round`).each(function (i) {
+                        if (i < roundNames.length) {
+                            // Create or update a dedicated round label div
+                            let $label = $(this).find('.custom-round-label');
+                            if ($label.length === 0) {
+                                // Remove the existing jquery-bracket label to avoid overlap
+                                $(this).find('.label').hide();
+
+                                // Create our custom label
+                                $label = $('<div class="custom-round-label"></div>');
+                                $(this).prepend($label);
+                            }
+                            $label.text(roundNames[i]).css({
+                                'fontSize': '8px',
+                                'color': '#666',
+                                'textAlign': 'center',
+                                'marginBottom': '2px',
+                                'position': 'relative',
+                                'top': '0'
+                            });
+                        }
+                    });
+                });
+            }
+
+            // Call this after all brackets are initialized with a longer delay to ensure everything is rendered
+            setTimeout(setRoundLabels, 300);
+
+            // Fix for team selection - add direct click handlers
+            $(document).on('click', '.jQBracket .team', function () {
+                // Get the round and matchup data
+                const $team = $(this);
+                const $round = $team.closest('.round');
+                const $matchup = $team.closest('.match');
+
+                // Get siblings in same matchup
+                const $teams = $matchup.find('.team');
+
+                // Remove win class from all teams in this matchup
+                $teams.removeClass('win');
+
+                // Add win class to clicked team
+                $team.addClass('win');
+
+                // Manually trigger the bracket update
+                const bracketId = $round.closest('.jQBracket').parent().attr('id');
+                if (bracketId) {
+                    const region = bracketId.replace('-bracket', '');
+                    const data = $(`#${bracketId}`).bracket('data');
+                    handleRegionWinner(region, data);
+                }
             });
 
             // Load saved bracket if available
