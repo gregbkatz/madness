@@ -138,10 +138,7 @@ body {
     align-items: center;
     flex: 1;
     padding: 0 5px;
-    min-width: 320px;
-    /* Increased from 280px */
-    margin: 0 60px;
-    /* Increased from 40px to avoid overlap */
+    min-width: 280px;
     position: relative;
 }
 
@@ -255,10 +252,10 @@ body {
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: 10px 0;
+    padding: 40px 0 20px 0;
+    /* Greatly increased top padding from 20px to 40px */
     position: relative;
-    margin-top: 30px;
-    /* Added to push Final Four down a bit */
+    margin-top: 0;
 }
 
 .final-four-content {
@@ -273,8 +270,8 @@ body {
     justify-content: center;
     width: 100%;
     align-items: center;
-    margin-bottom: 20px;
-    /* Increased from 15px */
+    margin-bottom: 30px;
+    /* Increased from 20px */
 }
 
 .semifinal-matchup {
@@ -426,18 +423,14 @@ body {
 }
 
 /* Adjust the center positions for narrow screens */
+@media (max-width: 1600px) {
+    /* These media queries are removed to prevent snapping */
+}
+
 @media (max-width: 1500px) {
+    /* These media queries are removed to prevent snapping */
+}
 
-    /* Increased from 1400px */
-    .bracket-center {
-        margin: 0 70px;
-        /* Increased from 45px */
-        min-width: 340px;
-        /* Increased from 300px */
-    }
-
-    .bracket-content {
-        min-width: 1600px;
-        /* Increased from 1500px */
-    }
+@media (max-width: 1400px) {
+    /* These media queries are removed to prevent snapping */
 }
