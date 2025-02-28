@@ -54,7 +54,7 @@ body {
     display: flex;
     justify-content: space-between;
     width: 100%;
-    margin-bottom: 5px;
+    margin-bottom: 15px;
     font-weight: bold;
     text-align: center;
 }
@@ -65,6 +65,22 @@ body {
     font-size: 10px;
     width: 140px;
     /* Fixed width to match the teams */
+    max-width: 140px;
+    padding: 0 5px;
+}
+
+/* Styles for different header positions */
+.round-header-left {
+    text-align: center;
+}
+
+.round-header-right {
+    text-align: center;
+}
+
+.round-header-center {
+    color: #003478;
+    font-weight: bold;
 }
 
 /* Create a clear visual distinction for right side headers */
@@ -148,6 +164,10 @@ body {
 .game-wrapper {
     position: relative;
     margin-bottom: 3px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    /* Center the game in its allocated space */
 }
 
 /* Team styling */
@@ -217,43 +237,43 @@ body {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    padding-top: 10px;
+    padding: 10px 0;
 }
 
-.final-four-container {
+.final-four-content {
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
+}
+
+.semifinal-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    align-items: center;
+    margin-bottom: 15px;
 }
 
 .semifinal-matchup {
     display: flex;
     flex-direction: column;
-    margin-bottom: 20px;
     width: 140px;
 }
 
-.championship {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 10px;
-    width: 100%;
+.left-semifinal {
+    align-items: flex-end;
+    margin-right: 20px;
+}
+
+.right-semifinal {
+    align-items: flex-start;
+    margin-left: 20px;
 }
 
 .championship-matchup {
     width: 140px;
-}
-
-/* Championship header */
-.championship-header {
-    margin-bottom: 15px;
-    text-align: center;
-    font-size: 12px;
-    font-weight: bold;
-    text-transform: uppercase;
-    color: #003478;
+    margin: 0 20px;
 }
 
 /* Champion display */
@@ -278,6 +298,8 @@ body {
     font-size: 14px;
     font-weight: bold;
     color: #003478;
+    min-height: 20px;
+    /* Ensure space even when empty */
 }
 
 /* Region labels */
@@ -307,4 +329,51 @@ body {
 /* Reduce the bottom margins only for the 1st round */
 .round[data-round="1"] .game-wrapper {
     margin-bottom: 5px;
+}
+
+/* Fix for horizontal alignment in larger screens */
+@media (min-width: 1400px) {
+    .bracket-content {
+        margin: 0 auto;
+        max-width: 1800px;
+    }
+
+    /* Ensure rounds maintain fixed width */
+    .round {
+        width: 140px;
+        flex: 0 0 140px;
+    }
+
+    /* Right alignment for first round */
+    .bracket-right .region-rounds {
+        justify-content: flex-end !important;
+    }
+
+    /* Round headers alignment */
+    .round-headers {
+        max-width: 1800px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    /* Fix for right-aligned regions */
+    .bracket-right .round[data-round="0"] {
+        justify-content: flex-end;
+    }
+}
+
+/* Fix for game centering in all rounds */
+.round[data-round="1"] .game-wrapper,
+.round[data-round="2"] .game-wrapper,
+.round[data-round="3"] .game-wrapper {
+    position: relative;
+}
+
+/* This ensures each game is properly centered relative to the games in the previous round */
+.round .game {
+    position: relative;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
 }

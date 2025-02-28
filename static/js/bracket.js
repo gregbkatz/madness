@@ -132,12 +132,19 @@ function MarchMadnessBracket() {
         const newBracket = { ...bracket };
 
         // Get the selected team from the Final Four
-        const selectedTeam = bracket.finalFour[teamIndex + semifinalIndex * 2];
+        let selectedTeam;
+
+        if (semifinalIndex === 0) {
+            // Left semifinal (South/East)
+            selectedTeam = teamIndex === 0 ? bracket.finalFour[2] : bracket.finalFour[1];
+            newBracket.championship[0] = selectedTeam;
+        } else {
+            // Right semifinal (Midwest/West)
+            selectedTeam = teamIndex === 0 ? bracket.finalFour[3] : bracket.finalFour[0];
+            newBracket.championship[1] = selectedTeam;
+        }
 
         if (!selectedTeam) return;
-
-        // Update the championship based on which semifinal was selected
-        newBracket.championship[semifinalIndex] = selectedTeam;
 
         // Clear champion if championship teams change
         newBracket.champion = null;
@@ -204,8 +211,23 @@ function MarchMadnessBracket() {
 
     // Calculate the appropriate spacing for games in each round
     const getGameWrapperStyle = (round, alignment) => {
-        // Return consistent spacing for all regions to ensure vertical alignment
-        if (round === 0) return { marginBottom: '2px' };
+        // Base style for all game wrappers
+        const baseStyle = {
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center'
+        };
+
+        // Specific margin adjustments for each round
+        if (round === 0) {
+            // First round needs minimal spacing
+            return {
+                ...baseStyle,
+                marginBottom: '2px',
+                marginTop: '2px'
+            };
+        }
 
         // Use the same spacing values for all regions for consistency
         const spacingMap = {
@@ -214,8 +236,11 @@ function MarchMadnessBracket() {
             3: 140 // Elite 8
         };
 
+        // Return style with appropriate vertical margins
         return {
-            marginBottom: `${spacingMap[round]}px`
+            ...baseStyle,
+            marginBottom: `${spacingMap[round]}px`,
+            marginTop: `${spacingMap[round]}px`
         };
     };
 
@@ -245,7 +270,7 @@ function MarchMadnessBracket() {
         }
 
         return (
-            <div className={`round round-${alignment}`}>
+            <div className={`round round-${alignment}`} data-round={round}>
                 {games}
             </div>
         );
@@ -255,59 +280,58 @@ function MarchMadnessBracket() {
     const renderFinalFour = () => {
         return (
             <div className="final-four">
-                <div className="championship-header">FINAL FOUR</div>
-                <div className="final-four-container">
-                    {/* First semifinal - West vs East */}
-                    <div className="semifinal-matchup">
-                        {renderTeam(
-                            bracket.finalFour[0], // West champion
-                            () => handleFinalFourSelect(0, 0),
-                            bracket.championship[0] === bracket.finalFour[0]
-                        )}
-                        {renderTeam(
-                            bracket.finalFour[1], // East champion
-                            () => handleFinalFourSelect(0, 1),
-                            bracket.championship[0] === bracket.finalFour[1]
-                        )}
-                    </div>
+                <div className="final-four-content">
+                    {/* Display the Final Four matchups side by side in a pyramid structure */}
+                    <div className="semifinal-container">
+                        {/* Left side semifinal - South vs East */}
+                        <div className="semifinal-matchup left-semifinal">
+                            {renderTeam(
+                                bracket.finalFour[2], // South champion
+                                () => handleFinalFourSelect(0, 0),
+                                bracket.championship[0] === bracket.finalFour[2]
+                            )}
+                            {renderTeam(
+                                bracket.finalFour[1], // East champion
+                                () => handleFinalFourSelect(0, 1),
+                                bracket.championship[0] === bracket.finalFour[1]
+                            )}
+                        </div>
 
-                    {/* Second semifinal - South vs Midwest */}
-                    <div className="semifinal-matchup">
-                        {renderTeam(
-                            bracket.finalFour[2], // South champion
-                            () => handleFinalFourSelect(1, 0),
-                            bracket.championship[1] === bracket.finalFour[2]
-                        )}
-                        {renderTeam(
-                            bracket.finalFour[3], // Midwest champion
-                            () => handleFinalFourSelect(1, 1),
-                            bracket.championship[1] === bracket.finalFour[3]
-                        )}
-                    </div>
-
-                    <div className="championship">
-                        <div className="championship-header">CHAMPIONSHIP</div>
+                        {/* Championship in the middle */}
                         <div className="championship-matchup">
                             {renderTeam(
-                                bracket.championship[0], // Winner of West/East
+                                bracket.championship[0], // Winner of South/East
                                 () => handleChampionshipSelect(0),
                                 bracket.champion === bracket.championship[0]
                             )}
                             {renderTeam(
-                                bracket.championship[1], // Winner of South/Midwest
+                                bracket.championship[1], // Winner of Midwest/West
                                 () => handleChampionshipSelect(1),
                                 bracket.champion === bracket.championship[1]
                             )}
                         </div>
 
-                        {bracket.champion && (
-                            <div className="champion-display">
-                                <div className="champion-label">CHAMPION</div>
-                                <div className="champion-name">
-                                    {bracket.champion.name}
-                                </div>
-                            </div>
-                        )}
+                        {/* Right side semifinal - Midwest vs West */}
+                        <div className="semifinal-matchup right-semifinal">
+                            {renderTeam(
+                                bracket.finalFour[3], // Midwest champion
+                                () => handleFinalFourSelect(1, 0),
+                                bracket.championship[1] === bracket.finalFour[3]
+                            )}
+                            {renderTeam(
+                                bracket.finalFour[0], // West champion
+                                () => handleFinalFourSelect(1, 1),
+                                bracket.championship[1] === bracket.finalFour[0]
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Champion display - always visible */}
+                    <div className="champion-display">
+                        <div className="champion-label">CHAMPION</div>
+                        <div className="champion-name">
+                            {bracket.champion ? bracket.champion.name : "TBD"}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -318,22 +342,22 @@ function MarchMadnessBracket() {
     const renderRoundHeaders = () => {
         return (
             <div className="round-headers">
-                {/* Left side (South & East) - left to right flow */}
-                <div className="round-header">1st Round</div>
-                <div className="round-header">2nd Round</div>
-                <div className="round-header">Sweet 16</div>
-                <div className="round-header">Elite Eight</div>
+                {/* Left side headers (South & East) - left to right flow */}
+                <div className="round-header round-header-left" data-round="0">1st Round</div>
+                <div className="round-header round-header-left" data-round="1">2nd Round</div>
+                <div className="round-header round-header-left" data-round="2">Sweet 16</div>
+                <div className="round-header round-header-left" data-round="3">Elite Eight</div>
 
-                {/* Center */}
-                <div className="round-header">Final Four</div>
-                <div className="round-header">Championship</div>
-                <div className="round-header">Final Four</div>
+                {/* Center section */}
+                <div className="round-header round-header-center">Final Four</div>
+                <div className="round-header round-header-center">Championship</div>
+                <div className="round-header round-header-center">Final Four</div>
 
-                {/* Right side (Midwest & West) - right to left flow */}
-                <div className="round-header">Elite Eight</div>
-                <div className="round-header">Sweet 16</div>
-                <div className="round-header">2nd Round</div>
-                <div className="round-header">1st Round</div>
+                {/* Right side headers (Midwest & West) - right to left flow */}
+                <div className="round-header round-header-right" data-round="3">Elite Eight</div>
+                <div className="round-header round-header-right" data-round="2">Sweet 16</div>
+                <div className="round-header round-header-right" data-round="1">2nd Round</div>
+                <div className="round-header round-header-right" data-round="0">1st Round</div>
             </div>
         );
     };
