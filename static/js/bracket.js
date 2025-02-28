@@ -79,105 +79,72 @@ function MarchMadnessBracket() {
         // Ensure a team was selected
         if (!selectedTeam) return;
 
-        // Get the previously selected team at this position (if any)
-        const previousTeam = bracket[region][round][gameIndex * 2 + teamIndex];
-
-        // If we're selecting the same team that's already selected, no need to change anything
-        if (previousTeam === selectedTeam) return;
-
         // Determine next round and game position
         const nextRound = round + 1;
         const nextGameIndex = Math.floor(gameIndex / 2);
         const nextTeamIndex = gameIndex % 2;
         const nextSlot = nextGameIndex * 2 + nextTeamIndex;
 
-        // Check if this team is already selected in the next round
-        // If the same team is already in the next round, don't make any changes
-        if (round < 3 && bracket[region][nextRound][nextSlot] === selectedTeam) {
-            return; // Already selected this team to win, so don't change anything
+        // Check what team is currently in the next round's slot
+        let teamInNextSlot = null;
+        if (round < 3) {
+            teamInNextSlot = bracket[region][nextRound][nextSlot];
         }
 
-        // STEP 1: Set the selected team in the next round
-        if (round < 3) { // If not yet at Elite Eight
-            // Get the team that was previously in the next round (if any)
-            const prevNextRoundTeam = bracket[region][nextRound][nextSlot];
+        // Handle regular bracket rounds (not Elite Eight)
+        if (round < 3) {
+            // If clicking the same team that's already in the next round, do nothing
+            if (teamInNextSlot === selectedTeam) {
+                return;
+            }
 
             // Set the selected team in the next round
             newBracket[region][nextRound][nextSlot] = selectedTeam;
 
-            // STEP 2: Only clear subsequent rounds if the team in the next round is changing
-            if (prevNextRoundTeam !== selectedTeam) {
-                // We only need to check subsequent rounds if we changed a team
-                for (let r = nextRound + 1; r < 4; r++) {
-                    // Calculate which position in each subsequent round would be affected
-                    const affectedGameIdx = Math.floor(nextGameIndex / Math.pow(2, r - nextRound));
-                    const affectedTeamIdx = (nextGameIndex / Math.pow(2, r - nextRound)) % 1 > 0 ? 1 : 0;
-                    const affectedSlot = affectedGameIdx * 2 + affectedTeamIdx;
+            // Debug statement to track team replacement
+            console.log(`Setting ${selectedTeam && selectedTeam.name || 'TBD'} in ${region} round ${nextRound} slot ${nextSlot}, replacing ${teamInNextSlot && teamInNextSlot.name || 'TBD'}`);
 
-                    // Only clear if the team in that position is the one that's no longer advancing
-                    if (bracket[region][r][affectedSlot] === prevNextRoundTeam) {
-                        newBracket[region][r][affectedSlot] = null;
-                    } else if (bracket[region][r][affectedSlot] !== null) {
-                        // If some other team is already there, we don't need to continue clearing
-                        // because the bracket has already been modified to have a different path
-                        break;
-                    }
-                }
+            // If we're replacing a different team, we need to reset all instances of that team
+            if (teamInNextSlot !== null && teamInNextSlot !== selectedTeam) {
+                // Full reset cascade for the replaced team
+                console.log(`RESETTING ${teamInNextSlot.name} from all subsequent rounds`);
 
-                // STEP 3: Check if this affects the Final Four
-                // Only check if we've changed a team in the Elite Eight (round 3)
-                if (nextRound === 3 && bracket[region][3][nextSlot] !== selectedTeam) {
-                    // Get the Final Four index for this region
-                    const ffIndex = getRegionFinalFourIndex(region);
-
-                    // Only clear the Final Four slot if it contains the previous team
-                    if (bracket.finalFour[ffIndex] === bracket[region][3][nextSlot]) {
-                        const finalFourTeam = bracket.finalFour[ffIndex];
-
-                        // Clear the Final Four slot
-                        newBracket.finalFour[ffIndex] = null;
-
-                        // STEP 4: Check if this affects the Championship
-                        // Determine which half of the bracket this region belongs to
-                        const champIndex = ffIndex < 2 ? 0 : 1;
-
-                        // Only clear the championship slot if it contains the team being removed
-                        if (bracket.championship[champIndex] === finalFourTeam) {
-                            // Clear the championship slot
-                            newBracket.championship[champIndex] = null;
-
-                            // If the champion was this team, clear it too
-                            if (bracket.champion === finalFourTeam) {
-                                newBracket.champion = null;
-                            }
-                        }
-                    }
-                }
+                // This is a complete reset approach - check all later rounds in this region for the team
+                resetTeamCompletely(newBracket, region, teamInNextSlot, nextRound);
             }
         }
-        // STEP 6: Handle Elite Eight (round 3) to Final Four advancement
+        // Handle Elite Eight selections (to Final Four)
         else if (round === 3) {
             // Get the Final Four slot index for this region
             const ffIndex = getRegionFinalFourIndex(region);
 
-            // Get the current team in this Final Four slot (if any)
+            // Get current team in this Final Four slot
             const currentFinalFourTeam = bracket.finalFour[ffIndex];
 
-            // Update the Final Four with the selected Elite Eight winner
+            // If same team is already in Final Four, no need to change
+            if (currentFinalFourTeam === selectedTeam) {
+                return;
+            }
+
+            // Set the new Elite Eight winner in the Final Four
             newBracket.finalFour[ffIndex] = selectedTeam;
 
-            // If there was a team in this Final Four slot and it's different from the new selection
-            if (currentFinalFourTeam && currentFinalFourTeam !== selectedTeam) {
-                // Determine which side of the Championship bracket this affects
+            console.log(`Setting ${selectedTeam && selectedTeam.name || 'TBD'} in Final Four slot ${ffIndex}, replacing ${currentFinalFourTeam && currentFinalFourTeam.name || 'TBD'}`);
+
+            // If we're replacing a different team in the Final Four, we need to reset it from Championship and possibly the champion
+            if (currentFinalFourTeam !== null && currentFinalFourTeam !== selectedTeam) {
+                // Determine which Championship slot this affects
                 const champIndex = ffIndex < 2 ? 0 : 1;
 
-                // If the team being replaced was in the Championship, clear it
+                // Check if the replaced team was in Championship
                 if (bracket.championship[champIndex] === currentFinalFourTeam) {
+                    console.log(`RESETTING ${currentFinalFourTeam.name} from Championship slot ${champIndex}`);
                     // Clear the Championship slot
                     newBracket.championship[champIndex] = null;
 
-                    // If the Champion is the team being replaced, clear that too
+                    // Clear champion if needed
                     if (bracket.champion === currentFinalFourTeam) {
+                        console.log(`RESETTING ${currentFinalFourTeam.name} from Champion`);
                         newBracket.champion = null;
                     }
                 }
@@ -186,6 +153,117 @@ function MarchMadnessBracket() {
 
         // Update the bracket state
         setBracket(newBracket);
+    };
+
+    // Completely reset a team from all subsequent rounds - much more thorough approach
+    const resetTeamCompletely = (bracketState, region, teamToReset, startRound) => {
+        // Track all changes for debugging
+        const changes = [];
+
+        // Save the team name and seed for comparison
+        const teamName = teamToReset.name;
+        const teamSeed = teamToReset.seed;
+
+        // Helper function to check if a team matches our target team
+        const isMatchingTeam = (team) => {
+            return team && team.name === teamName && team.seed === teamSeed;
+        };
+
+        // 1. Check all subsequent rounds in this region
+        for (let round = startRound; round <= 3; round++) {
+            // Scan every possible slot in this round
+            for (let slot = 0; slot < bracketState[region][round].length; slot++) {
+                if (isMatchingTeam(bracketState[region][round][slot])) {
+                    // Found the team, clear it
+                    bracketState[region][round][slot] = null;
+                    changes.push(`Cleared ${teamName} from ${region} round ${round} slot ${slot}`);
+
+                    // If this is the Elite Eight round, we also need to check Final Four
+                    if (round === 3) {
+                        const ffIndex = getRegionFinalFourIndex(region);
+
+                        // Check if this team made it to Final Four
+                        if (isMatchingTeam(bracketState.finalFour[ffIndex])) {
+                            // Clear from Final Four
+                            bracketState.finalFour[ffIndex] = null;
+                            changes.push(`Cleared ${teamName} from Final Four slot ${ffIndex}`);
+
+                            // Now check Championship
+                            const champIndex = ffIndex < 2 ? 0 : 1;
+                            if (isMatchingTeam(bracketState.championship[champIndex])) {
+                                // Clear from Championship
+                                bracketState.championship[champIndex] = null;
+                                changes.push(`Cleared ${teamName} from Championship slot ${champIndex}`);
+
+                                // Finally check if it was the champion
+                                if (isMatchingTeam(bracketState.champion)) {
+                                    bracketState.champion = null;
+                                    changes.push(`Cleared ${teamName} from Champion`);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Also check Final Four directly
+        for (let i = 0; i < bracketState.finalFour.length; i++) {
+            if (isMatchingTeam(bracketState.finalFour[i])) {
+                bracketState.finalFour[i] = null;
+                changes.push(`Cleared ${teamName} from Final Four slot ${i}`);
+
+                // Check Championship
+                const champIndex = i < 2 ? 0 : 1;
+                if (isMatchingTeam(bracketState.championship[champIndex])) {
+                    bracketState.championship[champIndex] = null;
+                    changes.push(`Cleared ${teamName} from Championship slot ${champIndex}`);
+
+                    // Check Champion
+                    if (isMatchingTeam(bracketState.champion)) {
+                        bracketState.champion = null;
+                        changes.push(`Cleared ${teamName} from Champion`);
+                    }
+                }
+            }
+        }
+
+        // 3. Check Championship directly
+        for (let i = 0; i < bracketState.championship.length; i++) {
+            if (isMatchingTeam(bracketState.championship[i])) {
+                bracketState.championship[i] = null;
+                changes.push(`Cleared ${teamName} from Championship slot ${i}`);
+
+                // Check Champion
+                if (isMatchingTeam(bracketState.champion)) {
+                    bracketState.champion = null;
+                    changes.push(`Cleared ${teamName} from Champion`);
+                }
+            }
+        }
+
+        // 4. Finally check Champion directly
+        if (isMatchingTeam(bracketState.champion)) {
+            bracketState.champion = null;
+            changes.push(`Cleared ${teamName} from Champion`);
+        }
+
+        // Log all the changes made for debugging
+        if (changes.length > 0) {
+            console.log("RESET CASCADE:", changes);
+        } else {
+            console.log(`No instances of ${teamName} found in later rounds`);
+        }
+    };
+
+    // Find a team in a specific round and return its slot position (-1 if not found)
+    const findTeamInRound = (regionBracket, round, team) => {
+        for (let i = 0; i < regionBracket[round].length; i++) {
+            if (regionBracket[round][i] === team) {
+                return i;
+            }
+        }
+        return -1;
     };
 
     // Helper function to get the Final Four index for a region
@@ -218,32 +296,35 @@ function MarchMadnessBracket() {
             champIndex = 1;
         }
 
-        // Get the selected team
+        // Get the selected team from the Final Four array
         const selectedTeam = bracket.finalFour[finalFourIndex];
 
-        // Exit if no team available to select
+        // Exit if no team available to select (prevent errors on empty slots)
         if (!selectedTeam) return;
 
         // Get the current team in the championship slot
         const currentChampionshipTeam = bracket.championship[champIndex];
 
-        // ALWAYS clear the championship slot when making a new selection
-        newBracket.championship[champIndex] = null;
-
-        // If the champion was the team that was in this championship slot, clear it too
-        if (bracket.champion === currentChampionshipTeam) {
-            newBracket.champion = null;
-        }
-
-        // If the user clicked the same team that's already selected, don't set it again
-        // This effectively toggles the selection off if clicking the same team
+        // Toggle behavior - if clicking the same team that's already in championship, clear it
         if (currentChampionshipTeam === selectedTeam) {
-            // Keep it cleared
+            // Clear the championship slot
+            newBracket.championship[champIndex] = null;
+
+            // If the champion was from this championship slot, clear it too
+            if (bracket.champion === currentChampionshipTeam) {
+                newBracket.champion = null;
+            }
         } else {
             // Set the new team in the championship slot
             newBracket.championship[champIndex] = selectedTeam;
+
+            // If the champion was from this championship slot, clear it since we've changed the team
+            if (bracket.champion === currentChampionshipTeam) {
+                newBracket.champion = null;
+            }
         }
 
+        // Update the bracket state
         setBracket(newBracket);
     };
 
@@ -252,7 +333,7 @@ function MarchMadnessBracket() {
         // Create a deep copy of the bracket state
         const newBracket = JSON.parse(JSON.stringify(bracket));
 
-        // Get the selected team
+        // Get the selected team from the championship array
         const selectedTeam = bracket.championship[teamIndex];
 
         // Exit if no team available to select
@@ -261,26 +342,60 @@ function MarchMadnessBracket() {
         // Get the current champion
         const currentChampion = bracket.champion;
 
-        // ALWAYS clear the champion first
-        newBracket.champion = null;
-
-        // If the user clicked the same team that's already the champion, don't set it again
-        // This effectively toggles the selection off if clicking the same team
-        if (currentChampion !== selectedTeam) {
+        // Toggle behavior - if clicking the same team that's already champion, clear it
+        if (currentChampion === selectedTeam) {
+            // Clear the champion
+            newBracket.champion = null;
+        } else {
             // Set the new champion
             newBracket.champion = selectedTeam;
         }
 
+        // Update the bracket state
         setBracket(newBracket);
     };
 
     // Render a single team box
-    const renderTeam = (team, onClick, isWinner = false, isRightRegion = false) => {
+    const renderTeam = (team, onClick, isWinner = false, isRightRegion = false, teamName = '') => {
+        // Create a stable onClick handler even for TBD teams to help debugging
+        const handleClick = (e) => {
+            // Stop propagation to prevent parent elements from capturing the click
+            e.stopPropagation();
+
+            // Log the click for debugging
+            if (team) {
+                console.log(`Team clicked: ${team.name} (${team.seed})`);
+            } else {
+                console.log(`Empty team clicked (${teamName || 'TBD'})`);
+                return; // Don't execute onClick for empty teams
+            }
+
+            // Execute the provided onClick handler
+            if (onClick && typeof onClick === 'function') {
+                onClick();
+            }
+        };
+
         if (!team) {
             return (
-                <div className="team tbd">
+                <div
+                    className="team tbd"
+                    style={{
+                        cursor: 'default',
+                        padding: '4px 8px',
+                        margin: '2px 0',
+                        border: '1px dashed #ccc',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        backgroundColor: '#f9f9f9',
+                        color: '#999',
+                        pointerEvents: 'auto'
+                    }}
+                    onClick={handleClick}
+                >
                     <span className="seed"></span>
-                    <span className="team-name">TBD</span>
+                    <span className="team-name">{teamName || 'TBD'}</span>
                 </div>
             );
         }
@@ -289,10 +404,42 @@ function MarchMadnessBracket() {
         // Check the global flag to determine if we're in an auto-fill operation
         const winnerClass = isWinner && !window.lastActionWasAutoFill ? 'winner' : '';
 
+        // Style to ensure all teams are clearly clickable
+        const teamStyle = {
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            padding: '4px 8px',
+            margin: '2px 0',
+            display: 'flex',
+            alignItems: 'center',
+            backgroundColor: winnerClass ? '#e3f2fd' : '#fff',
+            borderLeft: winnerClass ? '3px solid #2196F3' : '1px solid #ccc',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+            pointerEvents: 'auto',
+            position: 'relative',
+            zIndex: 10  // Ensure team is above other elements
+        };
+
         return (
             <div
                 className={`team ${winnerClass}`}
-                onClick={onClick}
+                onClick={handleClick}
+                style={teamStyle}
+                onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f0f7ff';
+                    e.currentTarget.style.borderColor = '#99c2ff';
+                    e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = winnerClass ? '#e3f2fd' : '#fff';
+                    e.currentTarget.style.borderColor = winnerClass ? '#2196F3' : '#ccc';
+                    e.currentTarget.style.borderLeftWidth = winnerClass ? '3px' : '1px';
+                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                }}
             >
                 <span className="seed">{team.seed}</span>
                 <span className="team-name">{team.name}</span>
@@ -395,53 +542,158 @@ function MarchMadnessBracket() {
 
     // Render Final Four and Championship
     const renderFinalFour = () => {
+        // Add more distinct styling and explicit z-indexing to ensure proper click handling
+        const semifinalStyle = {
+            position: 'relative',
+            margin: '10px',
+            padding: '10px',
+            backgroundColor: '#f8f9fa',
+            borderRadius: '6px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+            zIndex: 2
+        };
+
+        const championshipStyle = {
+            position: 'relative',
+            margin: '10px 20px',
+            padding: '12px',
+            backgroundColor: '#fff8e1',
+            borderRadius: '6px',
+            boxShadow: '0 3px 6px rgba(0,0,0,0.1)',
+            border: '1px solid #ffe082',
+            zIndex: 3
+        };
+
+        // Create distinct onClick handlers for each position to aid debugging
+        const handleSouthClick = () => {
+            console.log("South team clicked!");
+            handleFinalFourSelect(0, 0);
+        };
+
+        const handleEastClick = () => {
+            console.log("East team clicked!");
+            handleFinalFourSelect(0, 1);
+        };
+
+        const handleMidwestClick = () => {
+            console.log("Midwest team clicked!");
+            handleFinalFourSelect(1, 0);
+        };
+
+        const handleWestClick = () => {
+            console.log("West team clicked!");
+            handleFinalFourSelect(1, 1);
+        };
+
+        const handleChampionship1Click = () => {
+            console.log("Championship team 1 clicked!");
+            handleChampionshipSelect(0);
+        };
+
+        const handleChampionship2Click = () => {
+            console.log("Championship team 2 clicked!");
+            handleChampionshipSelect(1);
+        };
+
         return (
-            <div className="final-four">
+            <div className="final-four" style={{ position: 'relative', zIndex: 1 }}>
                 <div className="final-four-content">
                     {/* Display the Final Four matchups side by side in a pyramid structure */}
                     <div className="semifinal-container">
                         {/* Left side semifinal - South vs East */}
-                        <div className="semifinal-matchup left-semifinal">
-                            {renderTeam(
-                                bracket.finalFour[2], // South champion
-                                () => handleFinalFourSelect(0, 0),
-                                bracket.championship[0] === bracket.finalFour[2]
-                            )}
-                            {renderTeam(
-                                bracket.finalFour[1], // East champion
-                                () => handleFinalFourSelect(0, 1),
-                                bracket.championship[0] === bracket.finalFour[1]
-                            )}
+                        <div className="semifinal-matchup left-semifinal" style={semifinalStyle}>
+                            <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: '10px', fontSize: '14px' }}>South/East Semifinal</div>
+                            <div style={{ pointerEvents: 'auto' }}>
+                                {/* Wrap each team in its own div with explicit pointer-events */}
+                                <div style={{ margin: '5px 0' }}>
+                                    {renderTeam(
+                                        bracket.finalFour[2], // South champion
+                                        handleSouthClick,
+                                        bracket.championship[0] === bracket.finalFour[2],
+                                        false,
+                                        "South Champion"
+                                    )}
+                                </div>
+                                <div style={{ margin: '5px 0' }}>
+                                    {renderTeam(
+                                        bracket.finalFour[1], // East champion
+                                        handleEastClick,
+                                        bracket.championship[0] === bracket.finalFour[1],
+                                        false,
+                                        "East Champion"
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
                         {/* Championship in the middle */}
-                        <div className="championship-matchup">
-                            {renderTeam(
-                                bracket.championship[0], // Winner of South/East
-                                () => handleChampionshipSelect(0),
-                                bracket.champion === bracket.championship[0]
-                            )}
-                            {renderTeam(
-                                bracket.championship[1], // Winner of Midwest/West
-                                () => handleChampionshipSelect(1),
-                                bracket.champion === bracket.championship[1]
-                            )}
+                        <div className="championship-matchup" style={championshipStyle}>
+                            <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: '10px', color: '#bf8c00', fontSize: '16px' }}>Championship</div>
+                            <div style={{ pointerEvents: 'auto' }}>
+                                <div style={{ margin: '5px 0' }}>
+                                    {renderTeam(
+                                        bracket.championship[0], // Winner of South/East
+                                        handleChampionship1Click,
+                                        bracket.champion === bracket.championship[0],
+                                        false,
+                                        "South/East Winner"
+                                    )}
+                                </div>
+                                <div style={{ margin: '5px 0' }}>
+                                    {renderTeam(
+                                        bracket.championship[1], // Winner of Midwest/West
+                                        handleChampionship2Click,
+                                        bracket.champion === bracket.championship[1],
+                                        false,
+                                        "Midwest/West Winner"
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
                         {/* Right side semifinal - Midwest vs West */}
-                        <div className="semifinal-matchup right-semifinal">
-                            {renderTeam(
-                                bracket.finalFour[3], // Midwest champion
-                                () => handleFinalFourSelect(1, 0),
-                                bracket.championship[1] === bracket.finalFour[3]
-                            )}
-                            {renderTeam(
-                                bracket.finalFour[0], // West champion
-                                () => handleFinalFourSelect(1, 1),
-                                bracket.championship[1] === bracket.finalFour[0]
-                            )}
+                        <div className="semifinal-matchup right-semifinal" style={semifinalStyle}>
+                            <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: '10px', fontSize: '14px' }}>Midwest/West Semifinal</div>
+                            <div style={{ pointerEvents: 'auto' }}>
+                                <div style={{ margin: '5px 0' }}>
+                                    {renderTeam(
+                                        bracket.finalFour[3], // Midwest champion
+                                        handleMidwestClick,
+                                        bracket.championship[1] === bracket.finalFour[3],
+                                        false,
+                                        "Midwest Champion"
+                                    )}
+                                </div>
+                                <div style={{ margin: '5px 0' }}>
+                                    {renderTeam(
+                                        bracket.finalFour[0], // West champion
+                                        handleWestClick,
+                                        bracket.championship[1] === bracket.finalFour[0],
+                                        false,
+                                        "West Champion"
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    {/* Championship winner display */}
+                    {bracket.champion && (
+                        <div style={{
+                            textAlign: 'center',
+                            marginTop: '25px',
+                            padding: '10px 20px',
+                            backgroundColor: '#e8f5e9',
+                            border: '2px solid #4caf50',
+                            borderRadius: '8px',
+                            fontWeight: 'bold',
+                            color: '#2e7d32',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                            fontSize: '16px'
+                        }}>
+                            Champion: {bracket.champion.name} ({bracket.champion.seed})
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -609,11 +861,150 @@ function MarchMadnessBracket() {
         // Update the bracket state all at once
         setBracket(newBracket);
 
-        // Reset the flag after a short delay to ensure the current render completes
-        // This is important for subsequent manual selections to be properly highlighted
+        // Reset the flag after a delay
         setTimeout(() => {
             window.lastActionWasAutoFill = false;
-        }, 100);
+        }, 200); // Increased from 100ms to 200ms to ensure it catches all renders
+    };
+
+    // Debug function to help troubleshoot and verify bracket state
+    const debugBracket = () => {
+        console.log("=== BRACKET DEBUG INFO ===");
+        console.log("Final Four Teams:", bracket.finalFour.map(t => t ? `${t.name} (${t.seed})` : 'null'));
+        console.log("Championship Teams:", bracket.championship.map(t => t ? `${t.name} (${t.seed})` : 'null'));
+        console.log("Champion:", bracket.champion ? `${bracket.champion.name} (${bracket.champion.seed})` : 'null');
+
+        // Get a specific team to use for path testing
+        console.log("\n--- TEAM PATH TEST ---");
+        const testTeam = {
+            name: prompt("Enter team name to trace (e.g., Alabama):") || "Alabama",
+            seed: parseInt(prompt("Enter team seed (e.g., 1):") || "1")
+        };
+
+        console.log(`Tracing all instances of ${testTeam.name} (${testTeam.seed}):`);
+
+        // Helper to check if a team matches our test team
+        const isMatchingTeam = (team) => {
+            return team && team.name === testTeam.name && team.seed === testTeam.seed;
+        };
+
+        let foundLocations = [];
+
+        // Check all regions and rounds
+        Object.keys(bracket).forEach(region => {
+            // Skip non-region properties
+            if (!Array.isArray(bracket[region]) || !Array.isArray(bracket[region][0])) return;
+
+            // Check each round in this region
+            for (let round = 0; round <= 3; round++) {
+                for (let slot = 0; slot < bracket[region][round].length; slot++) {
+                    if (isMatchingTeam(bracket[region][round][slot])) {
+                        foundLocations.push(`Region: ${region}, Round: ${round}, Slot: ${slot}`);
+                    }
+                }
+            }
+        });
+
+        // Check Final Four
+        for (let i = 0; i < bracket.finalFour.length; i++) {
+            if (isMatchingTeam(bracket.finalFour[i])) {
+                foundLocations.push(`Final Four slot ${i} (${getRegionNameFromFinalFourIndex(i)})`);
+            }
+        }
+
+        // Check Championship
+        for (let i = 0; i < bracket.championship.length; i++) {
+            if (isMatchingTeam(bracket.championship[i])) {
+                foundLocations.push(`Championship slot ${i}`);
+            }
+        }
+
+        // Check Champion
+        if (isMatchingTeam(bracket.champion)) {
+            foundLocations.push('Champion');
+        }
+
+        // Display results
+        if (foundLocations.length > 0) {
+            console.log(`Found ${testTeam.name} at the following locations:`);
+            foundLocations.forEach(loc => console.log(` - ${loc}`));
+
+            // Test what would happen with a reset
+            console.log("\nIf we changed this team in round 1, these locations would be reset:");
+            foundLocations.forEach(loc => console.log(` - ${loc}`));
+        } else {
+            console.log(`No instances of ${testTeam.name} found in the bracket`);
+        }
+
+        // Now test an actual reset scenario
+        console.log("\n--- RESET SIMULATION TEST ---");
+        // Get a team from the first round that we want to replace
+        const testRegion = 'south';
+        const testRound = 0; // First round
+        const testGameIndex = 0;
+        const testTeamIndex = 0;
+        const oldTeam = bracket[testRegion][testRound][testGameIndex * 2 + testTeamIndex];
+
+        if (oldTeam) {
+            console.log(`Testing reset cascade if we change ${oldTeam.name} (${oldTeam.seed}) in ${testRegion} round ${testRound}...`);
+
+            // Helper to check if a team matches our old team
+            const matchesOldTeam = (team) => {
+                return team && team.name === oldTeam.name && team.seed === oldTeam.seed;
+            };
+
+            // Find all instances of the old team in later rounds
+            let oldTeamLocations = [];
+
+            // Check later rounds in this region
+            for (let round = testRound + 1; round <= 3; round++) {
+                for (let slot = 0; slot < bracket[testRegion][round].length; slot++) {
+                    if (matchesOldTeam(bracket[testRegion][round][slot])) {
+                        oldTeamLocations.push(`Region: ${testRegion}, Round: ${round}, Slot: ${slot}`);
+                    }
+                }
+            }
+
+            // Check Final Four if applicable
+            const ffIndex = getRegionFinalFourIndex(testRegion);
+            if (matchesOldTeam(bracket.finalFour[ffIndex])) {
+                oldTeamLocations.push(`Final Four slot ${ffIndex} (${getRegionNameFromFinalFourIndex(ffIndex)})`);
+
+                // Check Championship
+                const champIndex = ffIndex < 2 ? 0 : 1;
+                if (matchesOldTeam(bracket.championship[champIndex])) {
+                    oldTeamLocations.push(`Championship slot ${champIndex}`);
+
+                    // Check Champion
+                    if (matchesOldTeam(bracket.champion)) {
+                        oldTeamLocations.push('Champion');
+                    }
+                }
+            }
+
+            // Display reset results
+            if (oldTeamLocations.length > 0) {
+                console.log(`The reset would clear ${oldTeam.name} from these locations:`);
+                oldTeamLocations.forEach(loc => console.log(` - ${loc}`));
+            } else {
+                console.log(`${oldTeam.name} was not found in any later rounds`);
+            }
+        } else {
+            console.log("No team found in test position");
+        }
+
+        console.log("=== END DEBUG INFO ===");
+    };
+
+    // Helper function to get a region name from Final Four index
+    const getRegionNameFromFinalFourIndex = (index) => {
+        switch (index) {
+            case 0: return 'West';
+            case 1: return 'East';
+            case 2: return 'South';
+            case 3: return 'Midwest';
+            default: return 'Unknown';
+        }
     };
 
     // Main render method
@@ -621,21 +1012,40 @@ function MarchMadnessBracket() {
         <div className="bracket-container">
             <div className="bracket-content">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                    <button
-                        onClick={autoFillBracket}
-                        style={{
-                            padding: '8px 16px',
-                            backgroundColor: '#003478',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontWeight: 'bold',
-                            fontSize: '14px'
-                        }}
-                    >
-                        Auto-Fill Bracket (Lower Seeds Win)
-                    </button>
+                    <div>
+                        <button
+                            onClick={autoFillBracket}
+                            style={{
+                                padding: '8px 16px',
+                                backgroundColor: '#003478',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                fontSize: '14px',
+                                marginRight: '10px'
+                            }}
+                        >
+                            Auto-Fill Bracket (Lower Seeds Win)
+                        </button>
+
+                        <button
+                            onClick={debugBracket}
+                            style={{
+                                padding: '8px 16px',
+                                backgroundColor: '#6c757d',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                fontSize: '14px'
+                            }}
+                        >
+                            Debug Bracket
+                        </button>
+                    </div>
 
                     {/* Champion display at the top */}
                     {bracket.champion && (
@@ -673,7 +1083,7 @@ function MarchMadnessBracket() {
 
                         <div className="bracket-center" style={{
                             flex: '1',
-                            minWidth: '340px',
+                            minWidth: '400px',
                             display: 'flex',
                             justifyContent: 'center',
                             position: 'relative'
@@ -685,11 +1095,9 @@ function MarchMadnessBracket() {
                                 alignItems: 'center',
                                 width: '100%',
                                 height: '100%',
-                                position: 'absolute',
-                                top: '50%',  // Position from the middle of the container
-                                transform: 'translateY(0)', // Change from 25% to 0 to truly center it
-                                left: 0,
-                                right: 0
+                                position: 'relative',
+                                padding: '20px',
+                                pointerEvents: 'all'
                             }}>
                                 {renderFinalFour()}
                             </div>
