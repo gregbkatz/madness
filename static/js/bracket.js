@@ -170,22 +170,37 @@ function MarchMadnessBracket() {
 
     // Render a single game matchup
     const renderGame = (region, round, gameIndex, topTeam, bottomTeam) => {
+        const isWinnerTop = round < 3 && bracket[region][round + 1] &&
+            bracket[region][round + 1][Math.floor(gameIndex / 2) * 2 + gameIndex % 2] === topTeam;
+
+        const isWinnerBottom = round < 3 && bracket[region][round + 1] &&
+            bracket[region][round + 1][Math.floor(gameIndex / 2) * 2 + gameIndex % 2] === bottomTeam;
+
         return (
             <div className="game">
                 {renderTeam(
                     topTeam,
                     () => handleTeamSelect(region, round, gameIndex, 0),
-                    round < 3 && bracket[region][round + 1] &&
-                    bracket[region][round + 1][Math.floor(gameIndex / 2) * 2 + gameIndex % 2] === topTeam
+                    isWinnerTop
                 )}
                 {renderTeam(
                     bottomTeam,
                     () => handleTeamSelect(region, round, gameIndex, 1),
-                    round < 3 && bracket[region][round + 1] &&
-                    bracket[region][round + 1][Math.floor(gameIndex / 2) * 2 + gameIndex % 2] === bottomTeam
+                    isWinnerBottom
                 )}
             </div>
         );
+    };
+
+    // Calculate the appropriate spacing for games in each round
+    const getGameWrapperStyle = (round) => {
+        // Returns empty object for first round, appropriate margins for later rounds
+        if (round === 0) return {};
+
+        const spacingFactor = Math.pow(2, round);
+        return {
+            marginBottom: `${spacingFactor * 20}px`
+        };
     };
 
     // Render a full round of games for a region
@@ -199,7 +214,7 @@ function MarchMadnessBracket() {
             const bottomTeamIndex = gameIndex * 2 + 1;
 
             games.push(
-                <div key={`${region}-${round}-${i}`} className="game-wrapper">
+                <div key={`${region}-${round}-${i}`} className="game-wrapper" style={getGameWrapperStyle(round)}>
                     {renderGame(
                         region,
                         round,

@@ -38,9 +38,15 @@ body {
 /* Bracket container */
 .bracket-container {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     width: 100%;
     overflow-x: auto;
+}
+
+.bracket-content {
+    min-width: 1000px;
+    /* Ensure enough width for all rounds */
 }
 
 /* Round headers */
@@ -63,6 +69,7 @@ body {
 .bracket {
     display: flex;
     width: 100%;
+    margin-bottom: 20px;
 }
 
 /* Left and right bracket sides */
@@ -80,6 +87,7 @@ body {
     align-items: center;
     flex: 1;
     padding: 0 5px;
+    min-width: 160px;
 }
 
 /* Round columns */
@@ -89,6 +97,8 @@ body {
     flex: 1;
     justify-content: space-around;
     position: relative;
+    min-width: 150px;
+    padding: 0 5px;
 }
 
 .round-left {
@@ -102,13 +112,19 @@ body {
 /* Game matchups */
 .game {
     position: relative;
-    margin: 8px 0;
+    margin: 2px 0;
+    flex-shrink: 0;
+}
+
+.game-wrapper {
+    position: relative;
+    margin-bottom: 3px;
 }
 
 /* Team styling */
 .team {
     display: flex;
-    width: 150px;
+    width: 140px;
     height: 20px;
     border: 1px solid #ccc;
     margin: 1px 0;
@@ -128,7 +144,7 @@ body {
 }
 
 .seed {
-    width: 20px;
+    width: 18px;
     padding-left: 4px;
     font-weight: bold;
     display: inline-block;
@@ -142,7 +158,7 @@ body {
     text-overflow: ellipsis;
 }
 
-/* Bracket lines */
+/* Bracket lines - to be implemented with positioning */
 .connector {
     position: absolute;
     background-color: #ccc;
@@ -191,12 +207,14 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
 }
 
 .final-four-matchup {
     display: flex;
     flex-direction: column;
     margin-bottom: 10px;
+    width: 140px;
 }
 
 .championship {
@@ -204,6 +222,11 @@ body {
     flex-direction: column;
     align-items: center;
     margin-top: 10px;
+    width: 100%;
+}
+
+.championship-matchup {
+    width: 140px;
 }
 
 /* Championship header */
@@ -214,21 +237,25 @@ body {
     font-weight: bold;
 }
 
-/* Make round-specific spacing adjustments */
-.round:nth-child(1) .game {
+/* Make round-specific spacing adjustments for proper pyramid structure */
+/* First round (32 teams per side, 16 games) */
+.round:nth-child(1) .game-wrapper {
     margin: 0;
 }
 
-.round:nth-child(2) .game {
-    margin: 20px 0;
+/* Second round (16 teams per side, 8 games) */
+.round:nth-child(2) .game-wrapper {
+    margin-bottom: 20px;
 }
 
-.round:nth-child(3) .game {
-    margin: 60px 0;
+/* Sweet 16 (8 teams per side, 4 games) */
+.round:nth-child(3) .game-wrapper {
+    margin-bottom: 60px;
 }
 
-.round:nth-child(4) .game {
-    margin: 140px 0;
+/* Elite 8 (4 teams per side, 2 games) */
+.round:nth-child(4) .game-wrapper {
+    margin-bottom: 140px;
 }
 
 /* Region labels */
@@ -249,6 +276,7 @@ body {
     border: 1px solid #ddd;
     border-radius: 5px;
     text-align: center;
+    width: 140px;
 }
 
 .champion-label {
