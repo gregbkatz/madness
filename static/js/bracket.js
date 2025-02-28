@@ -11,7 +11,7 @@ function MarchMadnessBracket() {
         east: Array(4).fill().map(() => Array(8).fill(null)),
         south: Array(4).fill().map(() => Array(8).fill(null)),
         midwest: Array(4).fill().map(() => Array(8).fill(null)),
-        finalFour: [null, null],
+        finalFour: [null, null, null, null],
         championship: [null, null],
         champion: null
     });
@@ -95,9 +95,9 @@ function MarchMadnessBracket() {
             // Clear Final Four if Elite Eight winners are changed
             if (nextRound === 3) {
                 if (region === 'west') newBracket.finalFour[0] = null;
-                if (region === 'east') newBracket.finalFour[0] = null;
-                if (region === 'south') newBracket.finalFour[1] = null;
-                if (region === 'midwest') newBracket.finalFour[1] = null;
+                if (region === 'east') newBracket.finalFour[1] = null;
+                if (region === 'south') newBracket.finalFour[2] = null;
+                if (region === 'midwest') newBracket.finalFour[3] = null;
 
                 // Also clear championship and champion
                 newBracket.championship = [null, null];
@@ -108,11 +108,11 @@ function MarchMadnessBracket() {
         else if (round === 3) {
             // Update Final Four based on region
             if (region === 'west') newBracket.finalFour[0] = selectedTeam;
-            if (region === 'east') newBracket.finalFour[0] = selectedTeam;
-            if (region === 'south') newBracket.finalFour[1] = selectedTeam;
-            if (region === 'midwest') newBracket.finalFour[1] = selectedTeam;
+            if (region === 'east') newBracket.finalFour[1] = selectedTeam;
+            if (region === 'south') newBracket.finalFour[2] = selectedTeam;
+            if (region === 'midwest') newBracket.finalFour[3] = selectedTeam;
 
-            // Clear championship if this region's Final Four team changes
+            // Clear championship if relevant Final Four team changes
             if ((region === 'west' || region === 'east')) {
                 newBracket.championship[0] = null;
             } else {
@@ -128,12 +128,20 @@ function MarchMadnessBracket() {
 
     // Handle Final Four team selection
     const handleFinalFourSelect = (semifinalIndex, teamIndex) => {
-        if (!bracket.finalFour[semifinalIndex]) return;
-
+        // Create a copy of the bracket state
         const newBracket = { ...bracket };
-        newBracket.championship[semifinalIndex] = bracket.finalFour[semifinalIndex];
+
+        // Get the selected team from the Final Four
+        const selectedTeam = bracket.finalFour[teamIndex + semifinalIndex * 2];
+
+        if (!selectedTeam) return;
+
+        // Update the championship based on which semifinal was selected
+        newBracket.championship[semifinalIndex] = selectedTeam;
+
         // Clear champion if championship teams change
         newBracket.champion = null;
+
         setBracket(newBracket);
     };
 
@@ -196,27 +204,19 @@ function MarchMadnessBracket() {
 
     // Calculate the appropriate spacing for games in each round
     const getGameWrapperStyle = (round, alignment) => {
-        // Returns empty object for first round, appropriate margins for later rounds
-        if (round === 0) return {};
+        // Return consistent spacing for all regions to ensure vertical alignment
+        if (round === 0) return { marginBottom: '2px' };
 
-        const spacingFactor = Math.pow(2, round);
-        const isRightRegion = alignment === 'right';
+        // Use the same spacing values for all regions for consistency
+        const spacingMap = {
+            1: 20, // 2nd round
+            2: 60, // Sweet 16
+            3: 140 // Elite 8
+        };
 
-        // Adjust spacing based on whether it's a right or left region
-        if (isRightRegion) {
-            // For right regions with reverse round order
-            // (Elite 8 is now at position 0, Sweet 16 at 1, etc.)
-            const reverseRound = 3 - round; // Convert to right region round order
-            const rightSpacingFactor = Math.pow(2, reverseRound);
-            return {
-                marginBottom: `${rightSpacingFactor * 20}px`
-            };
-        } else {
-            // For left regions with standard order
-            return {
-                marginBottom: `${spacingFactor * 20}px`
-            };
-        }
+        return {
+            marginBottom: `${spacingMap[round]}px`
+        };
     };
 
     // Render a full round of games for a region
@@ -255,42 +255,60 @@ function MarchMadnessBracket() {
     const renderFinalFour = () => {
         return (
             <div className="final-four">
-                <div className="final-four-matchup">
-                    {renderTeam(
-                        bracket.finalFour[0],
-                        () => handleFinalFourSelect(0, 0),
-                        bracket.championship[0] === bracket.finalFour[0]
-                    )}
-                    {renderTeam(
-                        bracket.finalFour[1],
-                        () => handleFinalFourSelect(1, 0),
-                        bracket.championship[1] === bracket.finalFour[1]
-                    )}
-                </div>
-
-                <div className="championship">
-                    <div className="championship-header">CHAMPIONSHIP</div>
-                    <div className="championship-matchup">
+                <div className="championship-header">FINAL FOUR</div>
+                <div className="final-four-container">
+                    {/* First semifinal - West vs East */}
+                    <div className="semifinal-matchup">
                         {renderTeam(
-                            bracket.championship[0],
-                            () => handleChampionshipSelect(0),
-                            bracket.champion === bracket.championship[0]
+                            bracket.finalFour[0], // West champion
+                            () => handleFinalFourSelect(0, 0),
+                            bracket.championship[0] === bracket.finalFour[0]
                         )}
                         {renderTeam(
-                            bracket.championship[1],
-                            () => handleChampionshipSelect(1),
-                            bracket.champion === bracket.championship[1]
+                            bracket.finalFour[1], // East champion
+                            () => handleFinalFourSelect(0, 1),
+                            bracket.championship[0] === bracket.finalFour[1]
                         )}
                     </div>
 
-                    {bracket.champion && (
-                        <div className="champion-display">
-                            <div className="champion-label">CHAMPION</div>
-                            <div className="champion-name">
-                                {bracket.champion.name}
-                            </div>
+                    {/* Second semifinal - South vs Midwest */}
+                    <div className="semifinal-matchup">
+                        {renderTeam(
+                            bracket.finalFour[2], // South champion
+                            () => handleFinalFourSelect(1, 0),
+                            bracket.championship[1] === bracket.finalFour[2]
+                        )}
+                        {renderTeam(
+                            bracket.finalFour[3], // Midwest champion
+                            () => handleFinalFourSelect(1, 1),
+                            bracket.championship[1] === bracket.finalFour[3]
+                        )}
+                    </div>
+
+                    <div className="championship">
+                        <div className="championship-header">CHAMPIONSHIP</div>
+                        <div className="championship-matchup">
+                            {renderTeam(
+                                bracket.championship[0], // Winner of West/East
+                                () => handleChampionshipSelect(0),
+                                bracket.champion === bracket.championship[0]
+                            )}
+                            {renderTeam(
+                                bracket.championship[1], // Winner of South/Midwest
+                                () => handleChampionshipSelect(1),
+                                bracket.champion === bracket.championship[1]
+                            )}
                         </div>
-                    )}
+
+                        {bracket.champion && (
+                            <div className="champion-display">
+                                <div className="champion-label">CHAMPION</div>
+                                <div className="champion-name">
+                                    {bracket.champion.name}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         );

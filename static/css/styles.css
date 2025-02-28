@@ -63,6 +63,8 @@ body {
     flex: 1;
     text-transform: uppercase;
     font-size: 10px;
+    width: 140px;
+    /* Fixed width to match the teams */
 }
 
 /* Create a clear visual distinction for right side headers */
@@ -93,14 +95,15 @@ body {
 /* For left regions (South and East) */
 .bracket-left .region-rounds {
     flex-direction: row;
-    /* Normal flow: left to right */
+    justify-content: flex-start;
 }
 
 /* For right regions (Midwest and West) */
 .bracket-right .region-rounds {
     display: flex;
     width: 100%;
-    /* React control for right-to-left flow in renderRightRegion */
+    justify-content: flex-end;
+    /* Align rounds to the right edge */
 }
 
 /* Center section */
@@ -118,10 +121,12 @@ body {
 .round {
     display: flex;
     flex-direction: column;
-    flex: 1;
     justify-content: space-around;
     position: relative;
-    min-width: 150px;
+    min-width: 140px;
+    /* Fixed width that matches the team width */
+    max-width: 140px;
+    /* Ensure consistent width */
     padding: 0 5px;
 }
 
@@ -206,39 +211,26 @@ body {
     left: 0;
 }
 
-/* Champion display */
-.champion-container {
-    border: 1px solid #ccc;
-    padding: 5px 10px;
-    border-radius: 5px;
-    background-color: #f8f8f8;
-    text-align: center;
-    margin-top: 10px;
-}
-
-.champion-label {
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-
-.champion-team {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 /* Final Four section */
 .final-four {
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
+    padding-top: 10px;
 }
 
-.final-four-matchup {
+.final-four-container {
     display: flex;
     flex-direction: column;
-    margin-bottom: 10px;
+    align-items: center;
+    width: 100%;
+}
+
+.semifinal-matchup {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
     width: 140px;
 }
 
@@ -256,64 +248,15 @@ body {
 
 /* Championship header */
 .championship-header {
-    margin-bottom: 5px;
+    margin-bottom: 15px;
     text-align: center;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: bold;
-}
-
-/* These spacing rules are now handled in JavaScript */
-/* Remove these rules as they could be interfering with our new approach */
-
-/* Make round-specific spacing adjustments for proper pyramid structure */
-/* First round (32 teams per side, 16 games) */
-.round:nth-child(1) .game-wrapper {
-    /* No special margin needed - handled in JS */
-}
-
-/* Second round (16 teams per side, 8 games) */
-.round:nth-child(2) .game-wrapper {
-    /* No special margin needed - handled in JS */
-}
-
-/* Sweet 16 (8 teams per side, 4 games) */
-.round:nth-child(3) .game-wrapper {
-    /* No special margin needed - handled in JS */
-}
-
-/* Elite 8 (4 teams per side, 2 games) */
-.round:nth-child(4) .game-wrapper {
-    /* No special margin needed - handled in JS */
-}
-
-/* Reduce vertical spacing for Midwest and West regions */
-.bracket-right .region-rounds .round .game-wrapper {
-    /* No special margin needed - handled in JS */
-}
-
-.bracket-right .region-rounds .round:nth-child(2) .game-wrapper {
-    /* No special margin needed - handled in JS */
-}
-
-.bracket-right .region-rounds .round:nth-child(3) .game-wrapper {
-    /* No special margin needed - handled in JS */
-}
-
-.bracket-right .region-rounds .round:nth-child(4) .game-wrapper {
-    /* No special margin needed - handled in JS */
-}
-
-/* Region labels */
-.region-label {
-    text-align: center;
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: #666;
     text-transform: uppercase;
-    font-size: 11px;
+    color: #003478;
 }
 
-/* Championship center styling */
+/* Champion display */
 .champion-display {
     margin-top: 15px;
     padding: 10px;
@@ -335,6 +278,16 @@ body {
     font-size: 14px;
     font-weight: bold;
     color: #003478;
+}
+
+/* Region labels */
+.region-label {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #666;
+    text-transform: uppercase;
+    font-size: 11px;
 }
 
 /* TBD placeholder */
