@@ -83,6 +83,10 @@ function MarchMadnessBracket() {
 
         // Update the next round with the selected team if within regional rounds (0-3)
         if (nextRound < 4) {
+            // Store the currently selected team at this position (if any)
+            const previousSelectedTeam = bracket[region][nextRound][nextGameIndex * 2 + nextTeamIndex];
+
+            // Update with the newly selected team
             newBracket[region][nextRound][nextGameIndex * 2 + nextTeamIndex] = selectedTeam;
 
             // Clear subsequent rounds that might be affected by this change
@@ -92,28 +96,49 @@ function MarchMadnessBracket() {
                 newBracket[region][r][gameIdx * 2 + teamIdx] = null;
             }
 
-            // Clear Final Four if Elite Eight winners are changed
-            if (nextRound === 3) {
-                if (region === 'west') newBracket.finalFour[0] = null;
-                if (region === 'east') newBracket.finalFour[1] = null;
-                if (region === 'south') newBracket.finalFour[2] = null;
-                if (region === 'midwest') newBracket.finalFour[3] = null;
+            // Check if the previously selected team reached the Final Four
+            const regionFinalFourIndex = getRegionFinalFourIndex(region);
+            if (previousSelectedTeam && nextRound === 3 && bracket[region][3][0] === previousSelectedTeam) {
+                // Clear the team from Final Four
+                newBracket.finalFour[regionFinalFourIndex] = null;
 
-                // Also clear championship and champion
-                newBracket.championship = [null, null];
+                // Clear championship if necessary
+                if (bracket.championship[0] === previousSelectedTeam) {
+                    newBracket.championship[0] = null;
+                } else if (bracket.championship[1] === previousSelectedTeam) {
+                    newBracket.championship[1] = null;
+                }
+
+                // Clear champion if necessary
+                if (bracket.champion === previousSelectedTeam) {
+                    newBracket.champion = null;
+                }
+            }
+
+            // If team in Elite Eight changes, ensure Final Four is cleared
+            if (nextRound === 3 || round === 3) {
+                const regionFinalFourIndex = getRegionFinalFourIndex(region);
+                newBracket.finalFour[regionFinalFourIndex] = null;
+
+                // Clear championship and champion if affected
+                if (regionFinalFourIndex === 0 || regionFinalFourIndex === 1) {
+                    newBracket.championship[0] = null;
+                } else {
+                    newBracket.championship[1] = null;
+                }
+
+                // Always clear champion when Elite Eight changes
                 newBracket.champion = null;
             }
         }
         // Handle Elite Eight to Final Four advancement
         else if (round === 3) {
             // Update Final Four based on region
-            if (region === 'west') newBracket.finalFour[0] = selectedTeam;
-            if (region === 'east') newBracket.finalFour[1] = selectedTeam;
-            if (region === 'south') newBracket.finalFour[2] = selectedTeam;
-            if (region === 'midwest') newBracket.finalFour[3] = selectedTeam;
+            const regionFinalFourIndex = getRegionFinalFourIndex(region);
+            newBracket.finalFour[regionFinalFourIndex] = selectedTeam;
 
             // Clear championship if relevant Final Four team changes
-            if ((region === 'west' || region === 'east')) {
+            if (regionFinalFourIndex === 0 || regionFinalFourIndex === 1) {
                 newBracket.championship[0] = null;
             } else {
                 newBracket.championship[1] = null;
@@ -126,10 +151,21 @@ function MarchMadnessBracket() {
         setBracket(newBracket);
     };
 
+    // Helper function to get the Final Four index for a region
+    const getRegionFinalFourIndex = (region) => {
+        switch (region) {
+            case 'west': return 0;
+            case 'east': return 1;
+            case 'south': return 2;
+            case 'midwest': return 3;
+            default: return -1;
+        }
+    };
+
     // Handle Final Four team selection
     const handleFinalFourSelect = (semifinalIndex, teamIndex) => {
         // Create a copy of the bracket state
-        const newBracket = { ...bracket };
+        const newBracket = JSON.parse(JSON.stringify(bracket));
 
         // Get the selected team from the Final Four
         let selectedTeam;
@@ -365,7 +401,7 @@ function MarchMadnessBracket() {
     // Render the right regions (Midwest and West) with rounds in reverse order
     const renderRightRegion = (region, regionName) => {
         return (
-            <div className="region-rounds">
+            <div className="region-rounds" style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                 {/* Render Elite 8 (Round 3) first - leftmost */}
                 {renderRound(region, 3, 'right')}
 
