@@ -203,7 +203,8 @@ body {
 
 .team.winner {
     font-weight: bold;
-    background-color: #e6f0ff;
+    background-color: transparent;
+    border-left: 2px solid #003478;
 }
 
 .seed {
@@ -252,10 +253,13 @@ body {
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: 40px 0 20px 0;
-    /* Greatly increased top padding from 20px to 40px */
-    position: relative;
-    margin-top: 0;
+    padding: 0;
+    position: absolute;
+    top: 70%;
+    /* Change from 80% to 70% to position it more centered */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Keeps horizontal centering but now with vertical centering */
 }
 
 .final-four-content {
