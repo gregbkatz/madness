@@ -13,6 +13,28 @@ body {
     background-color: #fff;
 }
 
+/* App header */
+.app-header {
+    background-color: #003478;
+    color: white;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.app-header h1 {
+    font-size: 18px;
+    margin: 0;
+}
+
+.last-updated {
+    font-size: 12px;
+    color: #ccc;
+}
+
 /* Bracket container */
 .bracket-container {
     display: flex;
@@ -209,18 +231,6 @@ body {
     margin: 140px 0;
 }
 
-/* Hover effect for champion path */
-.hover-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #999;
-    font-size: 11px;
-    text-align: center;
-    width: 100%;
-}
-
 /* Region labels */
 .region-label {
     text-align: center;
@@ -232,28 +242,26 @@ body {
 }
 
 /* Championship center styling */
-.champion-circle {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: 2px solid #0056b3;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #fff;
-    margin: 10px 0;
-    overflow: hidden;
+.champion-display {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    text-align: center;
 }
 
-.champion-percentage {
-    font-size: 24px;
+.champion-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.champion-name {
+    font-size: 14px;
     font-weight: bold;
-    color: #0056b3;
-}
-
-.champion-team-logo {
-    max-width: 70%;
-    max-height: 70%;
+    color: #003478;
 }
 
 /* TBD placeholder */

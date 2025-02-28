@@ -222,10 +222,6 @@ function MarchMadnessBracket() {
     const renderFinalFour = () => {
         return (
             <div className="final-four">
-                <div className="hover-text">
-                    Hover to see each<br />team's path to the<br />championship.
-                </div>
-
                 <div className="final-four-matchup">
                     {renderTeam(
                         bracket.finalFour[0],
@@ -255,8 +251,11 @@ function MarchMadnessBracket() {
                     </div>
 
                     {bracket.champion && (
-                        <div className="champion-circle">
-                            <div className="champion-percentage">100%</div>
+                        <div className="champion-display">
+                            <div className="champion-label">CHAMPION</div>
+                            <div className="champion-name">
+                                {bracket.champion.name}
+                            </div>
                         </div>
                     )}
                 </div>
