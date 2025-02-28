@@ -1,0 +1,264 @@
+/* General styling */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 10px;
+    background-color: #fff;
+}
+
+/* Bracket container */
+.bracket-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* Round headers */
+.round-headers {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 5px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.round-header {
+    flex: 1;
+    text-transform: uppercase;
+    font-size: 10px;
+}
+
+/* Main bracket */
+.bracket {
+    display: flex;
+    width: 100%;
+}
+
+/* Left and right bracket sides */
+.bracket-left,
+.bracket-right {
+    display: flex;
+    flex: 4;
+}
+
+/* Center section */
+.bracket-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    padding: 0 5px;
+}
+
+/* Round columns */
+.round {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    justify-content: space-around;
+    position: relative;
+}
+
+.round-left {
+    align-items: flex-end;
+}
+
+.round-right {
+    align-items: flex-start;
+}
+
+/* Game matchups */
+.game {
+    position: relative;
+    margin: 8px 0;
+}
+
+/* Team styling */
+.team {
+    display: flex;
+    width: 150px;
+    height: 20px;
+    border: 1px solid #ccc;
+    margin: 1px 0;
+    background-color: #ffffff;
+    cursor: pointer;
+    position: relative;
+    align-items: center;
+}
+
+.team:hover {
+    background-color: #f0f0f0;
+}
+
+.team.winner {
+    font-weight: bold;
+    background-color: #e6f0ff;
+}
+
+.seed {
+    width: 20px;
+    padding-left: 4px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.team-name {
+    flex: 1;
+    padding-left: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Bracket lines */
+.connector {
+    position: absolute;
+    background-color: #ccc;
+}
+
+.connector-horizontal {
+    height: 1px;
+}
+
+.connector-vertical {
+    width: 1px;
+}
+
+/* West/East specific alignments */
+.bracket-left .connector-horizontal {
+    right: 0;
+}
+
+.bracket-right .connector-horizontal {
+    left: 0;
+}
+
+/* Champion display */
+.champion-container {
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+    border-radius: 5px;
+    background-color: #f8f8f8;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.champion-label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.champion-team {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Final Four section */
+.final-four {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.final-four-matchup {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+}
+
+.championship {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+}
+
+/* Championship header */
+.championship-header {
+    margin-bottom: 5px;
+    text-align: center;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+/* Make round-specific spacing adjustments */
+.round:nth-child(1) .game {
+    margin: 0;
+}
+
+.round:nth-child(2) .game {
+    margin: 20px 0;
+}
+
+.round:nth-child(3) .game {
+    margin: 60px 0;
+}
+
+.round:nth-child(4) .game {
+    margin: 140px 0;
+}
+
+/* Hover effect for champion path */
+.hover-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #999;
+    font-size: 11px;
+    text-align: center;
+    width: 100%;
+}
+
+/* Region labels */
+.region-label {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #666;
+    text-transform: uppercase;
+    font-size: 11px;
+}
+
+/* Championship center styling */
+.champion-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 2px solid #0056b3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #fff;
+    margin: 10px 0;
+    overflow: hidden;
+}
+
+.champion-percentage {
+    font-size: 24px;
+    font-weight: bold;
+    color: #0056b3;
+}
+
+.champion-team-logo {
+    max-width: 70%;
+    max-height: 70%;
+}
+
+/* TBD placeholder */
+.team.tbd {
+    color: #999;
+    font-style: italic;
+    cursor: default;
+}
