@@ -45,7 +45,7 @@ body {
 }
 
 .bracket-content {
-    min-width: 1000px;
+    min-width: 1200px;
     /* Ensure enough width for all rounds */
 }
 
@@ -77,6 +77,23 @@ body {
 .bracket-right {
     display: flex;
     flex: 4;
+}
+
+/* Region rounds container */
+.region-rounds {
+    display: flex;
+    width: 100%;
+}
+
+/* For left regions (South and East) */
+.bracket-left .region-rounds {
+    flex-direction: row;
+}
+
+/* For right regions (Midwest and West) */
+.bracket-right .region-rounds {
+    flex-direction: row-reverse;
+    /* Reverse the order for right-side regions */
 }
 
 /* Center section */
