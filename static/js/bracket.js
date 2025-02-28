@@ -324,10 +324,10 @@ function MarchMadnessBracket() {
                         <div className="region midwest">
                             <div className="region-label">Midwest</div>
                             <div className="region-rounds">
-                                {renderRound('midwest', 3, 'right')}
-                                {renderRound('midwest', 2, 'right')}
-                                {renderRound('midwest', 1, 'right')}
                                 {renderRound('midwest', 0, 'right')}
+                                {renderRound('midwest', 1, 'right')}
+                                {renderRound('midwest', 2, 'right')}
+                                {renderRound('midwest', 3, 'right')}
                             </div>
                         </div>
                     </div>
@@ -354,10 +354,10 @@ function MarchMadnessBracket() {
                         <div className="region west">
                             <div className="region-label">West</div>
                             <div className="region-rounds">
-                                {renderRound('west', 3, 'right')}
-                                {renderRound('west', 2, 'right')}
-                                {renderRound('west', 1, 'right')}
                                 {renderRound('west', 0, 'right')}
+                                {renderRound('west', 1, 'right')}
+                                {renderRound('west', 2, 'right')}
+                                {renderRound('west', 3, 'right')}
                             </div>
                         </div>
                     </div>

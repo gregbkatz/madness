@@ -126,6 +126,23 @@ body {
     align-items: flex-start;
 }
 
+/* Make Midwest and West regions have inverse ordering of rounds */
+.bracket-right .region-rounds .round:nth-child(1) {
+    order: 4;
+}
+
+.bracket-right .region-rounds .round:nth-child(2) {
+    order: 3;
+}
+
+.bracket-right .region-rounds .round:nth-child(3) {
+    order: 2;
+}
+
+.bracket-right .region-rounds .round:nth-child(4) {
+    order: 1;
+}
+
 /* Game matchups */
 .game {
     position: relative;
@@ -273,6 +290,27 @@ body {
 /* Elite 8 (4 teams per side, 2 games) */
 .round:nth-child(4) .game-wrapper {
     margin-bottom: 140px;
+}
+
+/* Reduce vertical spacing for Midwest and West regions */
+.bracket-right .region-rounds .round .game-wrapper {
+    margin-bottom: 2px;
+    /* Minimal margin for all rounds initially */
+}
+
+.bracket-right .region-rounds .round:nth-child(2) .game-wrapper {
+    margin-bottom: 15px;
+    /* Second round spacing */
+}
+
+.bracket-right .region-rounds .round:nth-child(3) .game-wrapper {
+    margin-bottom: 50px;
+    /* Sweet 16 spacing */
+}
+
+.bracket-right .region-rounds .round:nth-child(4) .game-wrapper {
+    margin-bottom: 120px;
+    /* Elite 8 spacing */
 }
 
 /* Region labels */
