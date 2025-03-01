@@ -465,7 +465,7 @@ body {
 
 /* Keep the bracket sections balanced */
 .bracket:first-child {
-    margin-bottom: 30px;
+    margin-bottom: -30px;
 }
 
 .bracket:nth-child(2) {
