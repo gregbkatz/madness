@@ -470,7 +470,7 @@ body {
 
 /* Keep the bracket sections balanced */
 .bracket:first-child {
-    margin-bottom: -150px;
+    margin-bottom: -130px;
 }
 
 .bracket:nth-child(2) {
