@@ -402,7 +402,7 @@ function MarchMadnessBracket() {
 
         // Apply the winner class only if manually selected (not during auto-fill)
         // Check the global flag to determine if we're in an auto-fill operation
-        const winnerClass = isWinner && !window.lastActionWasAutoFill ? 'winner' : '';
+        const winnerClass = isWinner ? 'winner' : '';
 
         // Style to ensure all teams are clearly clickable
         const teamStyle = {
@@ -676,24 +676,6 @@ function MarchMadnessBracket() {
                             </div>
                         </div>
                     </div>
-
-                    {/* Championship winner display */}
-                    {bracket.champion && (
-                        <div style={{
-                            textAlign: 'center',
-                            marginTop: '25px',
-                            padding: '10px 20px',
-                            backgroundColor: '#e8f5e9',
-                            border: '2px solid #4caf50',
-                            borderRadius: '8px',
-                            fontWeight: 'bold',
-                            color: '#2e7d32',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                            fontSize: '16px'
-                        }}>
-                            Champion: {bracket.champion.name} ({bracket.champion.seed})
-                        </div>
-                    )}
                 </div>
             </div>
         );
@@ -758,46 +740,51 @@ function MarchMadnessBracket() {
 
                 for (let gameIndex = 0; gameIndex < gamesInRound; gameIndex++) {
                     // Get the two teams in this matchup
-                    const team1Index = gameIndex * 2;
-                    const team2Index = gameIndex * 2 + 1;
+                    let team1, team2;
 
-                    const team1 = round === 0 ?
-                        newBracket[region][round][team1Index] :
-                        newBracket[region][round - 1][team1Index * 2];
+                    if (round === 0) {
+                        // First round - teams are already set
+                        team1 = newBracket[region][round][gameIndex * 2];
+                        team2 = newBracket[region][round][gameIndex * 2 + 1];
+                    } else {
+                        // Later rounds - need to get teams from previous round's winners
+                        const prevRound = round - 1;
+                        const team1Index = gameIndex * 2;
+                        const team2Index = gameIndex * 2 + 1;
 
-                    const team2 = round === 0 ?
-                        newBracket[region][round][team2Index] :
-                        newBracket[region][round - 1][team2Index * 2];
+                        team1 = newBracket[region][round][team1Index];
+                        team2 = newBracket[region][round][team2Index];
+                    }
 
-                    // Make sure we have both teams before determining a winner
-                    if (team1 && team2) {
-                        // Determine the winner based on seed
-                        let winner;
+                    // Skip if either team is missing
+                    if (!team1 || !team2) continue;
 
-                        if (team1.seed < team2.seed) {
-                            // Team 1 has a lower seed
-                            winner = team1;
-                        } else if (team2.seed < team1.seed) {
-                            // Team 2 has a lower seed
-                            winner = team2;
-                        } else {
-                            // Seeds are the same, select randomly
-                            winner = Math.random() < 0.5 ? team1 : team2;
-                        }
+                    // Determine the winner based on seed
+                    let winner;
 
-                        // Set the winner in the next round
-                        if (round < 3) {
-                            // For rounds 0-2, advance to the next round in the same region
-                            const nextRound = round + 1;
-                            const nextGameIndex = Math.floor(gameIndex / 2);
-                            const nextTeamIndex = gameIndex % 2;
+                    if (parseInt(team1.seed) < parseInt(team2.seed)) {
+                        // Team 1 has a lower seed (better)
+                        winner = team1;
+                    } else if (parseInt(team2.seed) < parseInt(team1.seed)) {
+                        // Team 2 has a lower seed (better)
+                        winner = team2;
+                    } else {
+                        // Seeds are the same, select randomly
+                        winner = Math.random() < 0.5 ? team1 : team2;
+                    }
 
-                            newBracket[region][nextRound][nextGameIndex * 2 + nextTeamIndex] = winner;
-                        } else {
-                            // For Elite Eight (round 3), advance to Final Four
-                            const ffIndex = getRegionFinalFourIndex(region);
-                            newBracket.finalFour[ffIndex] = winner;
-                        }
+                    // Set the winner in the next round
+                    if (round < 3) {
+                        // For rounds 0-2, advance to the next round in the same region
+                        const nextRound = round + 1;
+                        const nextGameIndex = Math.floor(gameIndex / 2);
+                        const nextTeamIndex = gameIndex % 2;
+
+                        newBracket[region][nextRound][nextGameIndex * 2 + nextTeamIndex] = winner;
+                    } else {
+                        // For Elite Eight (round 3), advance to Final Four
+                        const ffIndex = getRegionFinalFourIndex(region);
+                        newBracket.finalFour[ffIndex] = winner;
                     }
                 }
             }
@@ -809,12 +796,12 @@ function MarchMadnessBracket() {
 
             if (semifinalIndex === 0) {
                 // South vs East
-                team1 = newBracket.finalFour[2]; // South
+                team1 = newBracket.finalFour[0]; // South
                 team2 = newBracket.finalFour[1]; // East
             } else {
                 // Midwest vs West
-                team1 = newBracket.finalFour[3]; // Midwest
-                team2 = newBracket.finalFour[0]; // West
+                team1 = newBracket.finalFour[2]; // Midwest
+                team2 = newBracket.finalFour[3]; // West
             }
 
             // Make sure we have both teams before determining a winner
@@ -822,9 +809,9 @@ function MarchMadnessBracket() {
                 // Determine the winner based on seed
                 let winner;
 
-                if (team1.seed < team2.seed) {
+                if (parseInt(team1.seed) < parseInt(team2.seed)) {
                     winner = team1;
-                } else if (team2.seed < team1.seed) {
+                } else if (parseInt(team2.seed) < parseInt(team1.seed)) {
                     winner = team2;
                 } else {
                     // Seeds are the same, select randomly
@@ -845,9 +832,9 @@ function MarchMadnessBracket() {
             // Determine the winner based on seed
             let winner;
 
-            if (team1.seed < team2.seed) {
+            if (parseInt(team1.seed) < parseInt(team2.seed)) {
                 winner = team1;
-            } else if (team2.seed < team1.seed) {
+            } else if (parseInt(team2.seed) < parseInt(team1.seed)) {
                 winner = team2;
             } else {
                 // Seeds are the same, select randomly
@@ -864,7 +851,7 @@ function MarchMadnessBracket() {
         // Reset the flag after a delay
         setTimeout(() => {
             window.lastActionWasAutoFill = false;
-        }, 200); // Increased from 100ms to 200ms to ensure it catches all renders
+        }, 300); // Increased from 200ms to 300ms to ensure it catches all renders
     };
 
     // Debug function to help troubleshoot and verify bracket state
@@ -1046,21 +1033,6 @@ function MarchMadnessBracket() {
                             Debug Bracket
                         </button>
                     </div>
-
-                    {/* Champion display at the top */}
-                    {bracket.champion && (
-                        <div style={{
-                            padding: '8px 16px',
-                            backgroundColor: '#f5f5f5',
-                            border: '1px solid #ddd',
-                            borderRadius: '4px',
-                            fontWeight: 'bold',
-                            fontSize: '14px',
-                            color: '#003478'
-                        }}>
-                            Champion: {bracket.champion.name} ({bracket.champion.seed})
-                        </div>
-                    )}
                 </div>
 
                 {renderRoundHeaders()}

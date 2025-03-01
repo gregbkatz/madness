@@ -1,0 +1,26 @@
+<div class="final-four">
+    <div class="final-four-header">Final Four</div>
+
+    <!-- Champion Display - Always visible and placed above the championship matchup -->
+    <div class="championship-container">
+        <div class="trophy-icon">🏆</div>
+        <div class="championship-header">Champion</div>
+        <div class="team" style="background-color: #e8f5e9; border: 2px solid #4caf50;">
+            <span class="name">{{ champion.name if champion else 'TBD' }}</span>
+        </div>
+    </div>
+
+    <!-- Championship Matchup -->
+    <div class="final-round">
+        <div class="final-matchup">
+            <div class="team" data-team-id="{{ championship.team1.id }}">
+                <span class="seed">{{ championship.team1.seed }}</span>
+                <span class="name">{{ championship.team1.name }}</span>
+            </div>
+            <div class="team" data-team-id="{{ championship.team2.id }}">
+                <span class="seed">{{ championship.team2.seed }}</span>
+                <span class="name">{{ championship.team2.name }}</span>
+            </div>
+        </div>
+    </div>
+</div>
