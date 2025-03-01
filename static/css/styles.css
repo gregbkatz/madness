@@ -73,23 +73,16 @@ body {
 /* Round headers */
 .round-headers {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     width: 100%;
-    margin-bottom: 5px;
-    font-weight: bold;
-    text-align: center;
     max-width: 1500px;
+    gap: 0;
 }
 
 .round-header {
-    flex: 1;
-    text-transform: uppercase;
-    font-size: 10px;
-    width: 140px;
+    flex: 0 0 140px;
     max-width: 140px;
-    padding: 0 5px;
-    color: #333;
-    text-align: center;
+    padding: 0;
 }
 
 .round-header-center {
@@ -449,4 +442,179 @@ body {
     button {
         margin-bottom: 5px;
     }
+}
+
+/* Team components styling */
+.team-content {
+    display: flex;
+    align-items: center;
+}
+
+.seed-circle {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: #f2f2f2;
+    border: 1px solid #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 6px;
+    font-size: 9px;
+}
+
+.team-name-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100px;
+}
+
+/* Champion section styling */
+.champion-section {
+    margin-bottom: 10px;
+}
+
+.trophy-icon {
+    font-size: 24px;
+}
+
+.champion-title {
+    font-weight: bold;
+    font-size: 16px;
+    color: #2e7d32;
+}
+
+.champion-team {
+    padding: 10px;
+    background-color: white;
+    border-radius: 4px;
+    border: 1px solid #4caf50;
+    cursor: pointer;
+}
+
+.champion-team-name {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.champion-tbd {
+    font-size: 16px;
+    color: #aaa;
+    font-style: italic;
+}
+
+/* Semifinal and championship sections */
+.semifinal-title {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.team-container {
+    margin: 5px 0;
+}
+
+.championship-title {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #bf8c00;
+    font-size: 16px;
+}
+
+/* Region layout styling */
+.region-column {
+    display: flex;
+    flex-direction: column;
+    min-width: 140px;
+    max-width: 140px;
+    padding: 0 5px;
+}
+
+.region-column-right {
+    align-items: flex-start;
+}
+
+.region-label-styled {
+    margin-bottom: 15px;
+    margin-top: 15px;
+}
+
+.region-rounds-right {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Center bracket styling */
+.bracket-center-styled {
+    flex: 1;
+    min-width: 400px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.bracket-center-smaller {
+    flex: 1;
+    min-width: 340px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.center-wrapper-styled {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+}
+
+/* Final Four specific styling */
+.final-four-styled {
+    position: relative;
+    z-index: 1;
+}
+
+.semifinal-styled {
+    position: relative;
+    margin: 10px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    z-index: 2;
+}
+
+.championship-styled {
+    position: relative;
+    margin: 10px 20px;
+    padding: 12px;
+    background-color: #fff8e1;
+    border-radius: 6px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ffe082;
+    z-index: 3;
+}
+
+.champion-display-styled {
+    margin: 0 auto 15px auto;
+    padding: 15px;
+    background-color: #e8f5e9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 2px solid #4caf50;
+    text-align: center;
+    max-width: 200px;
+}
+
+/* Brackets wrapper styling */
+.brackets-wrapper-styled {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }

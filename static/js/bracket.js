@@ -809,7 +809,7 @@ function MarchMadnessBracket() {
 
                         <div className="bracket-center" style={{
                             flex: '1',
-                            minWidth: '400px',
+                            minWidth: '320px',
                             display: 'flex',
                             justifyContent: 'center',
                             position: 'relative'
