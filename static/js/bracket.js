@@ -601,7 +601,7 @@ function MarchMadnessBracket() {
                                 border: '1px solid #4caf50',
                                 cursor: 'pointer'
                             }}
-                                onClick={bracket.champion === championship[0] ? handleChampion1Select : handleChampion2Select}>
+                            >
                                 <div style={{ fontWeight: 'bold', fontSize: '16px' }}>{bracket.champion.name} ({bracket.champion.seed})</div>
                             </div>
                         ) : (
