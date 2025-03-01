@@ -6,6 +6,10 @@ from data.teams import teams
 import copy
 import random
 import json
+from datetime import datetime
+
+# List of regions in the tournament
+regions = ["west", "east", "south", "midwest"]
 
 def initialize_bracket():
     """
@@ -19,7 +23,15 @@ def initialize_bracket():
         "midwest": [[] for _ in range(4)],
         "finalFour": [None, None, None, None],
         "championship": [None, None],
-        "champion": None
+        "champion": None,
+        "winners": {
+            "west": [[] for _ in range(4)],
+            "east": [[] for _ in range(4)],
+            "south": [[] for _ in range(4)],
+            "midwest": [[] for _ in range(4)],
+            "finalFour": [],
+            "championship": []
+        }
     }
     
     # Initialize the bracket with teams in the first round
@@ -71,6 +83,16 @@ def initialize_bracket():
         
         # Round 3 (Elite 8): 2 slots
         bracket[region][3] = [None] * 2
+        
+        # Initialize winners arrays with empty lists
+        bracket["winners"][region][0] = []
+        bracket["winners"][region][1] = []
+        bracket["winners"][region][2] = []
+        bracket["winners"][region][3] = []
+    
+    # Initialize Final Four and Championship winners
+    bracket["winners"]["finalFour"] = []
+    bracket["winners"]["championship"] = []
     
     return bracket
 
@@ -83,6 +105,81 @@ def get_region_final_four_index(region):
         'midwest': 3
     }
     return mapping.get(region, -1)
+
+def update_winners(bracket):
+    """
+    Update the winners in the bracket based on the current selections.
+    This ensures we have a record of all winning teams for highlighting.
+    """
+    # Reset all winners
+    for region in ["west", "east", "south", "midwest"]:
+        for round_idx in range(4):
+            bracket["winners"][region][round_idx] = []
+
+    bracket["winners"]["finalFour"] = []
+    bracket["winners"]["championship"] = []
+    
+    # For each region, find teams that advance to next rounds
+    for region in ["west", "east", "south", "midwest"]:
+        # Process rounds 0 through 3
+        for round_idx in range(4):
+            if round_idx < 3:  # Rounds 0, 1, 2 (First Round through Sweet 16)
+                next_round = round_idx + 1
+                games_in_round = 2 ** (3 - round_idx)
+                
+                # Look at each pairing of teams to find which one advanced
+                for game_idx in range(games_in_round):
+                    base_idx = game_idx * 2  # Starting index for the pair in current round
+                    next_game_idx = game_idx // 2  # Game index in next round
+                    next_team_slot = next_game_idx * 2 + (game_idx % 2)  # Team slot in next round
+                    
+                    # Get the team that advanced to the next round
+                    if next_team_slot < len(bracket[region][next_round]) and bracket[region][next_round][next_team_slot]:
+                        advanced_team = bracket[region][next_round][next_team_slot]
+                        
+                        # Check if it's the first team in the pair
+                        if base_idx < len(bracket[region][round_idx]) and bracket[region][round_idx][base_idx] == advanced_team:
+                            bracket["winners"][region][round_idx].append(base_idx)
+                        
+                        # Check if it's the second team in the pair
+                        elif base_idx + 1 < len(bracket[region][round_idx]) and bracket[region][round_idx][base_idx + 1] == advanced_team:
+                            bracket["winners"][region][round_idx].append(base_idx + 1)
+            
+            elif round_idx == 3:  # Elite Eight (Round 3) - winners advance to Final Four
+                ff_idx = get_region_final_four_index(region)
+                
+                # Check if a team has advanced to the Final Four
+                if ff_idx is not None and bracket["finalFour"][ff_idx]:
+                    advanced_team = bracket["finalFour"][ff_idx]
+                    
+                    # Check which team from Elite Eight advanced
+                    if bracket[region][3][0] == advanced_team:
+                        bracket["winners"][region][3].append(0)
+                    elif len(bracket[region][3]) > 1 and bracket[region][3][1] == advanced_team:
+                        bracket["winners"][region][3].append(1)
+        
+    # Process Final Four winners advancing to Championship
+    if bracket["championship"][0]:  # First championship slot (South/East)
+        if bracket["championship"][0] == bracket["finalFour"][2]:  # South
+            bracket["winners"]["finalFour"].append(2)
+        elif bracket["championship"][0] == bracket["finalFour"][1]:  # East
+            bracket["winners"]["finalFour"].append(1)
+    
+    if bracket["championship"][1]:  # Second championship slot (Midwest/West)
+        if bracket["championship"][1] == bracket["finalFour"][3]:  # Midwest
+            bracket["winners"]["finalFour"].append(3)
+        elif bracket["championship"][1] == bracket["finalFour"][0]:  # West
+            bracket["winners"]["finalFour"].append(0)
+    
+    # Process Championship winner
+    if bracket["champion"]:
+        # Determine which Championship team won
+        if bracket["champion"] == bracket["championship"][0]:
+            bracket["winners"]["championship"].append(0)
+        elif bracket["champion"] == bracket["championship"][1]:
+            bracket["winners"]["championship"].append(1)
+    
+    return bracket
 
 def reset_team_completely(bracket, region, team_to_reset, start_round):
     """
@@ -165,6 +262,9 @@ def reset_team_completely(bracket, region, team_to_reset, start_round):
         bracket["champion"] = None
         changes.append(f"Cleared {team_name} from Champion")
     
+    # Update winners information after changes
+    bracket = update_winners(bracket)
+    
     return bracket
 
 def select_team(bracket, region, round_idx, game_index, team_index):
@@ -214,6 +314,8 @@ def select_team(bracket, region, round_idx, game_index, team_index):
                 if bracket["champion"] == current_championship_team:
                     bracket["champion"] = None
             
+            # Update winners after changes
+            bracket = update_winners(bracket)
             return bracket
     elif round_idx == 5:  # Championship
         if region == "championship":
@@ -226,6 +328,8 @@ def select_team(bracket, region, round_idx, game_index, team_index):
             else:
                 bracket["champion"] = selected_team
             
+            # Update winners after changes
+            bracket = update_winners(bracket)
             return bracket
     
     # Ensure a team was selected
@@ -280,6 +384,9 @@ def select_team(bracket, region, round_idx, game_index, team_index):
                 # Clear champion if needed
                 if bracket["champion"] == current_final_four_team:
                     bracket["champion"] = None
+    
+    # Update winners after changes
+    bracket = update_winners(bracket)
     
     return bracket
 
@@ -392,10 +499,194 @@ def auto_fill_bracket(bracket=None):
         # Set the champion
         bracket["champion"] = winner
     
+    # Update winners after auto-filling
+    bracket = update_winners(bracket)
+    
+    return bracket
+
+def random_fill_bracket(bracket):
+    """Fill the bracket with completely random picks"""
+    # Create a deep copy to avoid modifying the original
+    bracket = copy.deepcopy(bracket)
+    
+    # Clear any existing picks first to start fresh
+    for region in regions:
+        for round_idx in range(1, 4):  # We don't clear round 0 as it has the initial teams
+            bracket[region][round_idx] = [None] * (2 ** (4 - round_idx))
+        
+        # Clear winners for each round
+        for round_idx in range(4):
+            bracket["winners"][region][round_idx] = []
+    
+    # Clear Final Four and Championship
+    for i in range(4):
+        bracket['finalFour'][i] = None
+    bracket["winners"]["finalFour"] = []
+    
+    bracket['championship'][0] = None
+    bracket['championship'][1] = None
+    bracket["winners"]["championship"] = []
+    
+    bracket['champion'] = None
+    
+    # Process each region
+    for region in regions:
+        # First round (Round of 64) - randomly pick winners from each matchup
+        for game_idx in range(8):
+            team1_idx = game_idx * 2
+            team2_idx = game_idx * 2 + 1
+            
+            # Get the two teams
+            team1 = bracket[region][0][team1_idx]
+            team2 = bracket[region][0][team2_idx]
+            
+            # Randomly select winner (0 for top team, 1 for bottom team)
+            winner_idx = random.randint(0, 1)
+            
+            # Next round placement
+            next_round_idx = 1  # Round 1 (Round of 32)
+            next_game_idx = game_idx // 2
+            next_team_idx = game_idx % 2
+            next_slot = next_game_idx * 2 + next_team_idx
+            
+            # Set the winner in the bracket
+            if winner_idx == 0:
+                # Top team wins
+                bracket[region][next_round_idx][next_slot] = team1
+                bracket["winners"][region][0].append(team1_idx)
+            else:
+                # Bottom team wins
+                bracket[region][next_round_idx][next_slot] = team2
+                bracket["winners"][region][0].append(team2_idx)
+        
+        # Process round 1 (Round of 32)
+        for game_idx in range(4):
+            team1_idx = game_idx * 2
+            team2_idx = game_idx * 2 + 1
+            
+            # Get teams in this round
+            team1 = bracket[region][1][team1_idx]
+            team2 = bracket[region][1][team2_idx]
+            
+            # If we have both teams, randomly select one
+            if team1 is not None and team2 is not None:
+                winner_idx = random.randint(0, 1)
+                
+                # Next round placement
+                next_round_idx = 2  # Round 2 (Sweet 16)
+                next_game_idx = game_idx // 2
+                next_team_idx = game_idx % 2
+                next_slot = next_game_idx * 2 + next_team_idx
+                
+                if winner_idx == 0:
+                    # First team wins
+                    bracket[region][next_round_idx][next_slot] = team1
+                    bracket["winners"][region][1].append(team1_idx)
+                else:
+                    # Second team wins
+                    bracket[region][next_round_idx][next_slot] = team2
+                    bracket["winners"][region][1].append(team2_idx)
+        
+        # Process round 2 (Sweet 16)
+        for game_idx in range(2):
+            team1_idx = game_idx * 2
+            team2_idx = game_idx * 2 + 1
+            
+            # Get teams in this round
+            team1 = bracket[region][2][team1_idx]
+            team2 = bracket[region][2][team2_idx]
+            
+            if team1 is not None and team2 is not None:
+                winner_idx = random.randint(0, 1)
+                
+                if winner_idx == 0:
+                    # First team wins
+                    bracket[region][3][game_idx] = team1
+                    bracket["winners"][region][2].append(team1_idx)
+                else:
+                    # Second team wins
+                    bracket[region][3][game_idx] = team2
+                    bracket["winners"][region][2].append(team2_idx)
+        
+        # Process round 3 (Elite 8)
+        # In Elite 8, we have two teams (positions 0 and 1)
+        if len(bracket[region][3]) >= 2 and bracket[region][3][0] is not None and bracket[region][3][1] is not None:
+            winner_idx = random.randint(0, 1)
+            
+            # Get the team that will advance to Final Four
+            ff_idx = get_region_final_four_index(region)
+            
+            if winner_idx == 0:
+                bracket["finalFour"][ff_idx] = bracket[region][3][0]
+                bracket["winners"][region][3].append(0)
+            else:
+                bracket["finalFour"][ff_idx] = bracket[region][3][1]
+                bracket["winners"][region][3].append(1)
+        elif bracket[region][3][0] is not None:
+            # Only one team in Elite 8, that team advances
+            ff_idx = get_region_final_four_index(region)
+            bracket["finalFour"][ff_idx] = bracket[region][3][0]
+            bracket["winners"][region][3].append(0)
+    
+    # Process Final Four
+    # Semi-final 1: South vs East
+    if bracket["finalFour"][1] is not None and bracket["finalFour"][2] is not None:
+        winner_idx = random.randint(0, 1)
+        if winner_idx == 0:
+            # East wins
+            bracket["championship"][0] = bracket["finalFour"][1]
+            bracket["winners"]["finalFour"].append(1)
+        else:
+            # South wins
+            bracket["championship"][0] = bracket["finalFour"][2]
+            bracket["winners"]["finalFour"].append(2)
+    
+    # Semi-final 2: West vs Midwest
+    if bracket["finalFour"][0] is not None and bracket["finalFour"][3] is not None:
+        winner_idx = random.randint(0, 1)
+        if winner_idx == 0:
+            # West wins
+            bracket["championship"][1] = bracket["finalFour"][0]
+            bracket["winners"]["finalFour"].append(0)
+        else:
+            # Midwest wins
+            bracket["championship"][1] = bracket["finalFour"][3]
+            bracket["winners"]["finalFour"].append(3)
+    
+    # Championship
+    if bracket["championship"][0] is not None and bracket["championship"][1] is not None:
+        winner_idx = random.randint(0, 1)
+        if winner_idx == 0:
+            # First team wins
+            bracket["champion"] = bracket["championship"][0]
+            bracket["winners"]["championship"].append(0)
+        else:
+            # Second team wins
+            bracket["champion"] = bracket["championship"][1]
+            bracket["winners"]["championship"].append(1)
+    
+    # Ensure winners are properly set
+    bracket = update_winners(bracket)
+    
     return bracket
 
 def pretty_print_bracket(bracket):
     """
     Return a nicely formatted string representation of the bracket
     """
-    return json.dumps(bracket, indent=2) 
+    # Create a copy without the winners data for cleaner output
+    printable_bracket = copy.deepcopy(bracket)
+    
+    # Still include a summary of the winners
+    winners_summary = {
+        "winners_summary": {
+            "regions": {region: [len(winners) for winners in bracket["winners"][region]] for region in ["west", "east", "south", "midwest"]},
+            "finalFour": len(bracket["winners"]["finalFour"]),
+            "championship": len(bracket["winners"]["championship"])
+        }
+    }
+    
+    # Include full winners info for debugging
+    printable_bracket["winners_debug"] = copy.deepcopy(bracket["winners"])
+    
+    return json.dumps(printable_bracket, indent=2) 
