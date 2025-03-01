@@ -55,12 +55,22 @@ body {
     position: relative;
 }
 
+/* Reset bracket layout to avoid overlapping */
 .brackets-wrapper {
     display: flex;
     flex-direction: column;
-    min-height: 650px;
-    /* Reduce overall height */
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* Main bracket container with fixed height */
+.bracket {
+    display: flex;
     width: 100%;
+    margin-bottom: 20px;
+    min-height: 280px;
+    position: relative;
+    justify-content: center;
 }
 
 /* Round headers */
@@ -68,7 +78,7 @@ body {
     display: flex;
     justify-content: space-between;
     width: 100%;
-    margin-bottom: 15px;
+    margin-bottom: 5px;
     font-weight: bold;
     text-align: center;
     max-width: 1500px;
@@ -99,28 +109,11 @@ body {
     color: #333;
 }
 
-/* Main bracket */
-.bracket {
-    display: flex;
-    width: 100%;
-    margin-bottom: 30px;
-    /* Increased from 20px */
-    min-height: 340px;
-    position: relative;
-    justify-content: center;
-}
-
-/* Left and right bracket sides */
-.bracket-left,
-.bracket-right {
-    display: flex;
-    flex: 4;
-}
-
 /* Region rounds container */
 .region-rounds {
     display: flex;
     width: 100%;
+    height: 500px;
 }
 
 /* For left regions (South and East) */
@@ -139,13 +132,10 @@ body {
 /* Center section */
 .bracket-center {
     display: flex;
-    flex-direction: column;
+    flex: 1;
     justify-content: center;
     align-items: center;
-    flex: 1;
-    padding: 0 5px;
     min-width: 280px;
-    position: relative;
 }
 
 .center-wrapper {
@@ -156,14 +146,14 @@ body {
     justify-content: center;
 }
 
-/* Round columns */
+/* Fix round positioning */
 .round {
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
     margin: 0 5px;
-    height: 650px;
-    /* Reduce to make more compact */
+    height: 500px;
+    position: relative;
+    min-width: 140px;
 }
 
 .round-left {
@@ -174,39 +164,119 @@ body {
     align-items: flex-start;
 }
 
-/* Specific game spacing for different rounds */
-.round.round-0 {
-    justify-content: space-between;
-    padding: 10px 0;
-}
-
-.round.round-1 {
-    margin: 20px 0;
-}
-
-.round.round-2 {
-    padding-top: 80px;
-    padding-bottom: 80px;
-    justify-content: space-between;
-}
-
-.round.round-3 {
-    margin: 150px 0;
-}
-
-/* Game matchups */
-.game {
-    position: relative;
-    margin: 4px 0;
-    /* Reduce spacing between games in first round */
-    flex-shrink: 0;
-}
-
+/* Game wrapper base styling */
 .game-wrapper {
     position: relative;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    margin: 2px 0;
+}
+
+/* First round (64 teams) game positioning */
+.round[data-round="0"] .game-wrapper:nth-child(1) {
+    position: absolute;
+    top: 0%;
+}
+
+.round[data-round="0"] .game-wrapper:nth-child(2) {
+    position: absolute;
+    top: 10%;
+}
+
+.round[data-round="0"] .game-wrapper:nth-child(3) {
+    position: absolute;
+    top: 20%;
+}
+
+.round[data-round="0"] .game-wrapper:nth-child(4) {
+    position: absolute;
+    top: 30%;
+}
+
+.round[data-round="0"] .game-wrapper:nth-child(5) {
+    position: absolute;
+    top: 40%;
+}
+
+.round[data-round="0"] .game-wrapper:nth-child(6) {
+    position: absolute;
+    top: 50%;
+}
+
+.round[data-round="0"] .game-wrapper:nth-child(7) {
+    position: absolute;
+    top: 60%;
+}
+
+.round[data-round="0"] .game-wrapper:nth-child(8) {
+    position: absolute;
+    top: 70%;
+}
+
+/* Second round (32 teams) game positioning */
+.round[data-round="1"] .game-wrapper:nth-child(1) {
+    position: absolute;
+    top: 10%;
+    transform: translateY(-50%);
+}
+
+.round[data-round="1"] .game-wrapper:nth-child(2) {
+    position: absolute;
+    top: 30%;
+    transform: translateY(-50%);
+}
+
+.round[data-round="1"] .game-wrapper:nth-child(3) {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.round[data-round="1"] .game-wrapper:nth-child(4) {
+    position: absolute;
+    top: 70%;
+    transform: translateY(-50%);
+}
+
+/* Sweet 16 (round 2) positioning */
+.round[data-round="2"] {
+    display: flex;
+    flex-direction: column;
+}
+
+.round[data-round="2"] .game-wrapper:nth-child(1) {
+    position: absolute;
+    top: 55%;
+    transform: translateY(-50%);
+}
+
+.round[data-round="2"] .game-wrapper:nth-child(2) {
+    position: absolute;
+    top: 225%;
+    transform: translateY(-50%);
+}
+
+/* Elite Eight (round 3) positioning */
+.round[data-round="3"] {
+    display: flex;
+    justify-content: center;
+}
+
+.round[data-round="3"] .game-wrapper:nth-child(1) {
+    position: absolute;
+    top: 40%;
+    transform: translateY(-50%);
+}
+
+/* Region label positioning */
+.region-label {
+    text-align: center;
+    font-weight: bold;
+    color: #666;
+    text-transform: uppercase;
+    font-size: 11px;
+    margin: 10px 0;
 }
 
 /* Team styling */
@@ -218,7 +288,6 @@ body {
     margin: 1px 0;
     background-color: #ffffff;
     cursor: pointer;
-    position: relative;
     align-items: center;
 }
 
@@ -247,7 +316,7 @@ body {
     text-overflow: ellipsis;
 }
 
-/* Bracket lines - to be implemented with positioning */
+/* Bracket lines */
 .connector {
     position: absolute;
     background-color: #ccc;
@@ -271,20 +340,14 @@ body {
     left: 0;
 }
 
-/* Final Four section */
+/* Final Four layout */
 .final-four {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: 0;
-    position: absolute;
-    top: 70%;
-    /* Change from 80% to 70% to position it more centered */
-    left: 50%;
-    transform: translate(-50%, -50%);
-    /* Keeps horizontal centering but now with vertical centering */
+    margin-top: 40px;
 }
 
 .final-four-content {
@@ -292,6 +355,9 @@ body {
     flex-direction: column;
     align-items: center;
     width: 100%;
+    margin-top: 15px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
 }
 
 .semifinal-container {
@@ -299,44 +365,50 @@ body {
     justify-content: center;
     width: 100%;
     align-items: center;
-    margin-bottom: 30px;
-    /* Increased from 20px */
+    margin: 15px 0;
 }
 
 .semifinal-matchup {
     display: flex;
     flex-direction: column;
     width: 140px;
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .left-semifinal {
     align-items: flex-end;
-    margin-right: 30px;
-    /* Increased from 25px */
+    margin-right: 25px;
 }
 
 .right-semifinal {
     align-items: flex-start;
-    margin-left: 30px;
-    /* Increased from 25px */
+    margin-left: 25px;
 }
 
+/* Championship styling */
 .championship-matchup {
     width: 140px;
-    margin: 0 30px;
-    /* Increased from 25px */
+    margin: 0 25px;
+    background-color: #fff8e1;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ffe082;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Champion display */
+/* Champion display styling */
 .champion-display {
-    margin-top: 20px;
-    /* Increased from 15px */
-    padding: 10px;
-    background-color: #f5f5f5;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    margin: 15px auto;
+    padding: 15px;
+    background-color: #e8f5e9;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border: 2px solid #4caf50;
     text-align: center;
-    width: 140px;
+    max-width: 200px;
 }
 
 .champion-label {
@@ -353,16 +425,6 @@ body {
     min-height: 20px;
 }
 
-/* Region labels */
-.region-label {
-    text-align: center;
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: #666;
-    text-transform: uppercase;
-    font-size: 11px;
-}
-
 /* TBD placeholder */
 .team.tbd {
     color: #999;
@@ -370,108 +432,73 @@ body {
     cursor: default;
 }
 
-/* Remove round-specific spacing overrides since we manage this in JS now */
-/* Specific styling for teams in the right regions */
-.bracket-right .team {
-    /* Normal styling for team elements */
+/* Left and right bracket sides */
+.bracket-left,
+.bracket-right {
+    display: flex;
+    flex: 4;
 }
 
-/* Reduce the bottom margins only for the 1st round */
-.round[data-round="1"] .game-wrapper {
-    margin-bottom: 5px;
-}
-
-/* Fix for horizontal alignment in larger screens */
-@media (min-width: 1500px) {
-
-    /* Increased from 1400px */
-    .bracket-content {
-        margin: 0 auto;
-        max-width: 1900px;
-        /* Increased from 1800px */
-    }
-
-    /* Ensure rounds maintain fixed width */
-    .round {
-        width: 140px;
-        flex: 0 0 140px;
-    }
-
-    /* Right alignment for first round */
-    .bracket-right .region-rounds {
-        justify-content: flex-end !important;
-    }
-
-    /* Ensure the entire bracket-right container aligns with headers */
-    .bracket-right {
-        display: flex;
-        justify-content: flex-end;
-    }
-
-    /* Round headers alignment */
-    .round-headers {
-        max-width: 1900px;
-        /* Increased from 1800px */
-        margin: 0 auto;
-        display: flex;
-        justify-content: space-between;
-    }
-}
-
-/* Fix for game centering in all rounds */
-.round[data-round="1"] .game-wrapper,
-.round[data-round="2"] .game-wrapper,
-.round[data-round="3"] .game-wrapper {
+/* Game matchups */
+.game {
     position: relative;
+    margin: 4px 0;
+    flex-shrink: 0;
 }
 
-/* This ensures each game is properly centered relative to the games in the previous round */
-.round .game {
-    position: relative;
-    left: 0;
-    right: 0;
-    margin: 0 auto;
-}
-
-/* Override for empty center in second bracket row - improves spacing */
-.bracket:nth-child(2) {
-    margin-top: 10px;
-}
-
+/* Second bracket row specific styles */
 .bracket:nth-child(2) .bracket-center {
     min-height: 220px;
-}
-
-/* Ensure vertical alignment */
-.bracket:first-child {
-    margin-bottom: 10px;
-}
-
-/* Adjust the center positions for narrow screens */
-@media (max-width: 1600px) {
-    /* These media queries are removed to prevent snapping */
-}
-
-@media (max-width: 1500px) {
-    /* These media queries are removed to prevent snapping */
-}
-
-@media (max-width: 1400px) {
-    /* These media queries are removed to prevent snapping */
 }
 
 /* Final Four specific adjustments */
 .brackets-wrapper.final-four {
     min-height: 400px;
     margin-top: -50px;
-    /* Move up slightly */
 }
 
 /* Region brackets specific adjustments */
 .region-brackets {
     display: flex;
-    margin-bottom: -40px;
-    /* Reduce gap between region brackets and Final Four */
+    margin-bottom: -20px;
+}
+
+/* Keep the bracket sections balanced */
+.bracket:first-child {
+    margin-bottom: 30px;
+}
+
+.bracket:nth-child(2) {
+    margin-top: 30px;
+}
+
+/* Fix for horizontal alignment in larger screens */
+@media (min-width: 1500px) {
+    .bracket-content {
+        margin: 0 auto;
+        max-width: 1900px;
+    }
+
+    .round {
+        width: 140px;
+        flex: 0 0 140px;
+    }
+
+    .bracket-right .region-rounds {
+        justify-content: flex-end !important;
+    }
+
+    .bracket-right {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .round-headers {
+        max-width: 1900px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+    }
 }
 
 /* Mobile responsive design */
@@ -492,7 +519,6 @@ body {
         min-width: 1300px;
     }
 
-    /* Make buttons stack on mobile */
     button {
         margin-bottom: 5px;
     }
