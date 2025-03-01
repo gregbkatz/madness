@@ -161,8 +161,7 @@ function MarchMadnessBracket() {
             if (team) {
                 console.log(`Team clicked: ${team.name} (${team.seed})`);
             } else {
-                console.log(`Empty team clicked (${teamName || 'TBD'})`);
-                return; // Don't execute onClick for empty teams
+                console.log(`Empty team clicked`);
             }
 
             // Execute the provided onClick handler
@@ -174,9 +173,9 @@ function MarchMadnessBracket() {
         if (!team) {
             return (
                 <div
-                    className="team tbd"
+                    className="team empty"
                     style={{
-                        cursor: 'default',
+                        cursor: 'pointer',
                         padding: '4px 8px',
                         margin: '2px 0',
                         border: '1px dashed #ccc',
@@ -185,12 +184,13 @@ function MarchMadnessBracket() {
                         alignItems: 'center',
                         backgroundColor: '#f9f9f9',
                         color: '#999',
-                        pointerEvents: 'auto'
+                        pointerEvents: 'auto',
+                        minHeight: '20px'
                     }}
                     onClick={handleClick}
                 >
                     <span className="seed"></span>
-                    <span className="team-name">{teamName || 'TBD'}</span>
+                    <span className="team-name"></span>
                 </div>
             );
         }
@@ -243,11 +243,29 @@ function MarchMadnessBracket() {
 
     // Render a single game matchup
     const renderGame = (region, round, gameIndex, topTeam, bottomTeam, isRightRegion = false) => {
-        const isWinnerTop = round < 3 && bracket[region][round + 1] &&
-            bracket[region][round + 1][Math.floor(gameIndex / 2) * 2 + gameIndex % 2] === topTeam;
+        // Determine if each team is the winner by checking if they appear in the next round
+        let isWinnerTop = false;
+        let isWinnerBottom = false;
 
-        const isWinnerBottom = round < 3 && bracket[region][round + 1] &&
-            bracket[region][round + 1][Math.floor(gameIndex / 2) * 2 + gameIndex % 2] === bottomTeam;
+        if (round < 3 && bracket[region][round + 1]) {
+            // For regular rounds, check next round
+            const nextRoundIndex = Math.floor(gameIndex / 2);
+            if (topTeam && bracket[region][round + 1][nextRoundIndex] === topTeam) {
+                isWinnerTop = true;
+            }
+            if (bottomTeam && bracket[region][round + 1][nextRoundIndex] === bottomTeam) {
+                isWinnerBottom = true;
+            }
+        } else if (round === 3) {
+            // For Elite Eight, check Final Four
+            const ffIndex = getRegionFinalFourIndex(region);
+            if (topTeam && bracket.finalFour[ffIndex] === topTeam) {
+                isWinnerTop = true;
+            }
+            if (bottomTeam && bracket.finalFour[ffIndex] === bottomTeam) {
+                isWinnerBottom = true;
+            }
+        }
 
         return (
             <div className="game" key={`game-${region}-${round}-${gameIndex}`}>
@@ -358,6 +376,18 @@ function MarchMadnessBracket() {
             zIndex: 3
         };
 
+        // Champion display box styling
+        const championDisplayStyle = {
+            margin: '0 auto 15px auto',
+            padding: '15px',
+            backgroundColor: '#e8f5e9',
+            borderRadius: '8px',
+            boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+            border: '2px solid #4caf50',
+            textAlign: 'center',
+            maxWidth: '200px'
+        };
+
         // Create distinct onClick handlers for each position to aid debugging
         const handleSouthClick = () => {
             console.log("South team clicked!");
@@ -389,32 +419,67 @@ function MarchMadnessBracket() {
             handleChampionshipSelect(1);
         };
 
+        // Check if teams are winners in Final Four
+        const isSouthWinner = bracket.championship[0] === bracket.finalFour[2];
+        const isEastWinner = bracket.championship[0] === bracket.finalFour[1];
+        const isMidwestWinner = bracket.championship[1] === bracket.finalFour[3];
+        const isWestWinner = bracket.championship[1] === bracket.finalFour[0];
+
+        // Check if teams are winners in Championship
+        const isChamp1Winner = bracket.champion === bracket.championship[0];
+        const isChamp2Winner = bracket.champion === bracket.championship[1];
+
         return (
             <div className="final-four" style={{ position: 'relative', zIndex: 1 }}>
                 <div className="final-four-content">
+                    {/* Champion Display Box - Now positioned ABOVE the championship */}
+                    <div style={championDisplayStyle}>
+                        <div style={{ marginBottom: '10px' }}>
+                            <span role="img" aria-label="trophy" style={{ fontSize: '24px' }}>🏆</span>
+                            <div style={{ fontWeight: 'bold', fontSize: '16px', color: '#2e7d32' }}>Champion</div>
+                        </div>
+                        {bracket.champion ? (
+                            <div style={{
+                                padding: '10px',
+                                backgroundColor: 'white',
+                                borderRadius: '4px',
+                                border: '1px solid #4caf50'
+                            }}>
+                                <div style={{ fontWeight: 'bold' }}>{bracket.champion.name}</div>
+                                <div>Seed: {bracket.champion.seed}</div>
+                            </div>
+                        ) : (
+                            <div style={{
+                                padding: '10px',
+                                backgroundColor: 'white',
+                                borderRadius: '4px',
+                                border: '1px solid #ccc',
+                                color: '#999',
+                                fontStyle: 'italic'
+                            }}>
+                                TBD
+                            </div>
+                        )}
+                    </div>
+
                     {/* Display the Final Four matchups side by side in a pyramid structure */}
                     <div className="semifinal-container">
                         {/* Left side semifinal - South vs East */}
                         <div className="semifinal-matchup left-semifinal" style={semifinalStyle}>
                             <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: '10px', fontSize: '14px' }}>South/East Semifinal</div>
                             <div style={{ pointerEvents: 'auto' }}>
-                                {/* Wrap each team in its own div with explicit pointer-events */}
                                 <div style={{ margin: '5px 0' }}>
                                     {renderTeam(
                                         bracket.finalFour[2], // South champion
                                         handleSouthClick,
-                                        bracket.championship[0] === bracket.finalFour[2],
-                                        false,
-                                        "South Champion"
+                                        isSouthWinner
                                     )}
                                 </div>
                                 <div style={{ margin: '5px 0' }}>
                                     {renderTeam(
                                         bracket.finalFour[1], // East champion
                                         handleEastClick,
-                                        bracket.championship[0] === bracket.finalFour[1],
-                                        false,
-                                        "East Champion"
+                                        isEastWinner
                                     )}
                                 </div>
                             </div>
@@ -428,18 +493,14 @@ function MarchMadnessBracket() {
                                     {renderTeam(
                                         bracket.championship[0], // Winner of South/East
                                         handleChampionship1Click,
-                                        bracket.champion === bracket.championship[0],
-                                        false,
-                                        "South/East Winner"
+                                        isChamp1Winner
                                     )}
                                 </div>
                                 <div style={{ margin: '5px 0' }}>
                                     {renderTeam(
                                         bracket.championship[1], // Winner of Midwest/West
                                         handleChampionship2Click,
-                                        bracket.champion === bracket.championship[1],
-                                        false,
-                                        "Midwest/West Winner"
+                                        isChamp2Winner
                                     )}
                                 </div>
                             </div>
@@ -453,52 +514,20 @@ function MarchMadnessBracket() {
                                     {renderTeam(
                                         bracket.finalFour[3], // Midwest champion
                                         handleMidwestClick,
-                                        bracket.championship[1] === bracket.finalFour[3],
-                                        false,
-                                        "Midwest Champion"
+                                        isMidwestWinner
                                     )}
                                 </div>
                                 <div style={{ margin: '5px 0' }}>
                                     {renderTeam(
                                         bracket.finalFour[0], // West champion
                                         handleWestClick,
-                                        bracket.championship[1] === bracket.finalFour[0],
-                                        false,
-                                        "West Champion"
+                                        isWestWinner
                                     )}
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                {/* Champion Display */}
-                {bracket.champion && (
-                    <div style={{
-                        margin: '20px auto',
-                        padding: '15px',
-                        backgroundColor: '#e8f5e9',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                        border: '2px solid #4caf50',
-                        textAlign: 'center',
-                        maxWidth: '200px'
-                    }}>
-                        <div style={{ marginBottom: '10px' }}>
-                            <span role="img" aria-label="trophy" style={{ fontSize: '24px' }}>🏆</span>
-                            <div style={{ fontWeight: 'bold', fontSize: '16px', color: '#2e7d32' }}>Champion</div>
-                        </div>
-                        <div style={{
-                            padding: '10px',
-                            backgroundColor: 'white',
-                            borderRadius: '4px',
-                            border: '1px solid #4caf50'
-                        }}>
-                            <div style={{ fontWeight: 'bold' }}>{bracket.champion.name}</div>
-                            <div>Seed: {bracket.champion.seed}</div>
-                        </div>
-                    </div>
-                )}
             </div>
         );
     };
