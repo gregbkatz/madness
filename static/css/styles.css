@@ -409,6 +409,8 @@ body {
     border: 2px solid #4caf50;
     text-align: center;
     max-width: 200px;
+    height: 75px;
+    box-sizing: border-box;
 }
 
 .champion-label {
@@ -422,7 +424,10 @@ body {
     font-size: 14px;
     font-weight: bold;
     color: #003478;
-    min-height: 20px;
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* TBD placeholder */
@@ -465,7 +470,7 @@ body {
 
 /* Keep the bracket sections balanced */
 .bracket:first-child {
-    margin-bottom: -30px;
+    margin-bottom: -150px;
 }
 
 .bracket:nth-child(2) {

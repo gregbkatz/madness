@@ -610,8 +610,12 @@ function MarchMadnessBracket() {
                                 backgroundColor: 'white',
                                 borderRadius: '4px',
                                 border: '1px solid #ccc',
-                                minHeight: '24px'
+                                minHeight: '24px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
                             }}>
+                                <div style={{ fontSize: '16px', color: '#aaa', fontStyle: 'italic' }}>TBD</div>
                             </div>
                         )}
                     </div>
@@ -620,7 +624,7 @@ function MarchMadnessBracket() {
                     <div className="semifinal-container">
                         {/* Left side semifinal - South vs East */}
                         <div className="semifinal-matchup left-semifinal" style={semifinalStyle}>
-                            <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: '10px', fontSize: '14px' }}>South/East Semifinal</div>
+                            <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: '10px', fontSize: '14px' }}></div>
                             <div style={{ pointerEvents: 'auto' }}>
                                 <div style={{ margin: '5px 0' }}>
                                     {renderTeam(
@@ -666,7 +670,7 @@ function MarchMadnessBracket() {
 
                         {/* Right side semifinal - Midwest vs West */}
                         <div className="semifinal-matchup right-semifinal" style={semifinalStyle}>
-                            <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: '10px', fontSize: '14px' }}>Midwest/West Semifinal</div>
+                            <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: '10px', fontSize: '14px' }}></div>
                             <div style={{ pointerEvents: 'auto' }}>
                                 <div style={{ margin: '5px 0' }}>
                                     {renderTeam(
