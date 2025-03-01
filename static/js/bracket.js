@@ -151,7 +151,7 @@ function MarchMadnessBracket() {
     };
 
     // Render a single team box
-    const renderTeam = (team, onClick, isWinner = false, isRightRegion = false, teamName = '') => {
+    const renderTeam = (team, onClick, isWinner = false, isRightRegion = false) => {
         // Create a stable onClick handler even for TBD teams
         const handleClick = (e) => {
             // Stop propagation to prevent parent elements from capturing the click
@@ -208,12 +208,14 @@ function MarchMadnessBracket() {
             margin: '2px 0',
             display: 'flex',
             alignItems: 'center',
-            backgroundColor: winnerClass ? '#e3f2fd' : '#fff',
-            borderLeft: winnerClass ? '3px solid #2196F3' : '1px solid #ccc',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+            backgroundColor: isWinner ? '#e3f2fd' : '#fff',
+            borderLeft: isWinner ? '4px solid #1976D2' : '1px solid #ccc',
+            boxShadow: isWinner ? '0 2px 5px rgba(25,118,210,0.2)' : '0 1px 3px rgba(0,0,0,0.08)',
             pointerEvents: 'auto',
             position: 'relative',
-            zIndex: 10  // Ensure team is above other elements
+            zIndex: 10,  // Ensure team is above other elements
+            fontWeight: isWinner ? 'bold' : 'normal',
+            color: isWinner ? '#1565C0' : 'inherit'
         };
 
         return (
@@ -228,11 +230,13 @@ function MarchMadnessBracket() {
                     e.currentTarget.style.transform = 'translateY(-1px)';
                 }}
                 onMouseOut={(e) => {
-                    e.currentTarget.style.backgroundColor = winnerClass ? '#e3f2fd' : '#fff';
-                    e.currentTarget.style.borderColor = winnerClass ? '#2196F3' : '#ccc';
-                    e.currentTarget.style.borderLeftWidth = winnerClass ? '3px' : '1px';
-                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)';
+                    e.currentTarget.style.backgroundColor = isWinner ? '#e3f2fd' : '#fff';
+                    e.currentTarget.style.borderColor = isWinner ? '#1976D2' : '#ccc';
+                    e.currentTarget.style.borderLeftWidth = isWinner ? '4px' : '1px';
+                    e.currentTarget.style.boxShadow = isWinner ? '0 2px 5px rgba(25,118,210,0.2)' : '0 1px 3px rgba(0,0,0,0.08)';
                     e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.fontWeight = isWinner ? 'bold' : 'normal';
+                    e.currentTarget.style.color = isWinner ? '#1565C0' : 'inherit';
                 }}
             >
                 <span className="seed">{team.seed}</span>
@@ -292,7 +296,9 @@ function MarchMadnessBracket() {
             position: 'relative',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '100%'
         };
 
         // Specific margin adjustments for each round
@@ -305,18 +311,18 @@ function MarchMadnessBracket() {
             };
         }
 
-        // Use the same spacing values for all regions for consistency
+        // Improved spacing values for all regions for better vertical centering
         const spacingMap = {
-            1: 20, // 2nd round
-            2: 60, // Sweet 16
-            3: 140 // Elite 8
+            1: { marginBottom: '30px', marginTop: '30px' }, // 2nd round
+            2: { marginBottom: '70px', marginTop: '70px' }, // Sweet 16
+            3: { marginBottom: '150px', marginTop: '150px' } // Elite 8
         };
 
         // Return style with appropriate vertical margins
         return {
             ...baseStyle,
-            marginBottom: `${spacingMap[round]}px`,
-            marginTop: `${spacingMap[round]}px`
+            marginBottom: spacingMap[round].marginBottom,
+            marginTop: spacingMap[round].marginTop
         };
     };
 
@@ -445,8 +451,7 @@ function MarchMadnessBracket() {
                                 borderRadius: '4px',
                                 border: '1px solid #4caf50'
                             }}>
-                                <div style={{ fontWeight: 'bold' }}>{bracket.champion.name}</div>
-                                <div>Seed: {bracket.champion.seed}</div>
+                                <div style={{ fontWeight: 'bold', fontSize: '16px' }}>{bracket.champion.name} ({bracket.champion.seed})</div>
                             </div>
                         ) : (
                             <div style={{
@@ -454,10 +459,8 @@ function MarchMadnessBracket() {
                                 backgroundColor: 'white',
                                 borderRadius: '4px',
                                 border: '1px solid #ccc',
-                                color: '#999',
-                                fontStyle: 'italic'
+                                minHeight: '24px'
                             }}>
-                                TBD
                             </div>
                         )}
                     </div>
