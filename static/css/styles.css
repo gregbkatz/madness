@@ -1,6 +1,15 @@
-/* General styling */
+/* Reset all styles to ensure we're working with a clean slate */
 * {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Basic page styling */
+html,
+body {
+    width: 100%;
+    height: 100%;
     margin: 0;
     padding: 0;
 }
@@ -9,8 +18,8 @@ body {
     font-family: Arial, sans-serif;
     font-size: 12px;
     line-height: 1.4;
-    padding: 10px;
     background-color: #fff;
+    padding: 10px;
 }
 
 /* App header */
@@ -23,6 +32,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: relative;
+    z-index: 10;
 }
 
 .app-header h1 {
@@ -35,39 +46,55 @@ body {
     color: #ccc;
 }
 
-/* Bracket layout */
+/* Root container */
+#root {
+    position: relative;
+    width: 100%;
+    overflow: visible;
+}
+
+/* BRACKET CONTAINER - THE KEY ELEMENT */
 .bracket-container {
-    display: flex;
-    justify-content: center;
-    margin: 20px auto;
+    position: relative;
     width: 100%;
     overflow-x: auto;
-}
-
-.bracket-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 1300px;
-    max-width: 1500px;
-    width: 100%;
-    position: relative;
-}
-
-.brackets-wrapper {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    margin-top: 20px;
-}
-
-.bracket {
-    display: flex;
-    width: 100%;
+    border: 1px solid #ddd;
+    padding: 10px;
     margin-bottom: 20px;
-    min-height: 280px;
+    z-index: 0;
+}
+
+/* BRACKET CONTENT - THE FIXED WIDTH ELEMENT */
+.bracket-content {
+    display: inline-block;
+    width: 1600px;
+    margin-left: 0;
     position: relative;
-    justify-content: center;
+    z-index: 0;
+}
+
+/* Specifically ensure rounds 2, 3, and 4 are clickable */
+.round[data-round="1"],
+.round[data-round="2"],
+.round[data-round="3"] {
+    pointer-events: auto !important;
+    z-index: 10 !important;
+}
+
+/* Make sure their game wrappers are clickable too */
+.round[data-round="1"] .game-wrapper,
+.round[data-round="2"] .game-wrapper,
+.round[data-round="3"] .game-wrapper {
+    pointer-events: auto !important;
+    z-index: 11 !important;
+}
+
+/* And ensure all teams in these rounds are clickable */
+.round[data-round="1"] .team,
+.round[data-round="2"] .team,
+.round[data-round="3"] .team {
+    pointer-events: auto !important;
+    z-index: 12 !important;
 }
 
 /* Round headers */
@@ -75,445 +102,292 @@ body {
     display: flex;
     justify-content: center;
     width: 100%;
-    max-width: 1500px;
-    gap: 0;
+    margin-bottom: 20px;
 }
 
 .round-header {
     flex: 0 0 140px;
-    max-width: 140px;
-    padding: 0;
+    text-align: center;
+    font-weight: bold;
 }
 
 .round-header-center {
-    color: #003478;
+    flex: 0 0 200px;
+    text-align: center;
     font-weight: bold;
+    color: #003478;
+    font-size: 14px;
 }
 
-/* Region layout */
+/* Bracket structure */
+.brackets-wrapper-styled {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.bracket {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+/* Region styling */
+.region-column {
+    width: 140px;
+    flex: 0 0 140px;
+    display: flex;
+    flex-direction: column;
+    padding: 0 5px;
+    position: relative;
+}
+
+.region-label-styled {
+    text-align: center;
+    font-weight: bold;
+    color: #003478;
+    margin: 15px 0;
+}
+
 .region-rounds {
     display: flex;
     width: 100%;
-    height: 500px;
 }
 
-.bracket-left .region-rounds {
-    justify-content: flex-start;
-}
-
-.bracket-right .region-rounds {
+.region-rounds-right {
     justify-content: flex-end;
-}
-
-.bracket-left,
-.bracket-right {
-    display: flex;
-    flex: 4;
-}
-
-.bracket-center {
-    display: flex;
-    flex: 1;
-    justify-content: center;
-    align-items: center;
-    min-width: 280px;
-}
-
-.center-wrapper {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-/* Round and game positioning */
-.round {
-    display: flex;
-    flex-direction: column;
-    margin: 0 5px;
-    height: 500px;
-    position: relative;
-    min-width: 140px;
-}
-
-.round-left {
-    align-items: flex-end;
-}
-
-.round-right {
-    align-items: flex-start;
-}
-
-.game-wrapper {
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    margin: 2px 0;
-}
-
-/* First round (64 teams) game positioning */
-.round[data-round="0"] .game-wrapper:nth-child(1) {
-    top: 0%;
-}
-
-.round[data-round="0"] .game-wrapper:nth-child(2) {
-    top: 10%;
-}
-
-.round[data-round="0"] .game-wrapper:nth-child(3) {
-    top: 20%;
-}
-
-.round[data-round="0"] .game-wrapper:nth-child(4) {
-    top: 30%;
-}
-
-.round[data-round="0"] .game-wrapper:nth-child(5) {
-    top: 40%;
-}
-
-.round[data-round="0"] .game-wrapper:nth-child(6) {
-    top: 50%;
-}
-
-.round[data-round="0"] .game-wrapper:nth-child(7) {
-    top: 60%;
-}
-
-.round[data-round="0"] .game-wrapper:nth-child(8) {
-    top: 70%;
-}
-
-/* Second round (32 teams) game positioning */
-.round[data-round="1"] .game-wrapper {
-    transform: translateY(-50%);
-}
-
-.round[data-round="1"] .game-wrapper:nth-child(1) {
-    top: 10%;
-}
-
-.round[data-round="1"] .game-wrapper:nth-child(2) {
-    top: 30%;
-}
-
-.round[data-round="1"] .game-wrapper:nth-child(3) {
-    top: 50%;
-}
-
-.round[data-round="1"] .game-wrapper:nth-child(4) {
-    top: 70%;
-}
-
-/* Sweet 16 (round 2) positioning */
-.round[data-round="2"] .game-wrapper:nth-child(1) {
-    top: 55%;
-    transform: translateY(-50%);
-}
-
-.round[data-round="2"] .game-wrapper:nth-child(2) {
-    top: 225%;
-    transform: translateY(-50%);
-}
-
-/* Elite Eight (round 3) positioning */
-.round[data-round="3"] .game-wrapper:nth-child(1) {
-    top: 40%;
-    transform: translateY(-50%);
-}
-
-/* Region label */
-.region-label {
-    text-align: center;
-    font-weight: bold;
-    color: #666;
-    text-transform: uppercase;
-    font-size: 11px;
-    margin: 10px 0;
 }
 
 /* Team styling */
 .team {
     display: flex;
-    width: 140px;
-    height: 20px;
-    border: 1px solid #ccc;
-    margin: 1px 0;
-    background-color: #ffffff;
-    cursor: pointer;
     align-items: center;
+    padding: 4px 6px;
+    margin: 2px 0;
+    font-size: 11px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    cursor: pointer;
+    pointer-events: auto;
+    z-index: 3;
+    position: relative;
 }
 
 .team:hover {
-    background-color: #f7f7f7;
+    background-color: #e9ecef;
 }
 
 .team.winner {
-    font-weight: 500;
-    background-color: #f4f8ff;
-    border-left: 2px solid #4a90e2;
+    background-color: #e8f5e9;
+    border-color: #4caf50;
 }
 
 .team.tbd {
-    color: #999;
+    color: #aaa;
     font-style: italic;
     cursor: default;
 }
 
-.seed {
-    width: 18px;
-    padding-left: 4px;
-    font-weight: bold;
-    display: inline-block;
-}
-
-.team-name {
-    flex: 1;
-    padding-left: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Game matchups */
-.game {
-    position: relative;
-    margin: 4px 0;
-    flex-shrink: 0;
-}
-
-/* Bracket lines */
-.connector {
-    position: absolute;
-    background-color: #ccc;
-}
-
-.connector-horizontal {
-    height: 1px;
-}
-
-.connector-vertical {
-    width: 1px;
-}
-
-.bracket-left .connector-horizontal {
-    right: 0;
-}
-
-.bracket-right .connector-horizontal {
-    left: 0;
-}
-
-/* Final Four layout */
-.final-four {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    margin-top: 40px;
-}
-
-.final-four-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    margin-top: 190px;
-    padding-top: 15px;
-}
-
-.semifinal-container {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    align-items: center;
-    margin: 15px 0;
-}
-
-.semifinal-matchup {
-    display: flex;
-    flex-direction: column;
-    width: 140px;
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.left-semifinal {
-    align-items: flex-end;
-    margin-right: 25px;
-}
-
-.right-semifinal {
-    align-items: flex-start;
-    margin-left: 25px;
-}
-
-/* Championship styling */
-.championship-matchup {
-    width: 140px;
-    margin: 0 25px;
-    background-color: #fff8e1;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ffe082;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Champion display styling */
-.champion-display {
-    margin: 15px auto;
-    padding: 15px;
-    background-color: #e8f5e9;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    border: 2px solid #4caf50;
-    text-align: center;
-    max-width: 200px;
-    height: 75px;
-    box-sizing: border-box;
-    cursor: default;
-    user-select: none;
-}
-
-.champion-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    color: #666;
-    margin-bottom: 5px;
-}
-
-.champion-name {
-    font-size: 14px;
-    font-weight: bold;
-    color: #003478;
-    min-height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Bracket layout adjustments */
-.bracket:nth-child(2) .bracket-center {
-    min-height: 220px;
-}
-
-.bracket:first-child {
-    margin-bottom: -130px;
-}
-
-.bracket:nth-child(2) {
-    margin-top: 30px;
-}
-
-/* Responsive styling */
-@media (min-width: 1500px) {
-
-    .bracket-content,
-    .round-headers {
-        margin: 0 auto;
-        max-width: 1900px;
-    }
-
-    .round {
-        width: 140px;
-        flex: 0 0 140px;
-    }
-}
-
-@media (max-width: 768px) {
-    .bracket-container {
-        overflow-x: scroll;
-        -webkit-overflow-scrolling: touch;
-        padding: 0;
-        margin: 10px 0;
-    }
-
-    .bracket-content,
-    .round-headers {
-        min-width: 1300px;
-        padding: 0 10px;
-    }
-
-    button {
-        margin-bottom: 5px;
-    }
-}
-
-/* Team components styling */
+/* Team content */
 .team-content {
     display: flex;
     align-items: center;
+    width: 100%;
 }
 
 .seed-circle {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background-color: #f2f2f2;
-    border: 1px solid #ddd;
     display: flex;
     justify-content: center;
     align-items: center;
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    background-color: #003478;
+    color: white;
+    border-radius: 50%;
     margin-right: 6px;
     font-size: 9px;
+    font-weight: bold;
 }
 
 .team-name-text {
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 100px;
 }
 
-/* Champion section styling */
-.champion-section {
-    margin-bottom: 10px;
+/* Round styling */
+.round {
+    position: relative;
+    width: 140px;
+    flex: 0 0 140px;
+    pointer-events: auto;
+    z-index: 1;
 }
 
-.trophy-icon {
-    font-size: 24px;
+/* Game wrapper styling */
+.game-wrapper {
+    position: absolute;
+    width: 100%;
+    padding: 0 5px;
+    pointer-events: auto;
+    z-index: 2;
 }
 
-.champion-title {
-    font-weight: bold;
-    font-size: 16px;
-    color: #2e7d32;
+/* Game positions - FIXED PIXEL VALUES */
+/* First round games */
+.round[data-round="0"] .game-wrapper:nth-child(1) {
+    top: 0px;
 }
 
-.champion-team {
+.round[data-round="0"] .game-wrapper:nth-child(2) {
+    top: 60px;
+}
+
+.round[data-round="0"] .game-wrapper:nth-child(3) {
+    top: 120px;
+}
+
+.round[data-round="0"] .game-wrapper:nth-child(4) {
+    top: 180px;
+}
+
+.round[data-round="0"] .game-wrapper:nth-child(5) {
+    top: 240px;
+}
+
+.round[data-round="0"] .game-wrapper:nth-child(6) {
+    top: 300px;
+}
+
+.round[data-round="0"] .game-wrapper:nth-child(7) {
+    top: 360px;
+}
+
+.round[data-round="0"] .game-wrapper:nth-child(8) {
+    top: 420px;
+}
+
+/* Second round games */
+.round[data-round="1"] .game-wrapper:nth-child(1) {
+    top: 30px;
+}
+
+.round[data-round="1"] .game-wrapper:nth-child(2) {
+    top: 150px;
+}
+
+.round[data-round="1"] .game-wrapper:nth-child(3) {
+    top: 270px;
+}
+
+.round[data-round="1"] .game-wrapper:nth-child(4) {
+    top: 390px;
+}
+
+/* Sweet 16 games */
+.round[data-round="2"] .game-wrapper:nth-child(1) {
+    top: 90px;
+}
+
+.round[data-round="2"] .game-wrapper:nth-child(2) {
+    top: 330px;
+}
+
+/* Elite Eight game */
+.round[data-round="3"] .game-wrapper:nth-child(1) {
+    top: 210px;
+}
+
+/* Game styling */
+.game {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    pointer-events: auto;
+    position: relative;
+    z-index: 2;
+}
+
+/* Connector lines */
+.connector-wrapper {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.horizontal-line {
+    position: absolute;
+    height: 2px;
+    background-color: #ccc;
+}
+
+.vertical-line {
+    position: absolute;
+    width: 2px;
+    background-color: #ccc;
+}
+
+/* Final Four styling */
+.bracket-center-styled {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 220px;
+    margin: 0 20px;
+    pointer-events: auto;
+    z-index: 2;
+}
+
+.final-four-styled {
+    width: 100%;
     padding: 10px;
-    background-color: white;
-    border-radius: 4px;
-    border: 1px solid #4caf50;
-    cursor: pointer;
+    margin: 10px 0;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    pointer-events: auto;
+    z-index: 3;
 }
 
-.champion-team-name {
-    font-weight: bold;
-    font-size: 16px;
+.championship-styled {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    background-color: #fff8e1;
+    border-radius: 6px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ffe082;
+    pointer-events: auto;
+    z-index: 3;
 }
 
-.champion-tbd {
-    font-size: 16px;
-    color: #aaa;
-    font-style: italic;
+.semifinal-styled {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    pointer-events: auto;
+    z-index: 3;
 }
 
-/* Semifinal and championship sections */
-.semifinal-title {
+.champion-display-styled {
+    margin: 10px auto;
+    padding: 15px;
+    background-color: #e8f5e9;
+    border-radius: 8px;
+    border: 2px solid #4caf50;
     text-align: center;
-    font-weight: bold;
-    margin-bottom: 10px;
-    font-size: 14px;
-}
-
-.team-container {
-    margin: 5px 0;
+    max-width: 180px;
+    pointer-events: auto;
+    z-index: 3;
 }
 
 .championship-title {
@@ -524,12 +398,33 @@ body {
     font-size: 16px;
 }
 
+.semifinal-title {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.champion-tbd {
+    font-size: 16px;
+    color: #aaa;
+    font-style: italic;
+}
+
+/* Champion section */
+.champion-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
 /* Region layout styling */
 .region-column {
     display: flex;
     flex-direction: column;
     min-width: 140px;
-    max-width: 140px;
+    width: 140px;
     padding: 0 5px;
 }
 
@@ -537,24 +432,16 @@ body {
     align-items: flex-start;
 }
 
-.region-label-styled {
-    margin-bottom: 15px;
-    margin-top: 15px;
-}
-
-.region-rounds-right {
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
-}
-
 /* Center bracket styling */
 .bracket-center-styled {
-    flex: 1;
-    min-width: 400px;
     display: flex;
+    flex-direction: column;
     justify-content: center;
-    position: relative;
+    align-items: center;
+    width: 300px;
+    margin: 0 30px;
+    padding: 10px;
+    z-index: 1;
 }
 
 .bracket-center-smaller {
@@ -617,4 +504,106 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    width: 100%;
+    position: relative;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+/* Remove all responsive styling that causes layout shifting */
+@media (min-width: 1500px) {
+    /* Remove this media query entirely */
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 5px;
+        /* Reduce padding to give more room */
+    }
+
+    .bracket-container {
+        overflow-x: scroll;
+        /* Force scrollbar */
+        -webkit-overflow-scrolling: touch;
+        padding: 0 0 15px 0;
+        /* Keep bottom padding for scrollbar */
+        margin: 10px 0;
+    }
+
+    /* Keep consistent width */
+    .bracket-content,
+    .round-headers {
+        min-width: 1400px;
+        width: 1400px;
+        padding: 0 10px;
+    }
+}
+
+html {
+    overflow-x: auto;
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Ensure the app container doesn't overflow the viewport */
+#root {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    position: relative;
+}
+
+/* Final Four and Championship container */
+.bracket-center-styled {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 300px;
+    margin: 0 30px;
+    padding: 10px;
+    z-index: 1;
+}
+
+/* Championship containers */
+.champion-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* Region labels */
+.region-label-styled {
+    text-align: center;
+    font-weight: bold;
+    color: #003478;
+    margin: 15px 0;
+    font-size: 14px;
+}
+
+/* Region rounds container */
+.region-rounds {
+    display: flex;
+    width: 100%;
+    position: relative;
+}
+
+.region-rounds-right {
+    justify-content: flex-end;
+}
+
+/* For Firefox */
+.bracket-container {
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f1f1f1;
+    overflow: -moz-scrollbars-horizontal;
+}
+
+/* For IE */
+.bracket-container {
+    -ms-overflow-style: scrollbar;
 }
