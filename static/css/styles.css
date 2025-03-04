@@ -153,6 +153,9 @@ body {
     max-width: 130px;
     /* Ensure it doesn't shrink below this */
     min-width: 130px;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto !important;
 }
 
 .team:hover {
