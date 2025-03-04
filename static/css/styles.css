@@ -61,40 +61,16 @@ body {
     border: 1px solid #ddd;
     padding: 10px;
     margin-bottom: 20px;
-    z-index: 0;
 }
 
 /* BRACKET CONTENT - THE FIXED WIDTH ELEMENT */
 .bracket-content {
     display: inline-block;
+    /* This is critical for proper scrolling */
     width: 1600px;
     margin-left: 0;
+    /* Start from the very left edge */
     position: relative;
-    z-index: 0;
-}
-
-/* Specifically ensure rounds 2, 3, and 4 are clickable */
-.round[data-round="1"],
-.round[data-round="2"],
-.round[data-round="3"] {
-    pointer-events: auto !important;
-    z-index: 10 !important;
-}
-
-/* Make sure their game wrappers are clickable too */
-.round[data-round="1"] .game-wrapper,
-.round[data-round="2"] .game-wrapper,
-.round[data-round="3"] .game-wrapper {
-    pointer-events: auto !important;
-    z-index: 11 !important;
-}
-
-/* And ensure all teams in these rounds are clickable */
-.round[data-round="1"] .team,
-.round[data-round="2"] .team,
-.round[data-round="3"] .team {
-    pointer-events: auto !important;
-    z-index: 12 !important;
 }
 
 /* Round headers */
@@ -171,9 +147,12 @@ body {
     border: 1px solid #dee2e6;
     border-radius: 4px;
     cursor: pointer;
-    pointer-events: auto;
-    z-index: 3;
-    position: relative;
+    /* Fixed width for all team boxes */
+    width: 130px;
+    /* Ensure it doesn't grow beyond this */
+    max-width: 130px;
+    /* Ensure it doesn't shrink below this */
+    min-width: 130px;
 }
 
 .team:hover {
@@ -224,8 +203,6 @@ body {
     position: relative;
     width: 140px;
     flex: 0 0 140px;
-    pointer-events: auto;
-    z-index: 1;
 }
 
 /* Game wrapper styling */
@@ -233,8 +210,6 @@ body {
     position: absolute;
     width: 100%;
     padding: 0 5px;
-    pointer-events: auto;
-    z-index: 2;
 }
 
 /* Game positions - FIXED PIXEL VALUES */
@@ -307,9 +282,6 @@ body {
     display: flex;
     flex-direction: column;
     width: 100%;
-    pointer-events: auto;
-    position: relative;
-    z-index: 2;
 }
 
 /* Connector lines */
@@ -320,7 +292,6 @@ body {
     top: 0;
     left: 0;
     z-index: -1;
-    pointer-events: none;
 }
 
 .horizontal-line {
@@ -343,8 +314,6 @@ body {
     align-items: center;
     width: 220px;
     margin: 0 20px;
-    pointer-events: auto;
-    z-index: 2;
 }
 
 .final-four-styled {
@@ -354,8 +323,6 @@ body {
     background-color: #f8f9fa;
     border-radius: 6px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    pointer-events: auto;
-    z-index: 3;
 }
 
 .championship-styled {
@@ -366,16 +333,12 @@ body {
     border-radius: 6px;
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
     border: 1px solid #ffe082;
-    pointer-events: auto;
-    z-index: 3;
 }
 
 .semifinal-styled {
     width: 100%;
     padding: 10px;
     margin: 10px 0;
-    pointer-events: auto;
-    z-index: 3;
 }
 
 .champion-display-styled {
@@ -386,8 +349,6 @@ body {
     border: 2px solid #4caf50;
     text-align: center;
     max-width: 180px;
-    pointer-events: auto;
-    z-index: 3;
 }
 
 .championship-title {

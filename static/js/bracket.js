@@ -287,7 +287,7 @@ function MarchMadnessBracket() {
     const renderTeam = (team, isWinner, onClick, isTBD = false) => {
         // If no team data, return empty box
         if (!team) {
-            return <div className="team tbd">TBD</div>;
+            return <div className="team tbd"> &nbsp; </div>;
         }
 
         // Style for team boxes
@@ -615,7 +615,7 @@ function MarchMadnessBracket() {
                                 alignItems: 'center',
                                 justifyContent: 'center'
                             }}>
-                                <div style={{ fontSize: '16px', color: '#aaa', fontStyle: 'italic' }}>TBD</div>
+                                <div style={{ fontSize: '16px', color: '#aaa', fontStyle: 'italic' }}> &nbsp; </div>
                             </div>
                         )}
                     </div>
