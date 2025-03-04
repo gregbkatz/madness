@@ -789,7 +789,7 @@ function MarchMadnessBracket() {
                     </div>
                 </div>
 
-                {renderRoundHeaders()}
+
 
                 <div className="brackets-wrapper" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     <div className="bracket">
