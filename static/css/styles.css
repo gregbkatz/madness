@@ -120,12 +120,7 @@ body {
     position: relative;
 }
 
-.region-label-styled {
-    text-align: center;
-    font-weight: bold;
-    color: #003478;
-    margin: 15px 0;
-}
+
 
 .region-rounds {
     display: flex;
@@ -268,11 +263,11 @@ body {
 
 /* Sweet 16 games */
 .round[data-round="2"] .game-wrapper:nth-child(1) {
-    top: 50px;
+    top: -180px;
 }
 
 .round[data-round="2"] .game-wrapper:nth-child(2) {
-    top: 290px;
+    top: 60px;
 }
 
 /* Elite Eight game */
@@ -543,10 +538,17 @@ html {
 /* Region labels */
 .region-label-styled {
     text-align: center;
-    font-weight: bold;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 1px;
     color: #003478;
+    text-transform: uppercase;
+    padding-bottom: 6px;
     margin: 15px 0;
-    font-size: 14px;
+    margin-top: 225px;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* Region rounds container */

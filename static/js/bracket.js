@@ -789,8 +789,6 @@ function MarchMadnessBracket() {
                     </div>
                 </div>
 
-
-
                 <div className="brackets-wrapper" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     <div className="bracket">
                         <div className="bracket-left">
@@ -799,7 +797,7 @@ function MarchMadnessBracket() {
                                     {renderRound('south', 0, 'left')}
                                     {renderRound('south', 1, 'left')}
                                     <div style={{ display: 'flex', flexDirection: 'column', minWidth: '140px', maxWidth: '140px', padding: '0 5px' }}>
-                                        <div className="region-label" style={{ marginBottom: '15px', marginTop: '15px' }}>South</div>
+                                        <div className="region-label-styled">South</div>
                                         {renderRound('south', 2, 'left')}
                                     </div>
                                     {renderRound('south', 3, 'left')}
@@ -834,7 +832,7 @@ function MarchMadnessBracket() {
                                 <div className="region-rounds" style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                                     {renderRound('midwest', 3, 'right')}
                                     <div style={{ display: 'flex', flexDirection: 'column', minWidth: '140px', maxWidth: '140px', padding: '0 5px', alignItems: 'flex-start' }}>
-                                        <div className="region-label" style={{ marginBottom: '15px', marginTop: '15px' }}>Midwest</div>
+                                        <div className="region-label-styled">Midwest</div>
                                         {renderRound('midwest', 2, 'right')}
                                     </div>
                                     {renderRound('midwest', 1, 'right')}
@@ -851,7 +849,7 @@ function MarchMadnessBracket() {
                                     {renderRound('east', 0, 'left')}
                                     {renderRound('east', 1, 'left')}
                                     <div style={{ display: 'flex', flexDirection: 'column', minWidth: '140px', maxWidth: '140px', padding: '0 5px' }}>
-                                        <div className="region-label" style={{ marginBottom: '15px', marginTop: '15px' }}>East</div>
+                                        <div className="region-label-styled">East</div>
                                         {renderRound('east', 2, 'left')}
                                     </div>
                                     {renderRound('east', 3, 'left')}
@@ -874,7 +872,7 @@ function MarchMadnessBracket() {
                                 <div className="region-rounds" style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
                                     {renderRound('west', 3, 'right')}
                                     <div style={{ display: 'flex', flexDirection: 'column', minWidth: '140px', maxWidth: '140px', padding: '0 5px', alignItems: 'flex-start' }}>
-                                        <div className="region-label" style={{ marginBottom: '15px', marginTop: '15px' }}>West</div>
+                                        <div className="region-label-styled">West</div>
                                         {renderRound('west', 2, 'right')}
                                     </div>
                                     {renderRound('west', 1, 'right')}
