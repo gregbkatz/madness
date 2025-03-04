@@ -1,3 +1,8 @@
+// Fix for mobile scrolling issues
+if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+}
+
 // Define the main Bracket component
 function MarchMadnessBracket() {
     const [teams, setTeams] = React.useState({
