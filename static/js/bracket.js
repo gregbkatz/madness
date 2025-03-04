@@ -1,7 +1,27 @@
-// Fix for mobile scrolling issues
+// Comprehensive mobile scrolling fixes
 if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
 }
+
+// iOS Safari specific fixes
+document.addEventListener('touchend', function () {
+    // Delay to ensure any momentum scrolling has finished
+    setTimeout(function () {
+        // Prevent scroll bounce by checking if we're near the bottom
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
+            // Force scroll to bottom to prevent snap-back
+            window.scrollTo(0, document.body.offsetHeight);
+        }
+    }, 100);
+});
+
+// Listen for orientation changes
+window.addEventListener('orientationchange', function () {
+    // Scroll to current position after orientation change
+    setTimeout(function () {
+        window.scrollTo(0, window.scrollY);
+    }, 300);
+});
 
 // Define the main Bracket component
 function MarchMadnessBracket() {

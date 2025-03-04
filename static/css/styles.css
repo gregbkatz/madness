@@ -1,3 +1,54 @@
+/* MOBILE SCROLLING FIXES - COMPLETE RESET */
+html {
+    position: static !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: 100% !important;
+    width: 100% !important;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    position: static !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    min-height: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    touch-action: manipulation;
+    -webkit-overflow-scrolling: auto;
+}
+
+/* Prevent any touch delay */
+* {
+    touch-action: manipulation;
+}
+
+/* Fix iOS momentum scrolling */
+#root {
+    position: static !important;
+    display: block;
+    width: 100%;
+    padding-bottom: 150px;
+    /* Extra space at bottom */
+}
+
+/* Ensure bracket container doesn't interfere with scrolling */
+.bracket-container {
+    position: relative;
+    height: auto !important;
+    overflow: visible !important;
+    padding-bottom: 150px !important;
+    /* Force extra space */
+}
+
+/* Bracket content should be visible */
+.bracket-content {
+    overflow: visible !important;
+}
+
 /* Reset all styles to ensure we're working with a clean slate */
 * {
     box-sizing: border-box;
@@ -598,4 +649,54 @@ html {
     width: 100%;
     min-width: 700px;
     margin: 0 auto;
+}
+
+/* Mobile-specific fixes */
+@media only screen and (max-width: 767px) {
+    body {
+        height: auto !important;
+        position: static !important;
+    }
+
+    #root {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .bracket-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100vh - 120px);
+        /* Account for header */
+        position: relative;
+        overflow: auto !important;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 500px !important;
+        /* Very large padding */
+    }
+
+    .bracket-content {
+        position: relative !important;
+        height: auto !important;
+        min-height: calc(100vh - 120px);
+    }
+
+    /* Force hardware acceleration to smooth scrolling */
+    .bracket-container:before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1px;
+        height: 1px;
+        background: transparent;
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        -webkit-perspective: 1000;
+        perspective: 1000;
+    }
 }

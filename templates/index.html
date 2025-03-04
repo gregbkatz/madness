@@ -6,6 +6,30 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover, height=device-height">
     <title>March Madness Bracket</title>
+    <!-- Mobile Scrolling Fix -->
+    <script>
+        // iOS-specific scroll fix
+        document.addEventListener('DOMContentLoaded', function () {
+            // Fix iOS Safari viewport issues
+            let viewportHeight = window.innerHeight;
+            document.documentElement.style.setProperty('--vh', `${viewportHeight * 0.01}px`);
+
+            // Disable pull-to-refresh
+            document.body.addEventListener('touchmove', function (e) {
+                if (e.target.closest('.bracket-container')) {
+                    e.stopPropagation();
+                }
+            }, { passive: false });
+
+            // Ensure all content is visible in viewport
+            window.addEventListener('scroll', function () {
+                // If we're at the bottom, make sure we stay there
+                if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 10) {
+                    window.scrollTo(0, document.body.offsetHeight);
+                }
+            });
+        });
+    </script>
     <!-- React and ReactDOM CDN -->
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
@@ -21,6 +45,38 @@
     </header>
     <div id="root"></div>
     <script type="text/babel" src="{{ url_for('static', filename='js/bracket.js') }}"></script>
+    <!-- Force bottom content to be scrollable -->
+    <div style="height: 100px;"></div>
+    <script>
+        // Extra iOS mobile scroll fix
+        document.addEventListener('DOMContentLoaded', function () {
+            // Add padding to ensure scrollability on mobile
+            function addPadding() {
+                let bodyHeight = document.body.offsetHeight;
+                let windowHeight = window.innerHeight;
+
+                // Force scroll by adding padding if needed
+                if (bodyHeight <= windowHeight) {
+                    document.body.style.paddingBottom = '200px';
+                }
+            }
+
+            // Apply immediately and when orientation changes
+            addPadding();
+            window.addEventListener('resize', addPadding);
+            window.addEventListener('orientationchange', addPadding);
+
+            // Force scroll to stay at bottom when user reaches bottom
+            document.addEventListener('scroll', function () {
+                if ((window.innerHeight + window.pageYOffset) >= document.body.offsetHeight - 10) {
+                    // Force scroll to bottom
+                    setTimeout(function () {
+                        window.scrollTo(0, document.body.offsetHeight);
+                    }, 0);
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
