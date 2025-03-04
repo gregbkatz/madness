@@ -268,11 +268,11 @@ body {
 
 /* Sweet 16 games */
 .round[data-round="2"] .game-wrapper:nth-child(1) {
-    top: 90px;
+    top: 50px;
 }
 
 .round[data-round="2"] .game-wrapper:nth-child(2) {
-    top: 330px;
+    top: 290px;
 }
 
 /* Elite Eight game */
