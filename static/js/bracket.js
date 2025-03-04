@@ -585,7 +585,7 @@ function MarchMadnessBracket() {
         const championship = bracket.championship || [null, null];
 
         return (
-            <div className="final-four" style={{ position: 'relative', zIndex: 1 }}>
+            <div className="final-four" style={{ position: 'relative', zIndex: 1, top: 100 }}>
                 <div className="final-four-content">
                     {/* Champion Display Box - Now positioned ABOVE the championship */}
                     <div style={championDisplayStyle}>
