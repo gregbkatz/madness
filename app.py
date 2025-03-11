@@ -11,6 +11,9 @@ app = Flask(__name__)
 # Store the bracket in server memory (in a real app, this would be in a database)
 bracket = initialize_bracket()
 
+# Ensure the saved_brackets directory exists
+os.makedirs('saved_brackets', exist_ok=True)
+
 @app.route('/')
 def index():
     current_time = datetime.now().strftime("%B %d, %Y %I:%M %p")
@@ -19,6 +22,25 @@ def index():
 @app.route('/api/teams')
 def get_teams():
     return jsonify(teams)
+
+@app.route('/api/save-bracket', methods=['POST'])
+def save_bracket():
+    """Save the current bracket to a file."""
+    try:
+        # Generate a timestamp for the filename
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"saved_brackets/bracket_{timestamp}.json"
+        
+        # Write the current bracket to the file
+        with open(filename, 'w') as f:
+            json.dump(bracket, f, indent=2)
+            
+        print(f"Bracket saved to {filename}")
+        
+        return jsonify({"success": True, "message": f"Bracket saved to {filename}"})
+    except Exception as e:
+        print(f"Error saving bracket: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/bracket', methods=['GET', 'POST'])
 def manage_bracket():

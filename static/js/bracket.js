@@ -90,6 +90,32 @@ function MarchMadnessBracket() {
             .catch(error => console.error('Error updating bracket:', error));
     };
 
+    // Save bracket to server
+    const saveBracket = () => {
+        console.log('Saving bracket to file...');
+
+        fetch('/api/save-bracket', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Bracket saved successfully!');
+                    console.log('Save success:', data.message);
+                } else {
+                    alert('Error saving bracket: ' + data.error);
+                    console.error('Save error:', data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error saving bracket. Please try again.');
+                console.error('Error saving bracket:', error);
+            });
+    };
+
     // Handle Final Four Selection
     const handleFinalFourSelect = (semifinalIndex, teamIndex, region) => {
         console.log(`Final Four select: semifinalIndex=${semifinalIndex}, teamIndex=${teamIndex}, region=${region}`);
@@ -810,6 +836,22 @@ function MarchMadnessBracket() {
                             }}
                         >
                             Reset Bracket
+                        </button>
+
+                        <button
+                            onClick={saveBracket}
+                            style={{
+                                padding: '8px 16px',
+                                backgroundColor: '#2e7d32',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                fontSize: '14px'
+                            }}
+                        >
+                            Save Bracket
                         </button>
                     </div>
                 </div>
