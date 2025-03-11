@@ -42,6 +42,66 @@ def save_bracket():
         print(f"Error saving bracket: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+@app.route('/api/saved-brackets', methods=['GET'])
+def list_saved_brackets():
+    """List all saved brackets."""
+    try:
+        # Get all JSON files in the saved_brackets directory
+        saved_files = []
+        for file in os.listdir('saved_brackets'):
+            if file.endswith('.json'):
+                # Get file creation time
+                file_path = os.path.join('saved_brackets', file)
+                created_time = datetime.fromtimestamp(os.path.getctime(file_path))
+                readable_time = created_time.strftime("%Y-%m-%d %H:%M:%S")
+                
+                saved_files.append({
+                    "filename": file,
+                    "created": readable_time,
+                    "path": file_path
+                })
+        
+        # Sort by creation time (newest first)
+        saved_files.sort(key=lambda x: x["created"], reverse=True)
+        
+        return jsonify({"success": True, "brackets": saved_files})
+    except Exception as e:
+        print(f"Error listing saved brackets: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/load-bracket/<filename>', methods=['GET'])
+def load_bracket(filename):
+    """Load a saved bracket."""
+    global bracket
+    
+    try:
+        # Security check to prevent directory traversal
+        if '..' in filename or filename.startswith('/'):
+            return jsonify({"success": False, "error": "Invalid filename"}), 400
+        
+        file_path = os.path.join('saved_brackets', filename)
+        
+        # Check if file exists
+        if not os.path.exists(file_path):
+            return jsonify({"success": False, "error": f"File {filename} not found"}), 404
+        
+        # Load the bracket from the file
+        with open(file_path, 'r') as f:
+            loaded_bracket = json.load(f)
+        
+        # Update the global bracket
+        bracket = loaded_bracket
+        
+        # Ensure winners are updated
+        bracket = update_winners(bracket)
+        
+        print(f"Loaded bracket from {file_path}")
+        
+        return jsonify({"success": True, "message": f"Bracket loaded from {filename}", "bracket": bracket})
+    except Exception as e:
+        print(f"Error loading bracket: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
 @app.route('/api/bracket', methods=['GET', 'POST'])
 def manage_bracket():
     global bracket

@@ -42,6 +42,11 @@ function MarchMadnessBracket() {
         champion: null
     });
 
+    // State for saved brackets modal
+    const [showModal, setShowModal] = React.useState(false);
+    const [savedBrackets, setSavedBrackets] = React.useState([]);
+    const [loadingBrackets, setLoadingBrackets] = React.useState(false);
+
     // Fetch initial data
     React.useEffect(() => {
         // Fetch teams
@@ -113,6 +118,54 @@ function MarchMadnessBracket() {
             .catch(error => {
                 alert('Error saving bracket. Please try again.');
                 console.error('Error saving bracket:', error);
+            });
+    };
+
+    // Load bracket - show modal with saved brackets
+    const openLoadBracketModal = () => {
+        console.log('Fetching saved brackets...');
+        setLoadingBrackets(true);
+
+        fetch('/api/saved-brackets')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    setSavedBrackets(data.brackets);
+                    setShowModal(true);
+                    console.log('Retrieved saved brackets:', data.brackets);
+                } else {
+                    alert('Error retrieving saved brackets: ' + data.error);
+                    console.error('Error:', data.error);
+                }
+                setLoadingBrackets(false);
+            })
+            .catch(error => {
+                alert('Error retrieving saved brackets. Please try again.');
+                console.error('Error retrieving saved brackets:', error);
+                setLoadingBrackets(false);
+            });
+    };
+
+    // Load a specific bracket
+    const loadBracket = (filename) => {
+        console.log(`Loading bracket from ${filename}...`);
+
+        fetch(`/api/load-bracket/${filename}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    setBracket(data.bracket);
+                    setShowModal(false);
+                    alert('Bracket loaded successfully!');
+                    console.log('Load success:', data.message);
+                } else {
+                    alert('Error loading bracket: ' + data.error);
+                    console.error('Load error:', data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error loading bracket. Please try again.');
+                console.error('Error loading bracket:', error);
             });
     };
 
@@ -771,6 +824,103 @@ function MarchMadnessBracket() {
         );
     };
 
+    // Render the modal for loading brackets
+    const renderSavedBracketsModal = () => {
+        if (!showModal) return null;
+
+        // Styles for the modal
+        const modalOverlayStyle = {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+        };
+
+        const modalContentStyle = {
+            backgroundColor: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+            maxWidth: '90%',
+            width: '600px',
+            maxHeight: '80vh',
+            overflowY: 'auto'
+        };
+
+        const headerStyle = {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '15px'
+        };
+
+        const closeButtonStyle = {
+            backgroundColor: 'transparent',
+            border: 'none',
+            fontSize: '20px',
+            cursor: 'pointer'
+        };
+
+        const bracketItemStyle = {
+            padding: '10px',
+            margin: '5px 0',
+            borderRadius: '4px',
+            border: '1px solid #ddd',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+        };
+
+        const loadButtonStyle = {
+            padding: '5px 10px',
+            backgroundColor: '#2e7d32',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+        };
+
+        return (
+            <div style={modalOverlayStyle} onClick={() => setShowModal(false)}>
+                <div style={modalContentStyle} onClick={e => e.stopPropagation()}>
+                    <div style={headerStyle}>
+                        <h3 style={{ margin: 0 }}>Load Saved Bracket</h3>
+                        <button style={closeButtonStyle} onClick={() => setShowModal(false)}>×</button>
+                    </div>
+
+                    {loadingBrackets ? (
+                        <div>Loading saved brackets...</div>
+                    ) : savedBrackets.length === 0 ? (
+                        <div>No saved brackets found.</div>
+                    ) : (
+                        <div>
+                            {savedBrackets.map((bracket, index) => (
+                                <div key={index} style={bracketItemStyle}>
+                                    <div>
+                                        <div style={{ fontWeight: 'bold' }}>{bracket.filename}</div>
+                                        <div style={{ fontSize: '12px', color: '#666' }}>Saved on: {bracket.created}</div>
+                                    </div>
+                                    <button
+                                        style={loadButtonStyle}
+                                        onClick={() => loadBracket(bracket.filename)}
+                                    >
+                                        Load
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     // Main render method
     return (
         <div className="bracket-container">
@@ -852,6 +1002,22 @@ function MarchMadnessBracket() {
                             }}
                         >
                             Save Bracket
+                        </button>
+
+                        <button
+                            onClick={openLoadBracketModal}
+                            style={{
+                                padding: '8px 16px',
+                                backgroundColor: '#0277bd',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                fontSize: '14px'
+                            }}
+                        >
+                            Load Bracket
                         </button>
                     </div>
                 </div>
@@ -950,6 +1116,7 @@ function MarchMadnessBracket() {
                     </div>
                 </div>
             </div>
+            {renderSavedBracketsModal()}
         </div>
     );
 }
