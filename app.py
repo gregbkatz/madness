@@ -46,6 +46,49 @@ def show_login():
         username = request.form.get('username')
         if username:
             session['username'] = username
+            
+            # Automatically load the user's most recent bracket
+            try:
+                # Check if the user has any saved brackets
+                saved_files = []
+                for file in os.listdir('saved_brackets'):
+                    if file.endswith('.json') and username in file:
+                        # Get file creation time
+                        file_path = os.path.join('saved_brackets', file)
+                        created_time = datetime.fromtimestamp(os.path.getctime(file_path))
+                        saved_files.append({
+                            "filename": file,
+                            "created": created_time,
+                            "path": file_path
+                        })
+                
+                # Sort by creation time (newest first)
+                saved_files.sort(key=lambda x: x["created"], reverse=True)
+                print(saved_files)
+                # If user has saved brackets, load the most recent one
+                if saved_files:
+                    most_recent = saved_files[0]
+                    print(f"Auto-loading most recent bracket for {username}: {most_recent['filename']}")
+                    
+                    # Load the bracket
+                    with open(most_recent['path'], 'r') as f:
+                        loaded_bracket = json.load(f)
+                    
+                    # Update the user's bracket in session
+                    update_user_bracket(loaded_bracket)
+                    
+                    # Ensure winners are updated
+                    updated_bracket = update_winners(session['bracket'])
+                    update_user_bracket(updated_bracket)
+                else:
+                    # No saved brackets found, initialize a new one
+                    update_user_bracket(initialize_bracket())
+                    print(f"No saved brackets found for {username}, initializing new bracket")
+            except Exception as e:
+                # If any error occurs, just initialize a new bracket
+                update_user_bracket(initialize_bracket())
+                print(f"Error loading saved bracket for {username}: {str(e)}")
+            
             return redirect(url_for('index'))
         else:
             return render_template('login.html', error='Please enter your name')

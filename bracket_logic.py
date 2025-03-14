@@ -674,6 +674,7 @@ def pretty_print_bracket(bracket):
     """
     Return a nicely formatted string representation of the bracket
     """
+    return ""
     # Create a copy without the winners data for cleaner output
     printable_bracket = copy.deepcopy(bracket)
     
