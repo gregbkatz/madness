@@ -4,10 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
-    <meta name="description" content="March Madness Bracket Simulator">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>March Madness Bracket - {{ display_name }}</title>
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover, height=device-height">
+    <title>March Madness Bracket</title>
     <!-- Mobile Scrolling Fix -->
     <script>
         // iOS-specific scroll fix
@@ -33,106 +31,50 @@
         });
     </script>
     <!-- React and ReactDOM CDN -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <!-- Babel for JSX transpilation -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <style>
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .username {
-            font-size: 14px;
-            color: #e0e0e0;
-        }
-
-        .logout-link {
-            color: #ffcc80;
-            text-decoration: none;
-            font-size: 12px;
-            transition: color 0.2s;
-        }
-
-        .logout-link:hover {
-            color: white;
-            text-decoration: underline;
-        }
-
-        /* Hide Babel script during loading */
-        script[type="text/babel"] {
-            display: none;
-        }
-    </style>
 </head>
 
 <body>
     <header id="app-header" class="app-header">
-        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-            <h1>
-                {% if username %}
-                {{ display_name }}'s March Madness Bracket
-                {% else %}
-                March Madness Bracket v1.0
-                {% endif %}
-            </h1>
-            <div class="user-info">
-                {% if username and is_owner %}
-                <span class="username">@{{ username }}</span>
-                <a href="/logout" class="logout-link">Logout</a>
-                {% endif %}
-                <div class="last-updated">Last updated: {{ current_time }}</div>
-            </div>
-        </div>
+        <h1>March Madness Bracket v1.0</h1>
+        <div class="last-updated">Last updated: {{ current_time }}</div>
     </header>
-    <div id="root">
-        <div class="loading">Loading bracket...</div>
-    </div>
-    <script>
-        // Set the current username from the server
-        var username = "{{ username }}";
-        // Set up global variables for the React component
-        window.currentUsername = username;
-    </script>
-
-    {% if is_owner %}
-    <script>
-        // User is the owner of this bracket
-        window.isOwner = true;
-    </script>
-    {% else %}
-    <script>
-        // User is viewing someone else's bracket
-        window.isOwner = false;
-    </script>
-    {% endif %}
-
+    <div id="root"></div>
     <script type="text/babel" src="{{ url_for('static', filename='js/bracket.js') }}"></script>
     <!-- Force bottom content to be scrollable -->
     <div style="height: 100px;"></div>
     <script>
-        // Add padding to body if it's smaller than the window
-        function addPaddingToBody() {
-            if (document.body.clientHeight < window.innerHeight) {
-                document.body.style.paddingBottom = (window.innerHeight - document.body.clientHeight + 100) + 'px';
-            }
-        }
+        // Extra iOS mobile scroll fix
+        document.addEventListener('DOMContentLoaded', function () {
+            // Add padding to ensure scrollability on mobile
+            function addPadding() {
+                let bodyHeight = document.body.offsetHeight;
+                let windowHeight = window.innerHeight;
 
-        // Call on load and resize
-        window.addEventListener('load', addPaddingToBody);
-        window.addEventListener('resize', addPaddingToBody);
-        window.addEventListener('orientationchange', function () {
-            setTimeout(addPaddingToBody, 300);
-        });
-
-        // Force scroll to bottom when user tries to scroll past the bottom
-        window.addEventListener('scroll', function () {
-            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
-                window.scrollTo(0, document.body.offsetHeight);
+                // Force scroll by adding padding if needed
+                if (bodyHeight <= windowHeight) {
+                    document.body.style.paddingBottom = '200px';
+                }
             }
+
+            // Apply immediately and when orientation changes
+            addPadding();
+            window.addEventListener('resize', addPadding);
+            window.addEventListener('orientationchange', addPadding);
+
+            // Force scroll to stay at bottom when user reaches bottom
+            document.addEventListener('scroll', function () {
+                if ((window.innerHeight + window.pageYOffset) >= document.body.offsetHeight - 10) {
+                    // Force scroll to bottom
+                    setTimeout(function () {
+                        window.scrollTo(0, document.body.offsetHeight);
+                    }, 0);
+                }
+            });
         });
     </script>
 </body>

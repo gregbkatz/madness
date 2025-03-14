@@ -25,10 +25,6 @@ window.addEventListener('orientationchange', function () {
 
 // Define the main Bracket component
 function MarchMadnessBracket() {
-    // Get username from the window object if available
-    const username = window.currentUsername || '';
-    const isOwner = window.isOwner || false;
-
     const [teams, setTeams] = React.useState({
         west: [],
         east: [],
@@ -73,12 +69,6 @@ function MarchMadnessBracket() {
 
     // Function to handle team selection in regular rounds
     const handleTeamSelect = (region, round, gameIndex, teamIndex) => {
-        // Only allow changes if this is the user's own bracket
-        if (!isOwner) {
-            alert("You are viewing someone else's bracket. You cannot make changes.");
-            return;
-        }
-
         console.log(`Team select: region=${region}, round=${round}, game=${gameIndex}, team=${teamIndex}`);
 
         fetch('/api/bracket', {
@@ -107,11 +97,6 @@ function MarchMadnessBracket() {
 
     // Save bracket to server
     const saveBracket = () => {
-        if (!isOwner) {
-            alert("You are viewing someone else's bracket. You cannot save changes.");
-            return;
-        }
-
         console.log('Saving bracket to file...');
 
         fetch('/api/save-bracket', {
@@ -138,11 +123,6 @@ function MarchMadnessBracket() {
 
     // Load bracket - show modal with saved brackets
     const openLoadBracketModal = () => {
-        if (!isOwner) {
-            alert("You are viewing someone else's bracket. You cannot load your brackets here.");
-            return;
-        }
-
         console.log('Fetching saved brackets...');
         setLoadingBrackets(true);
 
@@ -168,11 +148,6 @@ function MarchMadnessBracket() {
 
     // Load a specific bracket
     const loadBracket = (filename) => {
-        if (!isOwner) {
-            alert("You are viewing someone else's bracket. You cannot load your brackets here.");
-            return;
-        }
-
         console.log(`Loading bracket from ${filename}...`);
 
         fetch(`/api/load-bracket/${filename}`)
@@ -196,10 +171,6 @@ function MarchMadnessBracket() {
 
     // Handle Final Four Selection
     const handleFinalFourSelect = (semifinalIndex, teamIndex, region) => {
-        if (!isOwner) {
-            return;
-        }
-
         console.log(`Final Four select: semifinalIndex=${semifinalIndex}, teamIndex=${teamIndex}, region=${region}`);
 
         // If the team is already in the finalFour array at the correct slot index, then we should be updating the Championship
@@ -265,10 +236,6 @@ function MarchMadnessBracket() {
 
     // Handle Champion selection
     const handleChampionSelect = (slotIndex) => {
-        if (!isOwner) {
-            return;
-        }
-
         console.log(`Champion select: slotIndex=${slotIndex}`);
 
         fetch('/api/bracket', {
@@ -294,10 +261,6 @@ function MarchMadnessBracket() {
 
     // Handle Championship team selection
     const handleChampionshipSelect = (teamIndex) => {
-        if (!isOwner) {
-            return;
-        }
-
         console.log(`Championship select: teamIndex=${teamIndex}`);
 
         // Check if there's already a team in this Championship slot
@@ -358,11 +321,6 @@ function MarchMadnessBracket() {
 
     // Auto-fill the bracket
     const autoFillBracket = () => {
-        if (!isOwner) {
-            alert("You are viewing someone else's bracket. You cannot make changes.");
-            return;
-        }
-
         fetch('/api/bracket', {
             method: 'POST',
             headers: {
@@ -382,11 +340,6 @@ function MarchMadnessBracket() {
 
     // Random-fill the bracket (completely random picks)
     const randomFillBracket = () => {
-        if (!isOwner) {
-            alert("You are viewing someone else's bracket. You cannot make changes.");
-            return;
-        }
-
         fetch('/api/bracket', {
             method: 'POST',
             headers: {
@@ -406,11 +359,6 @@ function MarchMadnessBracket() {
 
     // Reset the bracket
     const resetBracket = () => {
-        if (!isOwner) {
-            alert("You are viewing someone else's bracket. You cannot make changes.");
-            return;
-        }
-
         fetch('/api/bracket', {
             method: 'POST',
             headers: {
@@ -460,12 +408,12 @@ function MarchMadnessBracket() {
             backgroundColor: isTBD ? '#f0f0f0' : isWinner ? '#f0f8ff' : 'white',
             border: isWinner ? '1px solid #d0e0f0' : '1px solid #ddd',
             borderRadius: '2px',
-            cursor: isOwner && onClick ? 'pointer' : 'default', // Only show pointer cursor if owner
+            cursor: onClick ? 'pointer' : 'default',
             color: isTBD ? '#888' : '#333',
             boxShadow: isWinner ? '0 1px 2px rgba(0, 0, 100, 0.05)' : 'none',
             transition: 'all 0.2s ease',
             // Hover effect
-            ':hover': isOwner && onClick ? {
+            ':hover': onClick ? {
                 backgroundColor: isWinner ? '#e8f4ff' : '#f5f5f5',
                 borderColor: isWinner ? '#c0d8f0' : '#ccc',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
@@ -485,7 +433,7 @@ function MarchMadnessBracket() {
             <div
                 style={teamStyle}
                 className={`team ${isWinner ? 'winner' : ''}`}
-                onClick={isOwner ? onClick : undefined} // Only attach onClick if owner
+                onClick={onClick}
             >
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                     <div style={{
@@ -985,107 +933,93 @@ function MarchMadnessBracket() {
                     flexWrap: 'wrap',
                     width: '100%'
                 }}>
-                    {isOwner && (
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            justifyContent: 'center',
-                            flexWrap: 'wrap',
-                            gap: '10px'
-                        }}>
-                            <button
-                                onClick={autoFillBracket}
-                                style={{
-                                    padding: '8px 16px',
-                                    backgroundColor: '#003478',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                    fontSize: '14px'
-                                }}
-                            >
-                                Auto-Fill Bracket
-                            </button>
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        flexWrap: 'wrap',
+                        gap: '10px'
+                    }}>
+                        <button
+                            onClick={autoFillBracket}
+                            style={{
+                                padding: '8px 16px',
+                                backgroundColor: '#003478',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                fontSize: '14px'
+                            }}
+                        >
+                            Auto-Fill Bracket
+                        </button>
 
-                            <button
-                                onClick={randomFillBracket}
-                                style={{
-                                    padding: '8px 16px',
-                                    backgroundColor: '#6a1b9a',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                    fontSize: '14px'
-                                }}
-                            >
-                                Random Picks
-                            </button>
+                        <button
+                            onClick={randomFillBracket}
+                            style={{
+                                padding: '8px 16px',
+                                backgroundColor: '#6a1b9a',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                fontSize: '14px'
+                            }}
+                        >
+                            Random Picks
+                        </button>
 
-                            <button
-                                onClick={resetBracket}
-                                style={{
-                                    padding: '8px 16px',
-                                    backgroundColor: '#6c757d',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                    fontSize: '14px'
-                                }}
-                            >
-                                Reset Bracket
-                            </button>
+                        <button
+                            onClick={resetBracket}
+                            style={{
+                                padding: '8px 16px',
+                                backgroundColor: '#6c757d',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                fontSize: '14px'
+                            }}
+                        >
+                            Reset Bracket
+                        </button>
 
-                            <button
-                                onClick={saveBracket}
-                                style={{
-                                    padding: '8px 16px',
-                                    backgroundColor: '#2e7d32',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                    fontSize: '14px'
-                                }}
-                            >
-                                Save Bracket
-                            </button>
+                        <button
+                            onClick={saveBracket}
+                            style={{
+                                padding: '8px 16px',
+                                backgroundColor: '#2e7d32',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                fontSize: '14px'
+                            }}
+                        >
+                            Save Bracket
+                        </button>
 
-                            <button
-                                onClick={openLoadBracketModal}
-                                style={{
-                                    padding: '8px 16px',
-                                    backgroundColor: '#0277bd',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                    fontSize: '14px'
-                                }}
-                            >
-                                Load Bracket
-                            </button>
-                        </div>
-                    )}
-
-                    {!isOwner && (
-                        <div style={{
-                            padding: '10px',
-                            margin: '10px 0',
-                            backgroundColor: '#f8f9fa',
-                            borderRadius: '5px',
-                            fontSize: '14px'
-                        }}>
-                            You are viewing {username}'s bracket. <a href="/">Create your own bracket</a>
-                        </div>
-                    )}
+                        <button
+                            onClick={openLoadBracketModal}
+                            style={{
+                                padding: '8px 16px',
+                                backgroundColor: '#0277bd',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                fontSize: '14px'
+                            }}
+                        >
+                            Load Bracket
+                        </button>
+                    </div>
                 </div>
 
                 <div className="brackets-wrapper" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
