@@ -41,7 +41,12 @@
 <body>
     <header id="app-header" class="app-header">
         <h1>March Madness Bracket v1.0</h1>
-        <div class="last-updated">Last updated: {{ current_time }}</div>
+        <div class="header-info">
+            <div class="last-updated">Last updated: {{ current_time }}</div>
+            {% if username %}
+            <div class="user-info">User: {{ username }}</div>
+            {% endif %}
+        </div>
     </header>
     <div id="root"></div>
     <script type="text/babel" src="{{ url_for('static', filename='js/bracket.js') }}"></script>

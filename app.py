@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from data.teams import teams
 from datetime import datetime
 from bracket_logic import initialize_bracket, select_team, auto_fill_bracket, pretty_print_bracket, update_winners, random_fill_bracket, reset_team_completely
@@ -7,6 +7,7 @@ import os
 import copy
 
 app = Flask(__name__)
+app.secret_key = 'march_madness_simple_key'  # Secret key for session
 
 # Store the bracket in server memory (in a real app, this would be in a database)
 bracket = initialize_bracket()
@@ -16,8 +17,23 @@ os.makedirs('saved_brackets', exist_ok=True)
 
 @app.route('/')
 def index():
+    # Check if user is logged in
+    if 'username' not in session:
+        return redirect(url_for('show_login'))
+    
     current_time = datetime.now().strftime("%B %d, %Y %I:%M %p")
-    return render_template('index.html', current_time=current_time)
+    return render_template('index.html', current_time=current_time, username=session.get('username'))
+
+@app.route('/login', methods=['GET', 'POST'])
+def show_login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        if username:
+            session['username'] = username
+            return redirect(url_for('index'))
+        else:
+            return render_template('login.html', error='Please enter your name')
+    return render_template('login.html')
 
 @app.route('/api/teams')
 def get_teams():
