@@ -9,17 +9,33 @@ import copy
 app = Flask(__name__)
 app.secret_key = 'march_madness_simple_key'  # Secret key for session
 
-# Store the bracket in server memory (in a real app, this would be in a database)
-bracket = initialize_bracket()
+# No longer using a global bracket - each user will have their own in their session
 
 # Ensure the saved_brackets directory exists
 os.makedirs('saved_brackets', exist_ok=True)
+
+# Helper function to get the user's bracket from session, or initialize a new one if needed
+def get_user_bracket():
+    if 'bracket' not in session:
+        session['bracket'] = initialize_bracket()
+    return session['bracket']
+
+# Helper function to update the user's bracket in the session
+def update_user_bracket(new_bracket):
+    session['bracket'] = new_bracket
+    # Force session to save the changes by setting modified flag
+    session.modified = True
+    return session['bracket']
 
 @app.route('/')
 def index():
     # Check if user is logged in
     if 'username' not in session:
         return redirect(url_for('show_login'))
+    
+    # Initialize user's bracket if needed
+    if 'bracket' not in session:
+        session['bracket'] = initialize_bracket()
     
     current_time = datetime.now().strftime("%B %d, %Y %I:%M %p")
     return render_template('index.html', current_time=current_time, username=session.get('username'))
@@ -39,6 +55,8 @@ def show_login():
 def logout():
     # Clear the username from the session
     session.pop('username', None)
+    # Also clear the bracket to ensure a clean slate for the next user
+    session.pop('bracket', None)
     # Redirect to the login page
     return redirect(url_for('show_login'))
 
@@ -50,13 +68,17 @@ def get_teams():
 def save_bracket():
     """Save the current bracket to a file."""
     try:
-        # Generate a timestamp for the filename
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"saved_brackets/bracket_{timestamp}.json"
+        # Get the user's bracket from session
+        user_bracket = get_user_bracket()
         
-        # Write the current bracket to the file
+        # Include username in the filename
+        username = session.get('username', 'anonymous')
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"saved_brackets/bracket_{username}_{timestamp}.json"
+        
+        # Write the user's bracket to the file
         with open(filename, 'w') as f:
-            json.dump(bracket, f, indent=2)
+            json.dump(user_bracket, f, indent=2)
             
         print(f"Bracket saved to {filename}")
         
@@ -67,22 +89,27 @@ def save_bracket():
 
 @app.route('/api/saved-brackets', methods=['GET'])
 def list_saved_brackets():
-    """List all saved brackets."""
+    """List all saved brackets for the current user."""
     try:
+        # Get the current username
+        username = session.get('username', 'anonymous')
+        
         # Get all JSON files in the saved_brackets directory
         saved_files = []
         for file in os.listdir('saved_brackets'):
             if file.endswith('.json'):
-                # Get file creation time
-                file_path = os.path.join('saved_brackets', file)
-                created_time = datetime.fromtimestamp(os.path.getctime(file_path))
-                readable_time = created_time.strftime("%Y-%m-%d %H:%M:%S")
-                
-                saved_files.append({
-                    "filename": file,
-                    "created": readable_time,
-                    "path": file_path
-                })
+                # Only show files for the current user
+                if username in file:
+                    # Get file creation time
+                    file_path = os.path.join('saved_brackets', file)
+                    created_time = datetime.fromtimestamp(os.path.getctime(file_path))
+                    readable_time = created_time.strftime("%Y-%m-%d %H:%M:%S")
+                    
+                    saved_files.append({
+                        "filename": file,
+                        "created": readable_time,
+                        "path": file_path
+                    })
         
         # Sort by creation time (newest first)
         saved_files.sort(key=lambda x: x["created"], reverse=True)
@@ -95,12 +122,15 @@ def list_saved_brackets():
 @app.route('/api/load-bracket/<filename>', methods=['GET'])
 def load_bracket(filename):
     """Load a saved bracket."""
-    global bracket
-    
     try:
         # Security check to prevent directory traversal
         if '..' in filename or filename.startswith('/'):
             return jsonify({"success": False, "error": "Invalid filename"}), 400
+        
+        # Check that the user can access this file (simple check - does filename contain username)
+        username = session.get('username', 'anonymous')
+        if username not in filename and username != 'admin':  # Allow 'admin' to access any file
+            return jsonify({"success": False, "error": "You don't have permission to access this file"}), 403
         
         file_path = os.path.join('saved_brackets', filename)
         
@@ -112,26 +142,28 @@ def load_bracket(filename):
         with open(file_path, 'r') as f:
             loaded_bracket = json.load(f)
         
-        # Update the global bracket
-        bracket = loaded_bracket
+        # Update the user's bracket in session
+        update_user_bracket(loaded_bracket)
         
         # Ensure winners are updated
-        bracket = update_winners(bracket)
+        updated_bracket = update_winners(session['bracket'])
+        update_user_bracket(updated_bracket)
         
         print(f"Loaded bracket from {file_path}")
         
-        return jsonify({"success": True, "message": f"Bracket loaded from {filename}", "bracket": bracket})
+        return jsonify({"success": True, "message": f"Bracket loaded from {filename}", "bracket": session['bracket']})
     except Exception as e:
         print(f"Error loading bracket: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/bracket', methods=['GET', 'POST'])
 def manage_bracket():
-    global bracket
-    
     if request.method == 'POST':
         data = request.get_json()
         action = data.get('action')
+        
+        # Get the user's bracket from session
+        user_bracket = get_user_bracket()
         
         if action == 'update':
             # Update the bracket with the selected team
@@ -149,10 +181,10 @@ def manage_bracket():
             # Get the selected team from the first round or current round
             if round_index == 0:
                 # First round - get team directly from the first-round arrays
-                selected_team = bracket[region][0][team_position]
+                selected_team = user_bracket[region][0][team_position]
             else:
                 # Later rounds - get the team from its position in the current round
-                selected_team = bracket[region][round_index][team_position]
+                selected_team = user_bracket[region][round_index][team_position]
             
             # Determine where this team should be placed in the next round
             next_round = round_index + 1
@@ -176,23 +208,23 @@ def manage_bracket():
                 
                 if ff_index >= 0:
                     # Check if we're changing teams
-                    current_ff_team = bracket["finalFour"][ff_index]
+                    current_ff_team = user_bracket["finalFour"][ff_index]
                     if current_ff_team != selected_team:
                         # Reset the previous team if needed
                         if current_ff_team:
                             print(f"Replacing team in Final Four slot {ff_index}: {current_ff_team['name']} with {selected_team['name']}")
                             # Check Championship for this team
                             champ_index = 0 if ff_index in [1, 2] else 1  # South/East go to slot 0, Midwest/West to slot 1
-                            if bracket["championship"][champ_index] == current_ff_team:
+                            if user_bracket["championship"][champ_index] == current_ff_team:
                                 print(f"Resetting championship slot {champ_index} because team is being replaced in Final Four")
-                                bracket["championship"][champ_index] = None
+                                user_bracket["championship"][champ_index] = None
                                 # Also check champion
-                                if bracket["champion"] == current_ff_team:
+                                if user_bracket["champion"] == current_ff_team:
                                     print(f"Resetting champion because team is being replaced in Final Four")
-                                    bracket["champion"] = None
+                                    user_bracket["champion"] = None
                         
                         # Set the new team in Final Four
-                        bracket["finalFour"][ff_index] = selected_team
+                        user_bracket["finalFour"][ff_index] = selected_team
                         print(f"Set new team in Final Four slot {ff_index}: {selected_team['name'] if selected_team else 'None'}")
                 else:
                     print(f"Error: Invalid region {region} for Elite Eight")
@@ -200,23 +232,22 @@ def manage_bracket():
                 # Regular rounds - place the team in the next round
                 if next_round < 4:
                     # Get the team currently in the next round slot
-                    current_team = bracket[region][next_round][next_position] if next_position < len(bracket[region][next_round]) else None
+                    current_team = user_bracket[region][next_round][next_position] if next_position < len(user_bracket[region][next_round]) else None
                     
                     # If replacing a different team, reset all instances of that team
                     if current_team and current_team != selected_team:
-                        bracket = reset_team_completely(bracket, region, current_team, next_round)
+                        user_bracket = reset_team_completely(user_bracket, region, current_team, next_round)
                     
                     # Place the selected team in the next round
-                    bracket[region][next_round][next_position] = selected_team
+                    user_bracket[region][next_round][next_position] = selected_team
             
             # Update winners for rendering
-            bracket = update_winners(bracket)
+            user_bracket = update_winners(user_bracket)
             
-            # Save the updated bracket
-            with open('bracket.json', 'w') as f:
-                json.dump(bracket, f)
+            # Update the session with the modified bracket
+            update_user_bracket(user_bracket)
                 
-            return jsonify(bracket)
+            return jsonify(user_bracket)
         
         elif action == 'update_final_four':
             # Update the Final Four section
@@ -230,50 +261,49 @@ def manage_bracket():
                 
             try:
                 # Get the team from the Elite Eight (round 3)
-                if len(bracket[region][3]) == 0 or bracket[region][3][0] is None:
+                if len(user_bracket[region][3]) == 0 or user_bracket[region][3][0] is None:
                     return jsonify({"error": f"No winner found in the Elite Eight for {region} region"}), 400
                 
                 # Check if Elite Eight has a winner
                 elite_eight_team = None
                 
                 # Iterate through the first round to find the Elite Eight winner's details
-                for i, team in enumerate(bracket[region][0]):
-                    if team and (team == bracket[region][3][0] or (isinstance(bracket[region][3][0], dict) and 
-                                                                  team['name'] == bracket[region][3][0]['name'] and 
-                                                                  team['seed'] == bracket[region][3][0]['seed'])):
+                for i, team in enumerate(user_bracket[region][0]):
+                    if team and (team == user_bracket[region][3][0] or (isinstance(user_bracket[region][3][0], dict) and 
+                                                                  team['name'] == user_bracket[region][3][0]['name'] and 
+                                                                  team['seed'] == user_bracket[region][3][0]['seed'])):
                         elite_eight_team = team
                         break
                 
                 if not elite_eight_team:
                     # If we can't find it in round 0, use the Elite Eight team directly
-                    elite_eight_team = bracket[region][3][0]
+                    elite_eight_team = user_bracket[region][3][0]
                 
                 # Check if this will be a change
-                current_team = bracket["finalFour"][slot_index]
+                current_team = user_bracket["finalFour"][slot_index]
                 if current_team != elite_eight_team:
                     # If replacing a different team, reset that team from championship
                     if current_team:
                         # Check which championship slot to check
                         champ_index = 0 if slot_index in [1, 2] else 1  # South/East go to slot 0, Midwest/West to slot 1
-                        if bracket["championship"][champ_index] == current_team:
+                        if user_bracket["championship"][champ_index] == current_team:
                             # Reset from championship
-                            bracket["championship"][champ_index] = None
+                            user_bracket["championship"][champ_index] = None
                             
                             # Also check champion
-                            if bracket["champion"] == current_team:
-                                bracket["champion"] = None
+                            if user_bracket["champion"] == current_team:
+                                user_bracket["champion"] = None
                 
                 # Place in Final Four
-                bracket['finalFour'][slot_index] = elite_eight_team
+                user_bracket['finalFour'][slot_index] = elite_eight_team
                 
                 # Update winners for rendering
-                bracket = update_winners(bracket)
+                user_bracket = update_winners(user_bracket)
                 
-                # Save the updated bracket
-                with open('bracket.json', 'w') as f:
-                    json.dump(bracket, f)
+                # Update the session with the modified bracket
+                update_user_bracket(user_bracket)
                     
-                return jsonify(bracket)
+                return jsonify(user_bracket)
             except (KeyError, IndexError, TypeError) as e:
                 print(f"Error in update_final_four: {str(e)}")
                 return jsonify({"error": f"Error processing Final Four update: {str(e)}"}), 400
@@ -286,35 +316,34 @@ def manage_bracket():
             print(f"update_championship: ffIndex={ff_index}, slotIndex={slot_index}")
             
             try:
-                if ff_index is None or ff_index < 0 or ff_index >= len(bracket["finalFour"]):
+                if ff_index is None or ff_index < 0 or ff_index >= len(user_bracket["finalFour"]):
                     return jsonify({"error": f"Invalid Final Four index: {ff_index}"}), 400
                 
-                selected_team = bracket["finalFour"][ff_index]
+                selected_team = user_bracket["finalFour"][ff_index]
                 print(f"Selected team from Final Four: {selected_team}")
                 
                 if not selected_team:
                     return jsonify({"error": "No team found in the specified Final Four slot"}), 400
                 
                 # Check if this will be a change
-                current_team = bracket["championship"][slot_index]
+                current_team = user_bracket["championship"][slot_index]
                 if current_team != selected_team:
                     # If replacing a different team and it's the champion, reset champion
-                    if current_team and bracket["champion"] == current_team:
-                        bracket["champion"] = None
+                    if current_team and user_bracket["champion"] == current_team:
+                        user_bracket["champion"] = None
                         print(f"Reset champion because we're replacing it")
                 
                 # Set the team in championship
-                bracket['championship'][slot_index] = selected_team
+                user_bracket['championship'][slot_index] = selected_team
                 print(f"Updated championship[{slot_index}] with team {selected_team['name'] if selected_team else 'None'}")
                 
                 # Update winners for rendering
-                bracket = update_winners(bracket)
+                user_bracket = update_winners(user_bracket)
                 
-                # Save the updated bracket
-                with open('bracket.json', 'w') as f:
-                    json.dump(bracket, f)
+                # Update the session with the modified bracket
+                update_user_bracket(user_bracket)
                     
-                return jsonify(bracket)
+                return jsonify(user_bracket)
             except (KeyError, IndexError, TypeError) as e:
                 print(f"Error in update_championship: {str(e)}")
                 return jsonify({"error": f"Error processing Championship update: {str(e)}"}), 400
@@ -329,82 +358,87 @@ def manage_bracket():
                 if slot_index not in [0, 1]:
                     return jsonify({"error": "Invalid slot index for championship"}), 400
                     
-                selected_team = bracket["championship"][slot_index]
+                selected_team = user_bracket["championship"][slot_index]
                 print(f"Selected team from championship: {selected_team}")
                 
                 if not selected_team:
                     return jsonify({"error": "No team found in the specified Championship slot"}), 400
                 
                 # Toggle champion selection
-                if bracket["champion"] == selected_team:
+                if user_bracket["champion"] == selected_team:
                     # Clicking on current champion deselects it
-                    bracket["champion"] = None
+                    user_bracket["champion"] = None
                     print(f"Deselected champion")
                 else:
                     # Otherwise set as new champion
-                    bracket["champion"] = selected_team
+                    user_bracket["champion"] = selected_team
                     print(f"Set new champion: {selected_team['name']}")
                 
                 # Update winners for rendering
-                bracket = update_winners(bracket)
+                user_bracket = update_winners(user_bracket)
                 
-                # Save the updated bracket
-                with open('bracket.json', 'w') as f:
-                    json.dump(bracket, f)
+                # Update the session with the modified bracket
+                update_user_bracket(user_bracket)
                     
-                return jsonify(bracket)
+                return jsonify(user_bracket)
             except (KeyError, IndexError, TypeError) as e:
                 print(f"Error in select_champion: {str(e)}")
                 return jsonify({"error": f"Error selecting champion: {str(e)}"}), 400
         
         elif action == 'auto_fill':
             # Auto-fill the bracket
-            bracket = auto_fill_bracket(copy.deepcopy(bracket))
+            new_bracket = auto_fill_bracket(copy.deepcopy(user_bracket))
             
-            # Save the updated bracket
-            with open('bracket.json', 'w') as f:
-                json.dump(bracket, f)
+            # Update the session with the auto-filled bracket
+            update_user_bracket(new_bracket)
                 
-            return jsonify(bracket)
+            return jsonify(new_bracket)
         
         elif action == 'random_fill':
             # Randomly fill the bracket
-            print("Starting random fill with bracket structure:", bracket.keys())
-            bracket = random_fill_bracket(copy.deepcopy(bracket))
+            print("Starting random fill with bracket structure:", user_bracket.keys())
+            new_bracket = random_fill_bracket(copy.deepcopy(user_bracket))
             
             # Log the bracket structure after random_fill
-            print("After random_fill, bracket structure:", bracket.keys())
-            print("First round structure for west region:", [team['name'] if team else 'None' for team in bracket['west'][0]])
-            print("Sample from winners:", bracket['winners']['west'][0][:3])
+            print("After random_fill, bracket structure:", new_bracket.keys())
+            print("First round structure for west region:", [team['name'] if team else 'None' for team in new_bracket['west'][0]])
+            print("Sample from winners:", new_bracket['winners']['west'][0][:3])
             
-            # Save the updated bracket
-            with open('bracket.json', 'w') as f:
-                json.dump(bracket, f)
+            # Update the session with the randomly filled bracket
+            update_user_bracket(new_bracket)
                 
             print("Returning random filled bracket to frontend")
-            return jsonify(bracket)
+            return jsonify(new_bracket)
         
         elif action == 'reset':
             # Reset the bracket to initial state
-            bracket = initialize_bracket()
+            new_bracket = initialize_bracket()
             
             # Ensure winners are updated before returning
-            bracket = update_winners(bracket)
+            new_bracket = update_winners(new_bracket)
+            
+            # Update the session with the reset bracket
+            update_user_bracket(new_bracket)
             
             # Log the updated bracket for debugging
-            print('Bracket data being returned:', pretty_print_bracket(bracket))
+            print('Bracket data being returned:', pretty_print_bracket(new_bracket))
             
-            return jsonify(bracket)
+            return jsonify(new_bracket)
             
         else:
             print(f"Unknown action: {action}")
             return jsonify({"error": "Unknown action"}), 400
     
     # GET request - return the current bracket
+    # Get the user's bracket from session
+    user_bracket = get_user_bracket()
+    
     # Ensure winners are updated before returning
-    bracket = update_winners(bracket)
-    print('Bracket data being returned:', pretty_print_bracket(bracket))
-    return jsonify(bracket)
+    user_bracket = update_winners(user_bracket)
+    update_user_bracket(user_bracket)
+    
+    print('Bracket data being returned:', pretty_print_bracket(user_bracket))
+    return jsonify(user_bracket)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
