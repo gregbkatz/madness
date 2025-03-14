@@ -27,6 +27,26 @@ def update_user_bracket(new_bracket):
     session.modified = True
     return session['bracket']
 
+# Helper function to automatically save a user's bracket
+def auto_save_bracket(bracket):
+    try:
+        # Get the username (or use 'anonymous' if not logged in)
+        username = session.get('username', 'anonymous')
+        
+        # Create a filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"saved_brackets/bracket_{username}_{timestamp}.json"
+        
+        # Write the bracket to the file
+        with open(filename, 'w') as f:
+            json.dump(bracket, f, indent=2)
+            
+        print(f"Auto-saved bracket to {filename}")
+        return True
+    except Exception as e:
+        print(f"Error auto-saving bracket: {str(e)}")
+        return False
+
 @app.route('/')
 def index():
     # Check if user is logged in
@@ -52,7 +72,8 @@ def show_login():
                 # Check if the user has any saved brackets
                 saved_files = []
                 for file in os.listdir('saved_brackets'):
-                    if file.endswith('.json') and username in file:
+                    if file.endswith('.json') and file.startswith("bracket_" + username + "_"):
+                        print(file)
                         # Get file creation time
                         file_path = os.path.join('saved_brackets', file)
                         created_time = datetime.fromtimestamp(os.path.getctime(file_path))
@@ -64,7 +85,6 @@ def show_login():
                 
                 # Sort by creation time (newest first)
                 saved_files.sort(key=lambda x: x["created"], reverse=True)
-                print(saved_files)
                 # If user has saved brackets, load the most recent one
                 if saved_files:
                     most_recent = saved_files[0]
@@ -208,6 +228,9 @@ def manage_bracket():
         # Get the user's bracket from session
         user_bracket = get_user_bracket()
         
+        # Flag to track if the bracket was modified and should be auto-saved
+        bracket_modified = False
+        
         if action == 'update':
             # Update the bracket with the selected team
             region = data.get('region')
@@ -269,6 +292,7 @@ def manage_bracket():
                         # Set the new team in Final Four
                         user_bracket["finalFour"][ff_index] = selected_team
                         print(f"Set new team in Final Four slot {ff_index}: {selected_team['name'] if selected_team else 'None'}")
+                        bracket_modified = True
                 else:
                     print(f"Error: Invalid region {region} for Elite Eight")
             else:
@@ -283,12 +307,17 @@ def manage_bracket():
                     
                     # Place the selected team in the next round
                     user_bracket[region][next_round][next_position] = selected_team
+                    bracket_modified = True
             
             # Update winners for rendering
             user_bracket = update_winners(user_bracket)
             
             # Update the session with the modified bracket
             update_user_bracket(user_bracket)
+                
+            # Auto-save bracket if modified
+            if bracket_modified:
+                auto_save_bracket(user_bracket)
                 
             return jsonify(user_bracket)
         
@@ -337,14 +366,19 @@ def manage_bracket():
                             if user_bracket["champion"] == current_team:
                                 user_bracket["champion"] = None
                 
-                # Place in Final Four
-                user_bracket['finalFour'][slot_index] = elite_eight_team
+                    # Place in Final Four
+                    user_bracket['finalFour'][slot_index] = elite_eight_team
+                    bracket_modified = True
                 
                 # Update winners for rendering
                 user_bracket = update_winners(user_bracket)
                 
                 # Update the session with the modified bracket
                 update_user_bracket(user_bracket)
+                
+                # Auto-save bracket if modified
+                if bracket_modified:
+                    auto_save_bracket(user_bracket)
                     
                 return jsonify(user_bracket)
             except (KeyError, IndexError, TypeError) as e:
@@ -376,15 +410,20 @@ def manage_bracket():
                         user_bracket["champion"] = None
                         print(f"Reset champion because we're replacing it")
                 
-                # Set the team in championship
-                user_bracket['championship'][slot_index] = selected_team
-                print(f"Updated championship[{slot_index}] with team {selected_team['name'] if selected_team else 'None'}")
+                    # Set the team in championship
+                    user_bracket['championship'][slot_index] = selected_team
+                    print(f"Updated championship[{slot_index}] with team {selected_team['name'] if selected_team else 'None'}")
+                    bracket_modified = True
                 
                 # Update winners for rendering
                 user_bracket = update_winners(user_bracket)
                 
                 # Update the session with the modified bracket
                 update_user_bracket(user_bracket)
+                
+                # Auto-save bracket if modified
+                if bracket_modified:
+                    auto_save_bracket(user_bracket)
                     
                 return jsonify(user_bracket)
             except (KeyError, IndexError, TypeError) as e:
@@ -412,16 +451,22 @@ def manage_bracket():
                     # Clicking on current champion deselects it
                     user_bracket["champion"] = None
                     print(f"Deselected champion")
+                    bracket_modified = True
                 else:
                     # Otherwise set as new champion
                     user_bracket["champion"] = selected_team
                     print(f"Set new champion: {selected_team['name']}")
+                    bracket_modified = True
                 
                 # Update winners for rendering
                 user_bracket = update_winners(user_bracket)
                 
                 # Update the session with the modified bracket
                 update_user_bracket(user_bracket)
+                
+                # Auto-save bracket if modified
+                if bracket_modified:
+                    auto_save_bracket(user_bracket)
                     
                 return jsonify(user_bracket)
             except (KeyError, IndexError, TypeError) as e:
@@ -434,6 +479,9 @@ def manage_bracket():
             
             # Update the session with the auto-filled bracket
             update_user_bracket(new_bracket)
+            
+            # Auto-save the auto-filled bracket
+            auto_save_bracket(new_bracket)
                 
             return jsonify(new_bracket)
         
@@ -449,6 +497,9 @@ def manage_bracket():
             
             # Update the session with the randomly filled bracket
             update_user_bracket(new_bracket)
+            
+            # Auto-save the randomly filled bracket
+            auto_save_bracket(new_bracket)
                 
             print("Returning random filled bracket to frontend")
             return jsonify(new_bracket)
@@ -462,6 +513,9 @@ def manage_bracket():
             
             # Update the session with the reset bracket
             update_user_bracket(new_bracket)
+            
+            # Auto-save the reset bracket
+            auto_save_bracket(new_bracket)
             
             # Log the updated bracket for debugging
             print('Bracket data being returned:', pretty_print_bracket(new_bracket))
