@@ -30,11 +30,11 @@
             });
         });
     </script>
-    <!-- React and ReactDOM CDN -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <!-- Babel for JSX transpilation -->
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <!-- React and ReactDOM - Local Files -->
+    <script src="{{ url_for('static', filename='js/react.development.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/react-dom.development.js') }}"></script>
+    <!-- Babel for JSX transpilation - Local File -->
+    <script src="{{ url_for('static', filename='js/babel.min.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 
