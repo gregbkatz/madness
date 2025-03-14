@@ -35,6 +35,13 @@ def show_login():
             return render_template('login.html', error='Please enter your name')
     return render_template('login.html')
 
+@app.route('/logout')
+def logout():
+    # Clear the username from the session
+    session.pop('username', None)
+    # Redirect to the login page
+    return redirect(url_for('show_login'))
+
 @app.route('/api/teams')
 def get_teams():
     return jsonify(teams)

@@ -116,6 +116,24 @@ body {
     margin-top: 2px;
 }
 
+.change-user {
+    margin-top: 5px;
+}
+
+.change-user-button {
+    display: inline-block;
+    font-size: 11px;
+    background-color: #002555;
+    color: white;
+    text-decoration: none;
+    padding: 3px 8px;
+    border-radius: 3px;
+}
+
+.change-user-button:hover {
+    background-color: #001c3e;
+}
+
 /* Root container */
 #root {
     position: relative;
@@ -198,8 +216,6 @@ body {
     padding: 0 5px;
     position: relative;
 }
-
-
 
 .region-rounds {
     display: flex;
