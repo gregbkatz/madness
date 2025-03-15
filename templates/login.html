@@ -103,13 +103,15 @@
         <form action="/login" method="post">
             <div class="form-group">
                 <label for="username">Enter your name:</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" value="{{ username or '' }}" required>
+                <p id="validation-message" class="error"></p>
             </div>
             <input type="hidden" id="action" name="action" value="">
             <div class="button-group">
-                <button type="submit" class="create-btn"
+                <button type="submit" id="create-btn" class="create-btn"
                     onclick="document.getElementById('action').value='create'">Create New Bracket</button>
-                <button type="submit" class="load-btn" onclick="document.getElementById('action').value='load'">Load
+                <button type="submit" id="load-btn" class="load-btn"
+                    onclick="document.getElementById('action').value='load'">Load
                     Existing Bracket</button>
             </div>
             {% if error %}
@@ -117,6 +119,32 @@
             {% endif %}
         </form>
     </div>
+
+    <script>
+        document.getElementById('username').addEventListener('input', function () {
+            const username = this.value;
+            const validChars = /^[a-zA-Z0-9_\-\.]+$/.test(username);
+            const validLength = username.length >= 3;
+
+            const validationMsg = document.getElementById('validation-message');
+            const createBtn = document.getElementById('create-btn');
+            const loadBtn = document.getElementById('load-btn');
+
+            if (!validChars && username.length > 0) {
+                validationMsg.textContent = 'Error: Username can only contain letters, numbers, underscores, hyphens, and periods';
+                createBtn.disabled = true;
+                loadBtn.disabled = true;
+            } else if (!validLength && username.length > 0) {
+                validationMsg.textContent = 'Error: Username must be at least 3 characters long';
+                createBtn.disabled = true;
+                loadBtn.disabled = true;
+            } else {
+                validationMsg.textContent = '';
+                createBtn.disabled = false;
+                loadBtn.disabled = false;
+            }
+        });
+    </script>
 </body>
 
 </html>

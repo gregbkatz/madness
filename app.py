@@ -5,6 +5,7 @@ from bracket_logic import initialize_bracket, select_team, auto_fill_bracket, pr
 import json
 import os
 import copy
+import re
 
 app = Flask(__name__)
 app.secret_key = 'march_madness_simple_key'  # Secret key for session
@@ -13,6 +14,14 @@ app.secret_key = 'march_madness_simple_key'  # Secret key for session
 
 # Ensure the saved_brackets directory exists
 os.makedirs('saved_brackets', exist_ok=True)
+
+# Helper function to validate username contains only filename-safe characters
+def is_valid_username(username):
+    # Allow only alphanumeric, underscore, hyphen, and period
+    valid_chars = re.match(r'^[a-zA-Z0-9_\-\.]+$', username) is not None
+    # Ensure minimum length of 3 characters
+    valid_length = len(username) >= 3
+    return valid_chars and valid_length
 
 # Helper function to get the user's bracket from session, or initialize a new one if needed
 def get_user_bracket():
@@ -69,6 +78,17 @@ def show_login():
         if not username:
             return render_template('login.html', error='Please enter your name')
             
+        # Validate username contains only filename-safe characters and is at least 3 characters
+        if not is_valid_username(username):
+            # Check specific validation issue to provide appropriate error
+            if not re.match(r'^[a-zA-Z0-9_\-\.]+$', username):
+                error_msg = 'Username can only contain letters, numbers, underscores, hyphens, and periods'
+            elif len(username) < 3:
+                error_msg = 'Username must be at least 3 characters long'
+            else:
+                error_msg = 'Invalid username format'
+            return render_template('login.html', error=error_msg, username=username)
+            
         # Check if the user has any saved brackets
         saved_files = []
         for file in os.listdir('saved_brackets'):
@@ -91,7 +111,8 @@ def show_login():
             if saved_files:
                 # Bracket with this username already exists
                 return render_template('login.html', 
-                                      error=f'A bracket already exists for "{username}". If that was you, please use "Load Existing Bracket" otherwise choose a different name.')
+                                      error=f'A bracket already exists for "{username}". If that was you, please use "Load Existing Bracket" otherwise choose a different name.',
+                                      username=username)
             
             # No bracket exists, we can create a new one
             session['username'] = username
@@ -112,7 +133,8 @@ def show_login():
             if not saved_files:
                 # No bracket exists for this username
                 return render_template('login.html', 
-                                      error=f'No saved bracket found for "{username}". Please use "Create New Bracket" or try a different name.')
+                                      error=f'No saved bracket found for "{username}". Please use "Create New Bracket" or try a different name.',
+                                      username=username)
             
             # Bracket exists, we can load it
             session['username'] = username
@@ -144,10 +166,10 @@ def show_login():
             except Exception as e:
                 # Error loading the bracket
                 print(f"Error loading saved bracket for {username}: {str(e)}")
-                return render_template('login.html', error=f'Error loading bracket: {str(e)}')
+                return render_template('login.html', error=f'Error loading bracket: {str(e)}', username=username)
         else:
             # Invalid action
-            return render_template('login.html', error='Please select an action')
+            return render_template('login.html', error='Please select an action', username=username)
     
     return render_template('login.html')
 
