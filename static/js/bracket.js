@@ -47,6 +47,28 @@ function MarchMadnessBracket() {
     const [savedBrackets, setSavedBrackets] = React.useState([]);
     const [loadingBrackets, setLoadingBrackets] = React.useState(false);
 
+    // Function to update the save status indicator
+    const updateSaveStatus = () => {
+        const saveStatus = document.getElementById('save-status');
+        if (saveStatus) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            saveStatus.textContent = `📝 Bracket last saved at: ${timeString}`;
+
+            // Add animation class
+            saveStatus.classList.add('saving');
+
+            // Remove animation class after animation completes
+            setTimeout(() => {
+                saveStatus.classList.remove('saving');
+            }, 2000);
+        }
+    };
+
     // Fetch initial data
     React.useEffect(() => {
         // Fetch teams
@@ -63,6 +85,26 @@ function MarchMadnessBracket() {
             .then(data => {
                 console.log('Bracket fetched:', data);
                 setBracket(data);
+
+                // Update save status with 'loaded' message
+                const saveStatus = document.getElementById('save-status');
+                if (saveStatus) {
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                    saveStatus.textContent = `📋 Loaded at: ${timeString}`;
+
+                    // Add animation class for visual feedback
+                    saveStatus.classList.add('saving');
+
+                    // Remove animation class after animation completes
+                    setTimeout(() => {
+                        saveStatus.classList.remove('saving');
+                    }, 2000);
+                }
             })
             .catch(error => console.error('Error fetching bracket:', error));
     }, []);
@@ -91,6 +133,8 @@ function MarchMadnessBracket() {
             .then(data => {
                 console.log('Updated bracket:', data);
                 setBracket(data);
+                // Update save status when bracket changes (auto-save occurs)
+                updateSaveStatus();
             })
             .catch(error => console.error('Error updating bracket:', error));
     };
@@ -110,6 +154,7 @@ function MarchMadnessBracket() {
                 if (data.success) {
                     alert('Bracket saved successfully!');
                     console.log('Save success:', data.message);
+                    updateSaveStatus();
                 } else {
                     alert('Error saving bracket: ' + data.error);
                     console.error('Save error:', data.error);
@@ -156,6 +201,27 @@ function MarchMadnessBracket() {
                 if (data.success) {
                     setBracket(data.bracket);
                     setShowModal(false);
+
+                    // Update save status with 'loaded' message
+                    const saveStatus = document.getElementById('save-status');
+                    if (saveStatus) {
+                        const now = new Date();
+                        const timeString = now.toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                        });
+                        saveStatus.textContent = `📋 Loaded at: ${timeString}`;
+
+                        // Add animation class for visual feedback
+                        saveStatus.classList.add('saving');
+
+                        // Remove animation class after animation completes
+                        setTimeout(() => {
+                            saveStatus.classList.remove('saving');
+                        }, 2000);
+                    }
+
                     alert('Bracket loaded successfully!');
                     console.log('Load success:', data.message);
                 } else {
@@ -203,6 +269,8 @@ function MarchMadnessBracket() {
                 .then(data => {
                     console.log('Updated bracket after Championship selection:', data);
                     setBracket(data);
+                    // Update save status when Final Four changes (auto-save occurs)
+                    updateSaveStatus();
                 })
                 .catch(error => console.error('Error updating bracket:', error));
 
@@ -230,8 +298,10 @@ function MarchMadnessBracket() {
             .then(data => {
                 console.log('Updated bracket after Final Four selection:', data);
                 setBracket(data);
+                // Update save status when Final Four changes (auto-save occurs)
+                updateSaveStatus();
             })
-            .catch(error => console.error('Error updating bracket:', error));
+            .catch(error => console.error('Error updating Final Four selection:', error));
     };
 
     // Handle Champion selection
@@ -253,10 +323,12 @@ function MarchMadnessBracket() {
                 return response.json();
             })
             .then(data => {
-                console.log('Updated bracket after Champion selection:', data);
+                console.log('Updated champion selection:', data);
                 setBracket(data);
+                // Update save status when Champion changes (auto-save occurs)
+                updateSaveStatus();
             })
-            .catch(error => console.error('Error selecting champion:', error));
+            .catch(error => console.error('Error updating champion selection:', error));
     };
 
     // Handle Championship team selection
@@ -292,6 +364,8 @@ function MarchMadnessBracket() {
                 .then(data => {
                     console.log('Updated bracket after Champion deselection:', data);
                     setBracket(data);
+                    // Update save status when Championship changes (auto-save occurs)
+                    updateSaveStatus();
                 })
                 .catch(error => console.error('Error selecting champion:', error));
         } else {
@@ -314,6 +388,8 @@ function MarchMadnessBracket() {
                 .then(data => {
                     console.log('Updated bracket after Champion selection:', data);
                     setBracket(data);
+                    // Update save status when Championship changes (auto-save occurs)
+                    updateSaveStatus();
                 })
                 .catch(error => console.error('Error selecting champion:', error));
         }
@@ -334,6 +410,7 @@ function MarchMadnessBracket() {
             .then(data => {
                 console.log('Auto-filled bracket:', data);
                 setBracket(data);
+                updateSaveStatus();
             })
             .catch(error => console.error('Error auto-filling bracket:', error));
     };
@@ -353,6 +430,7 @@ function MarchMadnessBracket() {
             .then(data => {
                 console.log('Random-filled bracket:', data);
                 setBracket(data);
+                updateSaveStatus();
             })
             .catch(error => console.error('Error randomly filling bracket:', error));
     };
@@ -372,6 +450,26 @@ function MarchMadnessBracket() {
             .then(data => {
                 console.log('Reset bracket:', data);
                 setBracket(data);
+
+                // Update save status for reset action
+                const saveStatus = document.getElementById('save-status');
+                if (saveStatus) {
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                    saveStatus.textContent = `🔄 Reset at: ${timeString}`;
+
+                    // Add animation class
+                    saveStatus.classList.add('saving');
+
+                    // Remove animation class after animation completes
+                    setTimeout(() => {
+                        saveStatus.classList.remove('saving');
+                    }, 2000);
+                }
             })
             .catch(error => console.error('Error resetting bracket:', error));
     };
