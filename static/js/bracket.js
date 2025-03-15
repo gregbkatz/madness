@@ -46,6 +46,95 @@ function MarchMadnessBracket() {
     const [showModal, setShowModal] = React.useState(false);
     const [savedBrackets, setSavedBrackets] = React.useState([]);
     const [loadingBrackets, setLoadingBrackets] = React.useState(false);
+    // Track bracket completion status
+    const [completionStatus, setCompletionStatus] = React.useState({ complete: false, remainingPicks: 63 });
+
+    // Function to calculate how many games still need to be picked
+    const calculateCompletionStatus = (bracketData) => {
+        // In a 64-team tournament bracket structure:
+        // - First round (round 0): Teams are pre-populated, no picks needed
+        // - 2nd round (round 1): 16 games (4 per region * 4 regions)
+        // - Sweet 16 (round 2): 8 games (2 per region * 4 regions)
+        // - Elite 8 (round 3): 4 games (1 per region * 4 regions)
+        // - Final Four: 2 games
+        // - Championship: 1 game
+        // Total: 31 picks needed (16 + 8 + 4 + 2 + 1)
+
+        let totalPicks = 63; // Total picks needed to complete a bracket
+        let completedPicks = 0;
+        const regions = ['west', 'east', 'south', 'midwest'];
+
+        try {
+            // Count regional picks (Rounds 1-3, which represent 2nd round through Elite 8)
+            regions.forEach(region => {
+                if (!bracketData[region]) return;
+
+                for (let round = 1; round < 4; round++) {
+                    if (!bracketData[region][round]) continue;
+
+                    // Count actual team selections (non-null entries) in this round
+                    for (let i = 0; i < bracketData[region][round].length; i++) {
+                        if (bracketData[region][round][i]) {
+                            completedPicks++;
+                        }
+                    }
+                }
+            });
+
+            // Count Final Four picks (4 slots)
+            if (bracketData.finalFour) {
+                for (let i = 0; i < bracketData.finalFour.length; i++) {
+                    if (bracketData.finalFour[i]) {
+                        completedPicks++;
+                    }
+                }
+            }
+
+            // Count Championship picks (2 slots)
+            if (bracketData.championship) {
+                for (let i = 0; i < bracketData.championship.length; i++) {
+                    if (bracketData.championship[i]) {
+                        completedPicks++;
+                    }
+                }
+            }
+
+            // Count Champion pick (1 slot)
+            if (bracketData.champion) {
+                completedPicks++;
+            }
+
+            // Ensure we don't go negative
+            const remainingPicks = Math.max(0, totalPicks - completedPicks);
+
+            return {
+                complete: remainingPicks === 0,
+                remainingPicks
+            };
+        } catch (error) {
+            console.error("Error calculating completion status:", error);
+            return {
+                complete: false,
+                remainingPicks: totalPicks
+            };
+        }
+    };
+
+    // Function to update the bracket completion status in the UI
+    const updateCompletionStatus = (status) => {
+        const completionStatusElement = document.getElementById('completion-status');
+        if (completionStatusElement) {
+            if (status.complete) {
+                completionStatusElement.textContent = "✅ Bracket Complete!";
+                completionStatusElement.classList.add('complete');
+                completionStatusElement.classList.remove('incomplete');
+            } else {
+                completionStatusElement.textContent = `⚠️ ${status.remainingPicks} picks remaining`;
+                completionStatusElement.classList.add('incomplete');
+                completionStatusElement.classList.remove('complete');
+            }
+        }
+    };
 
     // Function to update the save status indicator
     const updateSaveStatus = () => {
@@ -85,6 +174,11 @@ function MarchMadnessBracket() {
             .then(data => {
                 console.log('Bracket fetched:', data);
                 setBracket(data);
+
+                // Calculate and update completion status
+                const status = calculateCompletionStatus(data);
+                setCompletionStatus(status);
+                updateCompletionStatus(status);
 
                 // Update save status with 'loaded' message
                 const saveStatus = document.getElementById('save-status');
@@ -133,6 +227,12 @@ function MarchMadnessBracket() {
             .then(data => {
                 console.log('Updated bracket:', data);
                 setBracket(data);
+
+                // Calculate and update completion status after selection
+                const status = calculateCompletionStatus(data);
+                setCompletionStatus(status);
+                updateCompletionStatus(status);
+
                 // Update save status when bracket changes (auto-save occurs)
                 updateSaveStatus();
             })
@@ -202,6 +302,11 @@ function MarchMadnessBracket() {
                     setBracket(data.bracket);
                     setShowModal(false);
 
+                    // Calculate and update completion status
+                    const status = calculateCompletionStatus(data.bracket);
+                    setCompletionStatus(status);
+                    updateCompletionStatus(status);
+
                     // Update save status with 'loaded' message
                     const saveStatus = document.getElementById('save-status');
                     if (saveStatus) {
@@ -269,6 +374,12 @@ function MarchMadnessBracket() {
                 .then(data => {
                     console.log('Updated bracket after Championship selection:', data);
                     setBracket(data);
+
+                    // Calculate and update completion status
+                    const status = calculateCompletionStatus(data);
+                    setCompletionStatus(status);
+                    updateCompletionStatus(status);
+
                     // Update save status when Final Four changes (auto-save occurs)
                     updateSaveStatus();
                 })
@@ -298,6 +409,12 @@ function MarchMadnessBracket() {
             .then(data => {
                 console.log('Updated bracket after Final Four selection:', data);
                 setBracket(data);
+
+                // Calculate and update completion status
+                const status = calculateCompletionStatus(data);
+                setCompletionStatus(status);
+                updateCompletionStatus(status);
+
                 // Update save status when Final Four changes (auto-save occurs)
                 updateSaveStatus();
             })
@@ -325,6 +442,12 @@ function MarchMadnessBracket() {
             .then(data => {
                 console.log('Updated champion selection:', data);
                 setBracket(data);
+
+                // Calculate and update completion status
+                const status = calculateCompletionStatus(data);
+                setCompletionStatus(status);
+                updateCompletionStatus(status);
+
                 // Update save status when Champion changes (auto-save occurs)
                 updateSaveStatus();
             })
@@ -364,6 +487,12 @@ function MarchMadnessBracket() {
                 .then(data => {
                     console.log('Updated bracket after Champion deselection:', data);
                     setBracket(data);
+
+                    // Calculate and update completion status
+                    const status = calculateCompletionStatus(data);
+                    setCompletionStatus(status);
+                    updateCompletionStatus(status);
+
                     // Update save status when Championship changes (auto-save occurs)
                     updateSaveStatus();
                 })
@@ -388,6 +517,12 @@ function MarchMadnessBracket() {
                 .then(data => {
                     console.log('Updated bracket after Champion selection:', data);
                     setBracket(data);
+
+                    // Calculate and update completion status
+                    const status = calculateCompletionStatus(data);
+                    setCompletionStatus(status);
+                    updateCompletionStatus(status);
+
                     // Update save status when Championship changes (auto-save occurs)
                     updateSaveStatus();
                 })
@@ -410,6 +545,12 @@ function MarchMadnessBracket() {
             .then(data => {
                 console.log('Auto-filled bracket:', data);
                 setBracket(data);
+
+                // Calculate and update completion status
+                const status = calculateCompletionStatus(data);
+                setCompletionStatus(status);
+                updateCompletionStatus(status);
+
                 updateSaveStatus();
             })
             .catch(error => console.error('Error auto-filling bracket:', error));
@@ -430,6 +571,12 @@ function MarchMadnessBracket() {
             .then(data => {
                 console.log('Random-filled bracket:', data);
                 setBracket(data);
+
+                // Calculate and update completion status
+                const status = calculateCompletionStatus(data);
+                setCompletionStatus(status);
+                updateCompletionStatus(status);
+
                 updateSaveStatus();
             })
             .catch(error => console.error('Error randomly filling bracket:', error));
@@ -450,6 +597,11 @@ function MarchMadnessBracket() {
             .then(data => {
                 console.log('Reset bracket:', data);
                 setBracket(data);
+
+                // Calculate and update completion status
+                const status = calculateCompletionStatus(data);
+                setCompletionStatus(status);
+                updateCompletionStatus(status);
 
                 // Update save status for reset action
                 const saveStatus = document.getElementById('save-status');

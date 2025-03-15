@@ -158,6 +158,36 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Completion status indicator styles */
+.completion-status {
+    font-size: 1rem;
+    color: #333;
+    margin: 0.5rem 0;
+    transition: all 0.4s ease;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: #f8f8f8;
+    border-left: 3px solid #ccc;
+    text-align: right;
+    font-weight: 500;
+}
+
+.completion-status.complete {
+    color: #1b5e20;
+    font-weight: bold;
+    background-color: #e8f5e9;
+    border-left: 3px solid #4caf50;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.completion-status.incomplete {
+    color: #e65100;
+    font-weight: bold;
+    background-color: #fff3e0;
+    border-left: 3px solid #ff9800;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 @keyframes pulse {
     0% {
         opacity: 1;
