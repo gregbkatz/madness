@@ -64,75 +64,91 @@ def index():
 def show_login():
     if request.method == 'POST':
         username = request.form.get('username')
-        if username:
-            session['username'] = username
+        action = request.form.get('action')
+        
+        if not username:
+            return render_template('login.html', error='Please enter your name')
             
-            # Automatically load the user's most recent bracket
-            try:
-                # Check if the user has any saved brackets
-                saved_files = []
-                for file in os.listdir('saved_brackets'):
-                    if file.endswith('.json') and file.startswith("bracket_" + username + "_"):
-                        print(file)
-                        # Get file creation time
-                        file_path = os.path.join('saved_brackets', file)
-                        created_time = datetime.fromtimestamp(os.path.getctime(file_path))
-                        saved_files.append({
-                            "filename": file,
-                            "created": created_time,
-                            "path": file_path
-                        })
-                
-                # Sort by creation time (newest first)
-                saved_files.sort(key=lambda x: x["created"], reverse=True)
-                # If user has saved brackets, load the most recent one
-                if saved_files:
-                    most_recent = saved_files[0]
-                    print(f"Auto-loading most recent bracket for {username}: {most_recent['filename']}")
-                    
-                    # Load the bracket
-                    with open(most_recent['path'], 'r') as f:
-                        loaded_bracket = json.load(f)
-                    
-                    # Update the user's bracket in session
-                    update_user_bracket(loaded_bracket)
-                    
-                    # Ensure winners are updated
-                    updated_bracket = update_winners(session['bracket'])
-                    update_user_bracket(updated_bracket)
-                    
-                    # Set bracket status to indicate this is a loaded bracket
-                    session['bracket_status'] = {
-                        'type': 'loaded',
-                        'timestamp': most_recent['created'].strftime("%Y-%m-%d %I:%M %p")
-                    }
-                    print(f"Bracket status: Loaded from {session['bracket_status']['timestamp']}")
-                else:
-                    # No saved brackets found, initialize a new one
-                    update_user_bracket(initialize_bracket())
-                    print(f"No saved brackets found for {username}, initializing new bracket")
-                    
-                    # Set bracket status to indicate this is a new bracket
-                    session['bracket_status'] = {
-                        'type': 'new',
-                        'timestamp': datetime.now().strftime("%Y-%m-%d %I:%M %p")
-                    }
-                    print("Bracket status: New bracket created")
-            except Exception as e:
-                # If any error occurs, just initialize a new bracket
-                update_user_bracket(initialize_bracket())
-                print(f"Error loading saved bracket for {username}: {str(e)}")
-                
-                # Set bracket status for error case
-                session['bracket_status'] = {
-                    'type': 'new',
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %I:%M %p")
-                }
-                print("Bracket status: New bracket created (after error)")
+        # Check if the user has any saved brackets
+        saved_files = []
+        for file in os.listdir('saved_brackets'):
+            if file.endswith('.json') and file.startswith("bracket_" + username + "_"):
+                # Get file creation time
+                file_path = os.path.join('saved_brackets', file)
+                created_time = datetime.fromtimestamp(os.path.getctime(file_path))
+                saved_files.append({
+                    "filename": file,
+                    "created": created_time,
+                    "path": file_path
+                })
+        
+        # Sort by creation time (newest first)
+        saved_files.sort(key=lambda x: x["created"], reverse=True)
+        
+        # Handle based on the selected action
+        if action == 'create':
+            # User wants to create a new bracket
+            if saved_files:
+                # Bracket with this username already exists
+                return render_template('login.html', 
+                                      error=f'A bracket already exists for "{username}". If that was you, please use "Load Existing Bracket" otherwise choose a different name.')
+            
+            # No bracket exists, we can create a new one
+            session['username'] = username
+            # Initialize a new bracket
+            update_user_bracket(initialize_bracket())
+            
+            # Set bracket status to indicate this is a new bracket
+            session['bracket_status'] = {
+                'type': 'new',
+                'timestamp': datetime.now().strftime("%Y-%m-%d %I:%M %p")
+            }
+            print("Bracket status: New bracket created")
             
             return redirect(url_for('index'))
+            
+        elif action == 'load':
+            # User wants to load an existing bracket
+            if not saved_files:
+                # No bracket exists for this username
+                return render_template('login.html', 
+                                      error=f'No saved bracket found for "{username}". Please use "Create New Bracket" or try a different name.')
+            
+            # Bracket exists, we can load it
+            session['username'] = username
+            
+            # Load the most recent bracket
+            most_recent = saved_files[0]
+            print(f"Loading most recent bracket for {username}: {most_recent['filename']}")
+            
+            try:
+                # Load the bracket
+                with open(most_recent['path'], 'r') as f:
+                    loaded_bracket = json.load(f)
+                
+                # Update the user's bracket in session
+                update_user_bracket(loaded_bracket)
+                
+                # Ensure winners are updated
+                updated_bracket = update_winners(session['bracket'])
+                update_user_bracket(updated_bracket)
+                
+                # Set bracket status to indicate this is a loaded bracket
+                session['bracket_status'] = {
+                    'type': 'loaded',
+                    'timestamp': most_recent['created'].strftime("%Y-%m-%d %I:%M %p")
+                }
+                print(f"Bracket status: Loaded from {session['bracket_status']['timestamp']}")
+                
+                return redirect(url_for('index'))
+            except Exception as e:
+                # Error loading the bracket
+                print(f"Error loading saved bracket for {username}: {str(e)}")
+                return render_template('login.html', error=f'Error loading bracket: {str(e)}')
         else:
-            return render_template('login.html', error='Please enter your name')
+            # Invalid action
+            return render_template('login.html', error='Please select an action')
+    
     return render_template('login.html')
 
 @app.route('/logout')

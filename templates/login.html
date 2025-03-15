@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
             margin: 0 auto;
             padding: 20px;
         }
+
         .login-container {
             background-color: #f8f9fa;
             border-radius: 5px;
@@ -18,18 +20,22 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             margin-top: 50px;
         }
+
         h1 {
             color: #003478;
             text-align: center;
         }
+
         .form-group {
             margin-bottom: 15px;
         }
+
         label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
         }
+
         input[type="text"] {
             width: 100%;
             padding: 8px;
@@ -37,6 +43,7 @@
             border-radius: 4px;
             font-size: 16px;
         }
+
         button {
             background-color: #003478;
             color: white;
@@ -48,15 +55,48 @@
             width: 100%;
             margin-top: 10px;
         }
+
         button:hover {
             background-color: #002555;
         }
+
         .error {
             color: red;
             margin-top: 10px;
         }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .create-btn,
+        .load-btn {
+            flex: 1;
+            width: auto;
+        }
+
+        .create-btn {
+            background-color: #2e7d32;
+            /* Green */
+        }
+
+        .create-btn:hover {
+            background-color: #1b5e20;
+        }
+
+        .load-btn {
+            background-color: #1565c0;
+            /* Blue */
+        }
+
+        .load-btn:hover {
+            background-color: #0d47a1;
+        }
     </style>
 </head>
+
 <body>
     <div class="login-container">
         <h1>March Madness Bracket</h1>
@@ -65,11 +105,18 @@
                 <label for="username">Enter your name:</label>
                 <input type="text" id="username" name="username" required>
             </div>
-            <button type="submit">Start Your Bracket</button>
+            <input type="hidden" id="action" name="action" value="">
+            <div class="button-group">
+                <button type="submit" class="create-btn"
+                    onclick="document.getElementById('action').value='create'">Create New Bracket</button>
+                <button type="submit" class="load-btn" onclick="document.getElementById('action').value='load'">Load
+                    Existing Bracket</button>
+            </div>
             {% if error %}
             <p class="error">{{ error }}</p>
             {% endif %}
         </form>
     </div>
 </body>
-</html> 
+
+</html>
