@@ -639,9 +639,32 @@ function MarchMadnessBracket() {
 
     // Render a team box
     const renderTeam = (team, isWinner, onClick, isTBD = false) => {
-        // If no team data, return empty box
+        // If no team data, return empty box with noticeable styling
         if (!team) {
-            return <div className="team tbd"> &nbsp; </div>;
+            // Empty slot style with light red background and dashed red border
+            const emptySlotStyle = {
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '4px 8px',
+                margin: '1px 0',
+                minHeight: '24px',
+                width: '140px',
+                fontSize: '11px',
+                fontWeight: '400',
+                backgroundColor: '#FFEBEE', // Light red background
+                border: '1px dashed #EF9A9A', // Dashed red border
+                borderRadius: '2px',
+                cursor: onClick ? 'pointer' : 'default',
+                color: '#D32F2F', // Deeper red text
+                transition: 'all 0.2s ease'
+            };
+
+            return (
+                <div style={emptySlotStyle} className="team tbd" onClick={onClick}>
+                    <span style={{ fontStyle: 'italic' }}>&nbsp;</span>
+                </div>
+            );
         }
 
         // Style for team boxes
@@ -961,15 +984,15 @@ function MarchMadnessBracket() {
                         ) : (
                             <div style={{
                                 padding: '10px',
-                                backgroundColor: 'white',
+                                backgroundColor: '#FFEBEE', // Light red background
                                 borderRadius: '4px',
-                                border: '1px solid #ccc',
+                                border: '1px dashed #EF9A9A', // Dashed red border
                                 minHeight: '24px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center'
                             }}>
-                                <div style={{ fontSize: '16px', color: '#aaa', fontStyle: 'italic' }}> &nbsp; </div>
+                                <div style={{ fontSize: '16px', color: '#689F38', fontStyle: 'italic' }}>&nbsp;</div>
                             </div>
                         )}
                     </div>
