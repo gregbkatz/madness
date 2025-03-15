@@ -181,10 +181,19 @@ function MarchMadnessBracket() {
                     // Update save status based on bracket status
                     const saveStatus = document.getElementById('save-status');
                     if (saveStatus && data.status) {
+                        // Get the username from the User info display in the header
+                        const userInfoElement = document.querySelector('.user-info');
+                        let username = "there";
+                        if (userInfoElement) {
+                            // Extract username from "User: username" format
+                            const userText = userInfoElement.textContent;
+                            username = userText.replace('User:', '').trim();
+                        }
+
                         if (data.status.type === 'new') {
-                            saveStatus.textContent = `📋 New bracket created`;
+                            saveStatus.textContent = `📋 Welcome ${username}! Thanks for creating a new bracket!`;
                         } else if (data.status.type === 'loaded') {
-                            saveStatus.textContent = `📋 Loaded bracket from ${data.status.timestamp}`;
+                            saveStatus.textContent = `📋 Welcome back ${username}! Your bracket from ${data.status.timestamp} has been loaded`;
                         }
 
                         // Add animation class for visual feedback
@@ -199,11 +208,12 @@ function MarchMadnessBracket() {
                     // Show the status banner notification
                     const statusBanner = document.getElementById('status-banner');
                     if (statusBanner && data.status) {
+                        // Reuse the same username we got earlier
                         if (data.status.type === 'new') {
-                            statusBanner.textContent = `🌟 NEW BRACKET CREATED`;
+                            statusBanner.textContent = `🌟 Welcome ${username}! Thanks for creating a new bracket!`;
                             statusBanner.className = 'status-banner new-bracket';
                         } else if (data.status.type === 'loaded') {
-                            statusBanner.textContent = `📂 LOADED YOUR BRACKET FROM ${data.status.timestamp}`;
+                            statusBanner.textContent = `📂 Welcome back ${username}! Your bracket from ${data.status.timestamp} has been loaded`;
                             statusBanner.className = 'status-banner loaded-bracket';
                         }
 
