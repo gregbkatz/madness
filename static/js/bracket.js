@@ -49,6 +49,9 @@ function MarchMadnessBracket() {
     // Track bracket completion status
     const [completionStatus, setCompletionStatus] = React.useState({ complete: false, remainingPicks: 63 });
 
+    // Add state for bracket status
+    const [bracketStatus, setBracketStatus] = React.useState(null);
+
     // Function to calculate how many games still need to be picked
     const calculateCompletionStatus = (bracketData) => {
         // In a 64-team tournament bracket structure:
@@ -168,6 +171,56 @@ function MarchMadnessBracket() {
             })
             .catch(error => console.error('Error fetching teams:', error));
 
+        // Fetch bracket status
+        fetch('/api/bracket-status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    setBracketStatus(data.status);
+
+                    // Update save status based on bracket status
+                    const saveStatus = document.getElementById('save-status');
+                    if (saveStatus && data.status) {
+                        if (data.status.type === 'new') {
+                            saveStatus.textContent = `📋 New bracket created`;
+                        } else if (data.status.type === 'loaded') {
+                            saveStatus.textContent = `📋 Loaded bracket from ${data.status.timestamp}`;
+                        }
+
+                        // Add animation class for visual feedback
+                        saveStatus.classList.add('saving');
+
+                        // Remove animation class after animation completes
+                        setTimeout(() => {
+                            saveStatus.classList.remove('saving');
+                        }, 2000);
+                    }
+
+                    // Show the status banner notification
+                    const statusBanner = document.getElementById('status-banner');
+                    if (statusBanner && data.status) {
+                        if (data.status.type === 'new') {
+                            statusBanner.textContent = `🌟 NEW BRACKET CREATED`;
+                            statusBanner.className = 'status-banner new-bracket';
+                        } else if (data.status.type === 'loaded') {
+                            statusBanner.textContent = `📂 LOADED YOUR BRACKET FROM ${data.status.timestamp}`;
+                            statusBanner.className = 'status-banner loaded-bracket';
+                        }
+
+                        // Make the banner visible
+                        setTimeout(() => {
+                            statusBanner.classList.add('visible');
+                        }, 500);
+
+                        // Hide the banner after 8 seconds
+                        setTimeout(() => {
+                            statusBanner.classList.remove('visible');
+                        }, 8000);
+                    }
+                }
+            })
+            .catch(error => console.error('Error fetching bracket status:', error));
+
         // Fetch current bracket state
         fetch('/api/bracket')
             .then(response => response.json())
@@ -179,26 +232,6 @@ function MarchMadnessBracket() {
                 const status = calculateCompletionStatus(data);
                 setCompletionStatus(status);
                 updateCompletionStatus(status);
-
-                // Update save status with 'loaded' message
-                const saveStatus = document.getElementById('save-status');
-                if (saveStatus) {
-                    const now = new Date();
-                    const timeString = now.toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    });
-                    saveStatus.textContent = `📋 Loaded at: ${timeString}`;
-
-                    // Add animation class for visual feedback
-                    saveStatus.classList.add('saving');
-
-                    // Remove animation class after animation completes
-                    setTimeout(() => {
-                        saveStatus.classList.remove('saving');
-                    }, 2000);
-                }
             })
             .catch(error => console.error('Error fetching bracket:', error));
     }, []);

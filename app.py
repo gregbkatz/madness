@@ -100,14 +100,35 @@ def show_login():
                     # Ensure winners are updated
                     updated_bracket = update_winners(session['bracket'])
                     update_user_bracket(updated_bracket)
+                    
+                    # Set bracket status to indicate this is a loaded bracket
+                    session['bracket_status'] = {
+                        'type': 'loaded',
+                        'timestamp': most_recent['created'].strftime("%Y-%m-%d %I:%M %p")
+                    }
+                    print(f"Bracket status: Loaded from {session['bracket_status']['timestamp']}")
                 else:
                     # No saved brackets found, initialize a new one
                     update_user_bracket(initialize_bracket())
                     print(f"No saved brackets found for {username}, initializing new bracket")
+                    
+                    # Set bracket status to indicate this is a new bracket
+                    session['bracket_status'] = {
+                        'type': 'new',
+                        'timestamp': datetime.now().strftime("%Y-%m-%d %I:%M %p")
+                    }
+                    print("Bracket status: New bracket created")
             except Exception as e:
                 # If any error occurs, just initialize a new bracket
                 update_user_bracket(initialize_bracket())
                 print(f"Error loading saved bracket for {username}: {str(e)}")
+                
+                # Set bracket status for error case
+                session['bracket_status'] = {
+                    'type': 'new',
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %I:%M %p")
+                }
+                print("Bracket status: New bracket created (after error)")
             
             return redirect(url_for('index'))
         else:
@@ -536,6 +557,17 @@ def manage_bracket():
     
     print('Bracket data being returned:', pretty_print_bracket(user_bracket))
     return jsonify(user_bracket)
+
+@app.route('/api/bracket-status')
+def get_bracket_status():
+    """Get information about whether the current bracket is new or loaded."""
+    try:
+        # Return the bracket status from the session, or a default if not available
+        status = session.get('bracket_status', {'type': 'unknown', 'timestamp': None})
+        return jsonify({"success": True, "status": status})
+    except Exception as e:
+        print(f"Error getting bracket status: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 80))
