@@ -142,8 +142,14 @@
                 validationMessage = '';
             }
 
-            // Clear any previous error messages
+            // Clear any previous error messages from client-side validation
             document.getElementById('validation-message').textContent = '';
+
+            // Clear any server-generated error messages when username changes
+            const serverErrorElements = document.querySelectorAll('.error:not(#validation-message)');
+            serverErrorElements.forEach(element => {
+                element.style.display = 'none';
+            });
         });
 
         // Add validation on button click
