@@ -802,8 +802,14 @@ function MarchMadnessBracket() {
         const isWinnerTop = isTeamWinner(region, round, topTeamIndex);
         const isWinnerBottom = isTeamWinner(region, round, bottomTeamIndex);
 
+        // Add alternating background colors for first round games only
+        const gameStyle = {};
+        if (round === 0) {
+            gameStyle.borderLeft = '6px solid #e0e0e0';  // Subtle border for visual indication
+        }
+
         return (
-            <div className="game" key={`game-${region}-${round}-${gameIndex}`}>
+            <div className="game" key={`game-${region}-${round}-${gameIndex}`} style={gameStyle}>
                 {renderTeam(
                     topTeam,
                     isWinnerTop,
