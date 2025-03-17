@@ -26,17 +26,17 @@ window.addEventListener('orientationchange', function () {
 // Define the main Bracket component
 function MarchMadnessBracket() {
     const [teams, setTeams] = React.useState({
+        midwest: [],
         west: [],
-        east: [],
         south: [],
-        midwest: []
+        east: []
     });
 
     const [bracket, setBracket] = React.useState({
-        west: Array(4).fill().map(() => Array(8).fill(null)),
-        east: Array(4).fill().map(() => Array(8).fill(null)),
-        south: Array(4).fill().map(() => Array(8).fill(null)),
         midwest: Array(4).fill().map(() => Array(8).fill(null)),
+        west: Array(4).fill().map(() => Array(8).fill(null)),
+        south: Array(4).fill().map(() => Array(8).fill(null)),
+        east: Array(4).fill().map(() => Array(8).fill(null)),
         finalFour: [null, null, null, null],
         championship: [null, null],
         champion: null
@@ -65,7 +65,7 @@ function MarchMadnessBracket() {
 
         let totalPicks = 63; // Total picks needed to complete a bracket
         let completedPicks = 0;
-        const regions = ['west', 'east', 'south', 'midwest'];
+        const regions = ['midwest', 'west', 'south', 'east'];
 
         try {
             // Count regional picks (Rounds 1-3, which represent 2nd round through Elite 8)
@@ -393,7 +393,7 @@ function MarchMadnessBracket() {
 
         if (currentTeam) {
             // Determine which Championship slot this team should go to
-            // South/East teams go to Championship slot 0, West/Midwest go to slot 1
+            // South/west teams go to Championship slot 0, midwest/east go to slot 1
             const championshipSlot = (slotIndex === 1 || slotIndex === 2) ? 0 : 1;
 
             console.log(`Team already in Final Four, updating Championship: championshipSlot=${championshipSlot}, team=${currentTeam.name}`);
@@ -672,10 +672,10 @@ function MarchMadnessBracket() {
     // Helper function to get the Final Four index for a region
     const getRegionFinalFourIndex = (region) => {
         switch (region) {
-            case 'west': return 0;
-            case 'east': return 1;
+            case 'midwest': return 0;
+            case 'west': return 1;
             case 'south': return 2;
-            case 'midwest': return 3;
+            case 'east': return 3;
             default: return -1;
         }
     };
@@ -940,39 +940,39 @@ function MarchMadnessBracket() {
             }
         };
 
-        const handleEastClick = () => {
-            console.log("East team clicked in Final Four!");
-            // East team will be in finalFour[1]
+        const handlewestClick = () => {
+            console.log("west team clicked in Final Four!");
+            // west team will be in finalFour[1]
             if (bracket.finalFour && bracket.finalFour[1]) {
                 // If team already exists, this should update the championship
-                handleFinalFourSelect(0, 0, 'east');
+                handleFinalFourSelect(0, 0, 'west');
             } else {
                 // Otherwise, get the team from the Elite Eight
-                handleFinalFourSelect(0, 0, 'east');
+                handleFinalFourSelect(0, 0, 'west');
             }
         };
 
-        const handleMidwestClick = () => {
-            console.log("Midwest team clicked in Final Four!");
-            // Midwest team will be in finalFour[3]
+        const handleeastClick = () => {
+            console.log("east team clicked in Final Four!");
+            // east team will be in finalFour[3]
             if (bracket.finalFour && bracket.finalFour[3]) {
                 // If team already exists, this should update the championship
-                handleFinalFourSelect(1, 0, 'midwest');
+                handleFinalFourSelect(1, 0, 'east');
             } else {
                 // Otherwise, get the team from the Elite Eight
-                handleFinalFourSelect(1, 0, 'midwest');
+                handleFinalFourSelect(1, 0, 'east');
             }
         };
 
-        const handleWestClick = () => {
-            console.log("West team clicked in Final Four!");
-            // West team will be in finalFour[0]
+        const handlemidwestClick = () => {
+            console.log("midwest team clicked in Final Four!");
+            // midwest team will be in finalFour[0]
             if (bracket.finalFour && bracket.finalFour[0]) {
                 // If team already exists, this should update the championship
-                handleFinalFourSelect(1, 0, 'west');
+                handleFinalFourSelect(1, 0, 'midwest');
             } else {
                 // Otherwise, get the team from the Elite Eight
-                handleFinalFourSelect(1, 0, 'west');
+                handleFinalFourSelect(1, 0, 'midwest');
             }
         };
 
@@ -998,9 +998,9 @@ function MarchMadnessBracket() {
 
         // Get winner information from the backend data
         const isSouthWinner = bracket.winners && bracket.winners.finalFour && bracket.winners.finalFour.includes(2);
-        const isEastWinner = bracket.winners && bracket.winners.finalFour && bracket.winners.finalFour.includes(1);
-        const isMidwestWinner = bracket.winners && bracket.winners.finalFour && bracket.winners.finalFour.includes(3);
-        const isWestWinner = bracket.winners && bracket.winners.finalFour && bracket.winners.finalFour.includes(0);
+        const iswestWinner = bracket.winners && bracket.winners.finalFour && bracket.winners.finalFour.includes(1);
+        const iseastWinner = bracket.winners && bracket.winners.finalFour && bracket.winners.finalFour.includes(3);
+        const ismidwestWinner = bracket.winners && bracket.winners.finalFour && bracket.winners.finalFour.includes(0);
 
         // Check if teams are winners in Championship
         const isChamp1Winner = bracket.winners && bracket.winners.championship && bracket.winners.championship.includes(0);
@@ -1048,7 +1048,7 @@ function MarchMadnessBracket() {
 
                     {/* Display the Final Four matchups side by side in a pyramid structure */}
                     <div className="semifinal-container">
-                        {/* Left side semifinal - South vs East */}
+                        {/* Left side semifinal - South vs west */}
                         <div className="semifinal-matchup left-semifinal" style={semifinalStyle}>
                             <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: '10px', fontSize: '14px' }}></div>
                             <div style={{ pointerEvents: 'auto' }}>
@@ -1062,9 +1062,9 @@ function MarchMadnessBracket() {
                                 </div>
                                 <div style={{ margin: '5px 0' }}>
                                     {renderTeam(
-                                        finalFour[1], // East champion
-                                        isEastWinner,
-                                        handleEastClick,
+                                        finalFour[1], // west champion
+                                        iswestWinner,
+                                        handlewestClick,
                                         false
                                     )}
                                 </div>
@@ -1077,7 +1077,7 @@ function MarchMadnessBracket() {
                             <div style={{ pointerEvents: 'auto' }}>
                                 <div style={{ margin: '5px 0' }}>
                                     {renderTeam(
-                                        championship[0], // Winner of South/East
+                                        championship[0], // Winner of South/west
                                         isChamp1Winner,
                                         handleChampionship1Click,
                                         false
@@ -1085,7 +1085,7 @@ function MarchMadnessBracket() {
                                 </div>
                                 <div style={{ margin: '5px 0' }}>
                                     {renderTeam(
-                                        championship[1], // Winner of Midwest/West
+                                        championship[1], // Winner of east/midwest
                                         isChamp2Winner,
                                         handleChampionship2Click,
                                         false
@@ -1094,23 +1094,23 @@ function MarchMadnessBracket() {
                             </div>
                         </div>
 
-                        {/* Right side semifinal - Midwest vs West */}
+                        {/* Right side semifinal - east vs midwest */}
                         <div className="semifinal-matchup right-semifinal" style={semifinalStyle}>
                             <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: '10px', fontSize: '14px' }}></div>
                             <div style={{ pointerEvents: 'auto' }}>
                                 <div style={{ margin: '5px 0' }}>
                                     {renderTeam(
-                                        finalFour[3], // Midwest champion
-                                        isMidwestWinner,
-                                        handleMidwestClick,
+                                        finalFour[3], // east champion
+                                        iseastWinner,
+                                        handleeastClick,
                                         false
                                     )}
                                 </div>
                                 <div style={{ margin: '5px 0' }}>
                                     {renderTeam(
-                                        finalFour[0], // West champion
-                                        isWestWinner,
-                                        handleWestClick,
+                                        finalFour[0], // midwest champion
+                                        ismidwestWinner,
+                                        handlemidwestClick,
                                         false
                                     )}
                                 </div>
@@ -1126,7 +1126,7 @@ function MarchMadnessBracket() {
     const renderRoundHeaders = () => {
         return (
             <div className="round-headers">
-                {/* Left side headers (South & East) - left to right flow */}
+                {/* Left side headers (South & west) - left to right flow */}
                 <div className="round-header round-header-left" data-round="0">1st Round</div>
                 <div className="round-header round-header-left" data-round="1">2nd Round</div>
                 <div className="round-header round-header-left" data-round="2">Sweet 16</div>
@@ -1137,7 +1137,7 @@ function MarchMadnessBracket() {
                 <div className="round-header round-header-center">Championship</div>
                 <div className="round-header round-header-center">Final Four</div>
 
-                {/* Right side headers (Midwest & West) - right to left flow */}
+                {/* Right side headers (east & midwest) - right to left flow */}
                 <div className="round-header round-header-right" data-round="3">Elite Eight</div>
                 <div className="round-header round-header-right" data-round="2">Sweet 16</div>
                 <div className="round-header round-header-right" data-round="1">2nd Round</div>
@@ -1215,15 +1215,15 @@ function MarchMadnessBracket() {
                         </div>
 
                         <div className="bracket-right">
-                            <div className="region midwest">
+                            <div className="region east">
                                 <div className="region-rounds" style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-                                    {renderRound('midwest', 3, 'right')}
+                                    {renderRound('east', 3, 'right')}
                                     <div style={{ display: 'flex', flexDirection: 'column', minWidth: '140px', maxWidth: '140px', padding: '0 5px', alignItems: 'flex-start' }}>
-                                        <div className="region-label-styled">Midwest</div>
-                                        {renderRound('midwest', 2, 'right')}
+                                        <div className="region-label-styled">east</div>
+                                        {renderRound('east', 2, 'right')}
                                     </div>
-                                    {renderRound('midwest', 1, 'right')}
-                                    {renderRound('midwest', 0, 'right')}
+                                    {renderRound('east', 1, 'right')}
+                                    {renderRound('east', 0, 'right')}
                                 </div>
                             </div>
                         </div>
@@ -1231,15 +1231,15 @@ function MarchMadnessBracket() {
 
                     <div className="bracket">
                         <div className="bracket-left">
-                            <div className="region east">
+                            <div className="region west">
                                 <div className="region-rounds">
-                                    {renderRound('east', 0, 'left')}
-                                    {renderRound('east', 1, 'left')}
+                                    {renderRound('west', 0, 'left')}
+                                    {renderRound('west', 1, 'left')}
                                     <div style={{ display: 'flex', flexDirection: 'column', minWidth: '140px', maxWidth: '140px', padding: '0 5px' }}>
-                                        <div className="region-label-styled">East</div>
-                                        {renderRound('east', 2, 'left')}
+                                        <div className="region-label-styled">west</div>
+                                        {renderRound('west', 2, 'left')}
                                     </div>
-                                    {renderRound('east', 3, 'left')}
+                                    {renderRound('west', 3, 'left')}
                                 </div>
                             </div>
                         </div>
@@ -1255,15 +1255,15 @@ function MarchMadnessBracket() {
                         </div>
 
                         <div className="bracket-right">
-                            <div className="region west">
+                            <div className="region midwest">
                                 <div className="region-rounds" style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-                                    {renderRound('west', 3, 'right')}
+                                    {renderRound('midwest', 3, 'right')}
                                     <div style={{ display: 'flex', flexDirection: 'column', minWidth: '140px', maxWidth: '140px', padding: '0 5px', alignItems: 'flex-start' }}>
-                                        <div className="region-label-styled">West</div>
-                                        {renderRound('west', 2, 'right')}
+                                        <div className="region-label-styled">midwest</div>
+                                        {renderRound('midwest', 2, 'right')}
                                     </div>
-                                    {renderRound('west', 1, 'right')}
-                                    {renderRound('west', 0, 'right')}
+                                    {renderRound('midwest', 1, 'right')}
+                                    {renderRound('midwest', 0, 'right')}
                                 </div>
                             </div>
                         </div>

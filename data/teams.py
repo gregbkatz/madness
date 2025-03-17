@@ -1,7 +1,7 @@
 """NCAA Tournament team data for 2023"""
 
 teams = {
-    "west": [
+    "midwest": [
         {"seed": 1, "name": "Kansas", "abbrev": "KU"},
         {"seed": 16, "name": "Howard", "abbrev": "HOW"},
         {"seed": 8, "name": "Arkansas", "abbrev": "ARK"},
@@ -14,12 +14,12 @@ teams = {
         {"seed": 11, "name": "Arizona St.", "abbrev": "ASU"},
         {"seed": 3, "name": "Gonzaga", "abbrev": "GON"},
         {"seed": 14, "name": "Gr. Canyon", "abbrev": "GCU"},
-        {"seed": 7, "name": "Northwestern", "abbrev": "NW"},
+        {"seed": 7, "name": "Northmidwestern", "abbrev": "NW"},
         {"seed": 10, "name": "Boise State", "abbrev": "BSU"},
         {"seed": 2, "name": "UCLA", "abbrev": "UCLA"},
         {"seed": 15, "name": "UNC-Ash.", "abbrev": "UNCA"}
     ],
-    "east": [
+    "west": [
         {"seed": 1, "name": "Purdue", "abbrev": "PUR"},
         {"seed": 16, "name": "F. Dickinson", "abbrev": "FDU"},
         {"seed": 8, "name": "Memphis", "abbrev": "MEM"},
@@ -55,7 +55,7 @@ teams = {
         {"seed": 2, "name": "Arizona", "abbrev": "ARIZ"},
         {"seed": 15, "name": "Princeton", "abbrev": "PRIN"}
     ],
-    "midwest": [
+    "east": [
         {"seed": 1, "name": "Houston", "abbrev": "HOU"},
         {"seed": 16, "name": "N. Kentucky", "abbrev": "NKU"},
         {"seed": 8, "name": "Iowa", "abbrev": "IOWA"},

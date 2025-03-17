@@ -78,13 +78,13 @@ def show_login():
         if not username:
             return render_template('login.html', error='Please enter your name')
             
-        # Validate username contains only filename-safe characters and is at least 3 characters
+        # Validate username contains only filename-safe characters and is at lwest 3 characters
         if not is_valid_username(username):
             # Check specific validation issue to provide appropriate error
             if not re.match(r'^[a-zA-Z0-9_\-\.]+$', username):
                 error_msg = 'Username can only contain letters, numbers, underscores, hyphens, and periods'
             elif len(username) < 3:
-                error_msg = 'Username must be at least 3 characters long'
+                error_msg = 'Username must be at lwest 3 characters long'
             else:
                 error_msg = 'Invalid username format'
             return render_template('login.html', error=error_msg, username=username)
@@ -102,7 +102,7 @@ def show_login():
                     "path": file_path
                 })
         
-        # Sort by creation time (newest first)
+        # Sort by creation time (nemidwest first)
         saved_files.sort(key=lambda x: x["created"], reverse=True)
         
         # Handle based on the selected action
@@ -233,7 +233,7 @@ def list_saved_brackets():
                         "path": file_path
                     })
         
-        # Sort by creation time (newest first)
+        # Sort by creation time (nemidwest first)
         saved_files.sort(key=lambda x: x["created"], reverse=True)
         
         return jsonify({"success": True, "brackets": saved_files})
@@ -320,13 +320,13 @@ def manage_bracket():
             if round_index == 3:
                 # Handle Elite Eight to Final Four
                 ff_index = -1
-                if region == 'west':
+                if region == 'midwest':
                     ff_index = 0
-                elif region == 'east':
+                elif region == 'west':
                     ff_index = 1
                 elif region == 'south':
                     ff_index = 2
-                elif region == 'midwest':
+                elif region == 'east':
                     ff_index = 3
                 
                 print(f"Elite Eight to Final Four: region={region}, ff_index={ff_index}, selected_team={selected_team['name'] if selected_team else 'None'}")
@@ -339,7 +339,7 @@ def manage_bracket():
                         if current_ff_team:
                             print(f"Replacing team in Final Four slot {ff_index}: {current_ff_team['name']} with {selected_team['name']}")
                             # Check Championship for this team
-                            champ_index = 0 if ff_index in [1, 2] else 1  # South/East go to slot 0, Midwest/West to slot 1
+                            champ_index = 0 if ff_index in [1, 2] else 1  # South/west go to slot 0, east/midwest to slot 1
                             if user_bracket["championship"][champ_index] == current_ff_team:
                                 print(f"Resetting championship slot {champ_index} because team is being replaced in Final Four")
                                 user_bracket["championship"][champ_index] = None
@@ -416,7 +416,7 @@ def manage_bracket():
                     # If replacing a different team, reset that team from championship
                     if current_team:
                         # Check which championship slot to check
-                        champ_index = 0 if slot_index in [1, 2] else 1  # South/East go to slot 0, Midwest/West to slot 1
+                        champ_index = 0 if slot_index in [1, 2] else 1  # South/west go to slot 0, east/midwest to slot 1
                         if user_bracket["championship"][champ_index] == current_team:
                             # Reset from championship
                             user_bracket["championship"][champ_index] = None
@@ -551,8 +551,8 @@ def manage_bracket():
             
             # Log the bracket structure after random_fill
             print("After random_fill, bracket structure:", new_bracket.keys())
-            print("First round structure for west region:", [team['name'] if team else 'None' for team in new_bracket['west'][0]])
-            print("Sample from winners:", new_bracket['winners']['west'][0][:3])
+            print("First round structure for midwest region:", [team['name'] if team else 'None' for team in new_bracket['midwest'][0]])
+            print("Sample from winners:", new_bracket['winners']['midwest'][0][:3])
             
             # Update the session with the randomly filled bracket
             update_user_bracket(new_bracket)

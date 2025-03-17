@@ -9,9 +9,10 @@
  */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-  typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (global = global || self, factory(global.React = {}));
-}(this, (function (exports) { 'use strict';
+    typeof define === 'function' && define.amd ? define(['exports'], factory) :
+      (global = global || self, factory(global.React = {}));
+}(this, (function (exports) {
+  'use strict';
 
   var ReactVersion = '18.3.1';
 
@@ -392,7 +393,7 @@
     }
   }
 
-  function ComponentDummy() {}
+  function ComponentDummy() { }
 
   ComponentDummy.prototype = Component.prototype;
   /**
@@ -1063,11 +1064,11 @@
           }
 
           mappedChild = cloneAndReplaceKey(mappedChild, // Keep both the (mapped) and old keys if they differ, just as
-          // traverseAllChildren used to do for objects as children
-          escapedPrefix + ( // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
-          mappedChild.key && (!_child || _child.key !== mappedChild.key) ? // $FlowFixMe Flow incorrectly thinks existing element's key can be a number
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          escapeUserProvidedKey('' + mappedChild.key) + '/' : '') + childKey);
+            // traverseAllChildren used to do for objects as children
+            escapedPrefix + ( // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
+              mappedChild.key && (!_child || _child.key !== mappedChild.key) ? // $FlowFixMe Flow incorrectly thinks existing element's key can be a number
+                // eslint-disable-next-line react-internal/safe-string-coercion
+                escapeUserProvidedKey('' + mappedChild.key) + '/' : '') + childKey);
         }
 
         array.push(mappedChild);
@@ -1381,14 +1382,14 @@
       {
         if (moduleObject === undefined) {
           error('lazy: Expected the result of a dynamic imp' + 'ort() call. ' + 'Instead received: %s\n\nYour code should look like: \n  ' + // Break up imports to avoid accidentally parsing them as dependencies.
-          'const MyComponent = lazy(() => imp' + "ort('./MyComponent'))\n\n" + 'Did you accidentally put curly braces around the import?', moduleObject);
+            'const MyComponent = lazy(() => imp' + "ort('./MyComponent'))\n\n" + 'Did you accidentally put curly braces around the import?', moduleObject);
         }
       }
 
       {
         if (!('default' in moduleObject)) {
           error('lazy: Expected the result of a dynamic imp' + 'ort() call. ' + 'Instead received: %s\n\nYour code should look like: \n  ' + // Break up imports to avoid accidentally parsing them as dependencies.
-          'const MyComponent = lazy(() => imp' + "ort('./MyComponent'))", moduleObject);
+            'const MyComponent = lazy(() => imp' + "ort('./MyComponent'))", moduleObject);
         }
       }
 
@@ -1517,16 +1518,16 @@
     } // Note: typeof might be other than 'symbol' or 'number' (e.g. if it's a polyfill).
 
 
-    if (type === REACT_FRAGMENT_TYPE || type === REACT_PROFILER_TYPE || enableDebugTracing  || type === REACT_STRICT_MODE_TYPE || type === REACT_SUSPENSE_TYPE || type === REACT_SUSPENSE_LIST_TYPE || enableLegacyHidden  || type === REACT_OFFSCREEN_TYPE || enableScopeAPI  || enableCacheElement  || enableTransitionTracing ) {
+    if (type === REACT_FRAGMENT_TYPE || type === REACT_PROFILER_TYPE || enableDebugTracing || type === REACT_STRICT_MODE_TYPE || type === REACT_SUSPENSE_TYPE || type === REACT_SUSPENSE_LIST_TYPE || enableLegacyHidden || type === REACT_OFFSCREEN_TYPE || enableScopeAPI || enableCacheElement || enableTransitionTracing) {
       return true;
     }
 
     if (typeof type === 'object' && type !== null) {
       if (type.$$typeof === REACT_LAZY_TYPE || type.$$typeof === REACT_MEMO_TYPE || type.$$typeof === REACT_PROVIDER_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE || // This needs to include all possible module reference object
-      // types supported by any Flight configuration anywhere since
-      // we don't know which Flight build this will end up being used
-      // with.
-      type.$$typeof === REACT_MODULE_REFERENCE || type.getModuleId !== undefined) {
+        // types supported by any Flight configuration anywhere since
+        // we don't know which Flight build this will end up being used
+        // with.
+        type.$$typeof === REACT_MODULE_REFERENCE || type.getModuleId !== undefined) {
         return true;
       }
     }
@@ -1679,7 +1680,7 @@
   var prevGroupCollapsed;
   var prevGroupEnd;
 
-  function disabledLog() {}
+  function disabledLog() { }
 
   disabledLog.__reactDisabledLog = true;
   function disableLogs() {
@@ -1788,7 +1789,7 @@
 
   function describeNativeComponentFrame(fn, construct) {
     // If something asked for a stack inside a fake render, it should get ignored.
-    if ( !fn || reentry) {
+    if (!fn || reentry) {
       return '';
     }
 
@@ -1871,7 +1872,7 @@
         var c = controlLines.length - 1;
 
         while (s >= 1 && c >= 0 && sampleLines[s] !== controlLines[c]) {
-          // We expect at least one stack frame to be shared.
+          // We expect at lwest one stack frame to be shared.
           // Typically this will be the root most one. However, stack frames may be
           // cut off due to maximum stack limits. In this case, one maybe cut off
           // earlier than the other. We assume that the sample is longer or the same
@@ -1998,7 +1999,7 @@
             try {
               // Lazy may contain any component type so we recursively resolve it.
               return describeUnknownElementTypeFrameInDEV(init(payload), source, ownerFn);
-            } catch (x) {}
+            } catch (x) { }
           }
       }
     }
@@ -2252,8 +2253,8 @@
       if (typeof type === 'function') {
         propTypes = type.propTypes;
       } else if (typeof type === 'object' && (type.$$typeof === REACT_FORWARD_REF_TYPE || // Note: Memo only checks outer props here.
-      // Inner props are checked in the reconciler.
-      type.$$typeof === REACT_MEMO_TYPE)) {
+        // Inner props are checked in the reconciler.
+        type.$$typeof === REACT_MEMO_TYPE)) {
         propTypes = type.propTypes;
       } else {
         return;
@@ -2637,7 +2638,7 @@
     advanceTimers(currentTime);
     currentTask = peek(taskQueue);
 
-    while (currentTask !== null && !(enableSchedulerDebugging )) {
+    while (currentTask !== null && !(enableSchedulerDebugging)) {
       if (currentTask.expirationTime > currentTime && (!hasTimeRemaining || shouldYieldToHost())) {
         // This currentTask hasn't expired, and we've reached the deadline.
         break;
@@ -2988,7 +2989,7 @@
   }
 
   var unstable_requestPaint = requestPaint;
-  var unstable_Profiling =  null;
+  var unstable_Profiling = null;
 
 
 
@@ -3010,7 +3011,7 @@
     unstable_continueExecution: unstable_continueExecution,
     unstable_pauseExecution: unstable_pauseExecution,
     unstable_getFirstCallbackNode: unstable_getFirstCallbackNode,
-    get unstable_now () { return getCurrentTime; },
+    get unstable_now() { return getCurrentTime; },
     unstable_forceFrameRate: forceFrameRate,
     unstable_Profiling: unstable_Profiling
   });
@@ -3169,7 +3170,7 @@
         {
           if (!didWarnNoAwaitAct && typeof Promise !== 'undefined') {
             // eslint-disable-next-line no-undef
-            Promise.resolve().then(function () {}).then(function () {
+            Promise.resolve().then(function () { }).then(function () {
               if (!wasAwaited) {
                 didWarnNoAwaitAct = true;
 
@@ -3292,9 +3293,9 @@
     }
   }
 
-  var createElement$1 =  createElementWithValidation ;
-  var cloneElement$1 =  cloneElementWithValidation ;
-  var createFactory =  createFactoryWithValidation ;
+  var createElement$1 = createElementWithValidation;
+  var cloneElement$1 = cloneElementWithValidation;
+  var createFactory = createFactoryWithValidation;
   var Children = {
     map: mapChildren,
     forEach: forEachChildren,
