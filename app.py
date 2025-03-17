@@ -126,6 +126,9 @@ def show_login():
             }
             print("Bracket status: New bracket created")
             
+            # Immediately save the empty bracket so we remember this user exists
+            auto_save_bracket(session['bracket'])
+            
             return redirect(url_for('index'))
             
         elif action == 'load':
