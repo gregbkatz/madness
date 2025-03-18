@@ -23,6 +23,33 @@ def is_valid_username(username):
     valid_length = len(username) >= 3
     return valid_chars and valid_length
 
+# Helper function to extract timestamp from bracket filename
+def extract_timestamp_from_filename(filename):
+    """
+    Extract timestamp from a bracket filename.
+    
+    Filename format: bracket_{username}_{YYYYMMDD}_{HHMMSS}.json
+    """        # Find the last two underscores
+    last_underscore = filename.rfind('_')
+    second_last_underscore = filename.rfind('_', 0, last_underscore)
+    if last_underscore > 0 and second_last_underscore > 0:
+        # Extract date part (between second last and last underscore)
+        date_part = filename[second_last_underscore+1:last_underscore]
+        
+        # Extract time part (after last underscore, before .json)
+        time_part = filename[last_underscore+1:filename.rfind('.json')]
+        
+        # Check that date and time parts have expected format (8 and 6 digits)
+        if len(date_part) == 8 and len(time_part) == 6 and date_part.isdigit() and time_part.isdigit():
+            # Parse the timestamp using strptime
+            timestamp_str = f"{date_part}_{time_part}"
+            return datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
+            
+    print(f"Error extracting timestamp from filename {filename}")
+    return None
+    
+
+
 # Helper function to get the user's bracket from session, or initialize a new one if needed
 def get_user_bracket():
     if 'bracket' not in session:
@@ -84,7 +111,7 @@ def show_login():
             if not re.match(r'^[a-zA-Z0-9_\-\.]+$', username):
                 error_msg = 'Username can only contain letters, numbers, underscores, hyphens, and periods'
             elif len(username) < 3:
-                error_msg = 'Username must be at lwest 3 characters long'
+                error_msg = 'Username must be at least 3 characters long'
             else:
                 error_msg = 'Invalid username format'
             return render_template('login.html', error=error_msg, username=username)
@@ -93,12 +120,10 @@ def show_login():
         saved_files = []
         for file in os.listdir('saved_brackets'):
             if file.endswith('.json') and file.startswith("bracket_" + username + "_"):
-                # Get file creation time
                 file_path = os.path.join('saved_brackets', file)
-                created_time = datetime.fromtimestamp(os.path.getctime(file_path))
                 saved_files.append({
                     "filename": file,
-                    "created": created_time,
+                    "created": extract_timestamp_from_filename(file),
                     "path": file_path
                 })
         
@@ -225,14 +250,12 @@ def list_saved_brackets():
             if file.endswith('.json'):
                 # Only show files for the current user
                 if username in file:
-                    # Get file creation time
                     file_path = os.path.join('saved_brackets', file)
-                    created_time = datetime.fromtimestamp(os.path.getctime(file_path))
-                    readable_time = created_time.strftime("%Y-%m-%d %H:%M:%S")
+
                     
                     saved_files.append({
                         "filename": file,
-                        "created": readable_time,
+                        "created": extract_timestamp_from_filename(file),
                         "path": file_path
                     })
         
@@ -611,5 +634,5 @@ def get_bracket_status():
         return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 80))
+    port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port) 
