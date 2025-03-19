@@ -89,6 +89,67 @@ def index():
     if 'username' not in session:
         return redirect(url_for('show_login'))
     
+    # Check for read_only parameter in query string
+    read_only = request.args.get('read_only', 'false').lower() == 'true'
+    
+    # Check if there's a username parameter for viewing another user's bracket
+    view_username = request.args.get('username')
+    if view_username and view_username != session.get('username'):
+        # Try to load the latest bracket for this user
+        try:
+            # Find latest bracket for the specified username
+            latest_bracket = None
+            latest_timestamp = None
+            
+            for file in os.listdir('saved_brackets'):
+                if file.endswith('.json') and file.startswith(f"bracket_{view_username}_"):
+                    file_path = os.path.join('saved_brackets', file)
+                    timestamp = extract_timestamp_from_filename(file)
+                    
+                    if timestamp and (latest_timestamp is None or timestamp > latest_timestamp):
+                        latest_timestamp = timestamp
+                        latest_bracket = file
+            
+            if latest_bracket:
+                # Set read-only mode (force it when viewing another user's bracket)
+                read_only = True
+                
+                # Load the bracket
+                file_path = os.path.join('saved_brackets', latest_bracket)
+                with open(file_path, 'r') as f:
+                    loaded_bracket = json.load(f)
+                
+                # Store original username
+                original_username = session.get('username')
+                
+                # Temporarily set session username to viewed user
+                session['username'] = view_username
+                
+                # Update the user's bracket in session
+                update_user_bracket(loaded_bracket)
+                
+                # Ensure winners are updated
+                updated_bracket = update_winners(session['bracket'])
+                update_user_bracket(updated_bracket)
+                
+                # Set bracket status
+                formatted_timestamp = latest_timestamp.strftime("%Y-%m-%d %I:%M %p") if latest_timestamp else "Unknown time"
+                session['bracket_status'] = {
+                    'type': 'viewed',
+                    'timestamp': formatted_timestamp,
+                    'original_username': original_username  # Keep track of original user
+                }
+                
+                # Set read-only flag
+                session['read_only'] = True
+                
+                print(f"Viewing {view_username}'s bracket from {formatted_timestamp} in read-only mode")
+        except Exception as e:
+            print(f"Error loading bracket for username {view_username}: {str(e)}")
+    
+    # Store read_only state in session
+    session['read_only'] = read_only
+    
     # Initialize user's bracket if needed
     if 'bracket' not in session:
         session['bracket'] = initialize_bracket()
@@ -628,10 +689,70 @@ def get_bracket_status():
     try:
         # Return the bracket status from the session, or a default if not available
         status = session.get('bracket_status', {'type': 'unknown', 'timestamp': None})
-        return jsonify({"success": True, "status": status})
+        
+        # Add read_only flag to the response
+        read_only = session.get('read_only', False)
+        
+        # Include original username if viewing someone else's bracket
+        original_username = None
+        if 'original_username' in status:
+            original_username = status['original_username']
+        
+        return jsonify({
+            "success": True, 
+            "status": status,
+            "read_only": read_only,
+            "original_username": original_username
+        })
     except Exception as e:
         print(f"Error getting bracket status: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/users-list')
+def users_list():
+    """Show a list of all users who have created brackets."""
+    try:
+        # Get all unique usernames from saved bracket files
+        users = set()
+        user_data = []
+        
+        # Get list of all bracket files
+        for file in os.listdir('saved_brackets'):
+            if file.endswith('.json') and file.startswith("bracket_"):
+                # Extract username from filename (format: bracket_USERNAME_timestamp.json)
+                parts = file.split('_')
+                if len(parts) >= 3:
+                    # Username is the part between "bracket_" and the timestamp
+                    username = '_'.join(parts[1:-2])
+                    
+                    # Skip if username is empty or only contains special characters
+                    if not username or username == 'anonymous':
+                        continue
+                    
+                    if username not in users:
+                        # Get the most recent file for this user
+                        timestamp = extract_timestamp_from_filename(file)
+                        formatted_time = timestamp.strftime("%Y-%m-%d %I:%M %p") if timestamp else "Unknown"
+                        
+                        # Get number of brackets for this user
+                        user_brackets = [f for f in os.listdir('saved_brackets') 
+                                       if f.endswith('.json') and f.startswith(f"bracket_{username}_")]
+                        
+                        # Add to user data
+                        user_data.append({
+                            "username": username,
+                            "last_updated": formatted_time,
+                            "bracket_count": len(user_brackets)
+                        })
+                        users.add(username)
+        
+        # Sort by username
+        user_data.sort(key=lambda x: x["username"].lower())
+        
+        return render_template('users_list.html', users=user_data)
+    except Exception as e:
+        print(f"Error loading users list: {str(e)}")
+        return render_template('users_list.html', users=[], error=str(e))
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
