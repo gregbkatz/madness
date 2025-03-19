@@ -48,8 +48,9 @@ function MarchMadnessBracket() {
     const [loadingBrackets, setLoadingBrackets] = React.useState(false);
     // Track bracket completion status
     const [completionStatus, setCompletionStatus] = React.useState({ complete: false, remainingPicks: 63 });
-
-    // Add state for bracket status
+    // Add read-only mode state
+    const [readOnly, setReadOnly] = React.useState(false);
+    // Track bracket status
     const [bracketStatus, setBracketStatus] = React.useState(null);
 
     // Function to calculate how many games still need to be picked
@@ -163,6 +164,14 @@ function MarchMadnessBracket() {
 
     // Fetch initial data
     React.useEffect(() => {
+        // Check for read-only mode in URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const readOnlyParam = urlParams.get('readOnly');
+        if (readOnlyParam === 'true') {
+            setReadOnly(true);
+            console.log('Bracket is in read-only mode');
+        }
+
         // Fetch teams
         fetch('/api/teams')
             .then(response => response.json())
@@ -250,6 +259,12 @@ function MarchMadnessBracket() {
     const handleTeamSelect = (region, round, gameIndex, teamIndex) => {
         console.log(`Team select: region=${region}, round=${round}, game=${gameIndex}, team=${teamIndex}`);
 
+        // Exit if in read-only mode
+        if (readOnly) {
+            console.log('Cannot make changes in read-only mode');
+            return;
+        }
+
         fetch('/api/bracket', {
             method: 'POST',
             headers: {
@@ -285,6 +300,12 @@ function MarchMadnessBracket() {
     // Save bracket to server
     const saveBracket = () => {
         console.log('Saving bracket to file...');
+
+        // Exit if in read-only mode
+        if (readOnly) {
+            console.log('Cannot save changes in read-only mode');
+            return;
+        }
 
         fetch('/api/save-bracket', {
             method: 'POST',
@@ -387,6 +408,12 @@ function MarchMadnessBracket() {
     const handleFinalFourSelect = (semifinalIndex, teamIndex, region) => {
         console.log(`Final Four select: semifinalIndex=${semifinalIndex}, teamIndex=${teamIndex}, region=${region}`);
 
+        // Exit if in read-only mode
+        if (readOnly) {
+            console.log('Cannot make changes in read-only mode');
+            return;
+        }
+
         // If the team is already in the finalFour array at the correct slot index, then we should be updating the Championship
         const slotIndex = getRegionFinalFourIndex(region);
         const currentTeam = bracket.finalFour[slotIndex];
@@ -468,6 +495,12 @@ function MarchMadnessBracket() {
     const handleChampionSelect = (slotIndex) => {
         console.log(`Champion select: slotIndex=${slotIndex}`);
 
+        // Exit if in read-only mode
+        if (readOnly) {
+            console.log('Cannot make changes in read-only mode');
+            return;
+        }
+
         fetch('/api/bracket', {
             method: 'POST',
             headers: {
@@ -500,6 +533,12 @@ function MarchMadnessBracket() {
     // Handle Championship team selection
     const handleChampionshipSelect = (teamIndex) => {
         console.log(`Championship select: teamIndex=${teamIndex}`);
+
+        // Exit if in read-only mode
+        if (readOnly) {
+            console.log('Cannot make changes in read-only mode');
+            return;
+        }
 
         // Check if there's already a team in this Championship slot
         const teamInSlot = bracket.championship[teamIndex];
@@ -575,6 +614,12 @@ function MarchMadnessBracket() {
 
     // Auto-fill the bracket
     const autoFillBracket = () => {
+        // Exit if in read-only mode
+        if (readOnly) {
+            console.log('Cannot auto-fill in read-only mode');
+            return;
+        }
+
         fetch('/api/bracket', {
             method: 'POST',
             headers: {
@@ -601,6 +646,12 @@ function MarchMadnessBracket() {
 
     // Random-fill the bracket (completely random picks)
     const randomFillBracket = () => {
+        // Exit if in read-only mode
+        if (readOnly) {
+            console.log('Cannot random-fill in read-only mode');
+            return;
+        }
+
         fetch('/api/bracket', {
             method: 'POST',
             headers: {
@@ -627,6 +678,12 @@ function MarchMadnessBracket() {
 
     // Reset the bracket
     const resetBracket = () => {
+        // Exit if in read-only mode
+        if (readOnly) {
+            console.log('Cannot reset in read-only mode');
+            return;
+        }
+
         fetch('/api/bracket', {
             method: 'POST',
             headers: {
