@@ -25,6 +25,16 @@ window.addEventListener('orientationchange', function () {
 
 // Define the main Bracket component
 function MarchMadnessBracket() {
+    // Map of long team names to shortened display names
+    const teamNameShortcuts = {
+        "UNC Wilmington": "UNC Wilm.",
+        "Texas/Xavier": "Xavier",
+        "AL St/St Francis U": "AL St",
+        "AU/Mt St Mary's": "Mt St Mary's",
+        "San Diego St/NC": "UNC",
+        "Mississppi St": "Miss. St",
+    };
+
     const [teams, setTeams] = React.useState({
         midwest: [],
         west: [],
@@ -776,6 +786,9 @@ function MarchMadnessBracket() {
         const isReadOnly = readOnly || bracket.read_only === true;
         const showBonus = isReadOnly && serverClasses.includes('correct') && hasBonus;
 
+        // Get shortened team name if available, otherwise use original name
+        const displayName = teamNameShortcuts[team.name] || team.name;
+
         // Debug logging
         if (serverClasses.includes('correct')) {
             console.log('Correct team found:', team.name);
@@ -847,7 +860,7 @@ function MarchMadnessBracket() {
                         {team.seed}
                     </div>
                     <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100px' }}>
-                        {team.name}
+                        {displayName}
                         {showBonus && (
                             <span style={{ color: '#F9A825', fontWeight: 'bold', marginLeft: '3px' }}>
                                 {bonusText}
@@ -1113,7 +1126,9 @@ function MarchMadnessBracket() {
                             }}
                                 className={bracket.champion.classes || ''}
                             >
-                                <div style={{ fontWeight: 'bold', fontSize: '16px' }}>{bracket.champion.name} ({bracket.champion.seed})</div>
+                                <div style={{ fontWeight: 'bold', fontSize: '16px' }}>
+                                    {teamNameShortcuts[bracket.champion.name] || bracket.champion.name} ({bracket.champion.seed})
+                                </div>
                             </div>
                         ) : (
                             <div style={{
