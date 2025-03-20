@@ -749,6 +749,7 @@ def users_list():
                         
                         # Calculate picks remaining for latest bracket
                         picks_remaining = 63  # Default - all picks remaining
+                        champion = "None"  # Default - no champion selected
                         
                         if sorted_brackets:
                             latest_bracket_file = sorted_brackets[0][0]
@@ -780,6 +781,8 @@ def users_list():
                                 # Count Champion
                                 if bracket_data["champion"] is not None:
                                     completed_picks += 1
+                                    # Extract champion name
+                                    champion = bracket_data["champion"]["name"]
                                 
                                 # Calculate remaining picks
                                 picks_remaining = 63 - completed_picks
@@ -791,7 +794,8 @@ def users_list():
                             "username": username,
                             "last_updated": formatted_time,
                             "bracket_count": len(user_brackets),
-                            "picks_remaining": picks_remaining
+                            "picks_remaining": picks_remaining,
+                            "champion": champion
                         })
                         users.add(username)
         

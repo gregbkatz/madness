@@ -85,6 +85,7 @@
                 <th>Username</th>
                 <th>Last Updated</th>
                 <th>Picks remaining</th>
+                <th>Champion</th>
             </tr>
         </thead>
         <tbody>
@@ -95,6 +96,7 @@
                 </td>
                 <td>{{ user.last_updated }}</td>
                 <td>{{ user.picks_remaining }}</td>
+                <td>{{ user.champion }}</td>
             </tr>
             {% endfor %}
         </tbody>
