@@ -770,9 +770,24 @@ function MarchMadnessBracket() {
 
         // Check for bonus points
         const hasBonus = team.bonus !== undefined;
+        const bonusValue = team.bonus;
+        const bonusType = typeof team.bonus;
         const bonusText = hasBonus ? ` (+${team.bonus})` : '';
         const isReadOnly = readOnly || bracket.read_only === true;
         const showBonus = isReadOnly && serverClasses.includes('correct') && hasBonus;
+
+        // Debug logging
+        if (serverClasses.includes('correct')) {
+            console.log('Correct team found:', team.name);
+            console.log('  - hasBonus:', hasBonus);
+            console.log('  - bonus value:', bonusValue);
+            console.log('  - bonus type:', bonusType);
+            console.log('  - bonus === undefined:', team.bonus === undefined);
+            console.log('  - bonus == null:', team.bonus == null);
+            console.log('  - isReadOnly:', isReadOnly);
+            console.log('  - showBonus:', showBonus);
+            console.log('  - complete team object:', JSON.stringify(team));
+        }
 
         // Style for team boxes
         const teamStyle = {

@@ -80,6 +80,11 @@ def compare_with_truth(bracket):
     
     # Try to get the chalk bracket for bonus calculations
     chalk_bracket = get_chalk_bracket()
+    print(f"Chalk bracket loaded: {chalk_bracket is not None}")
+    
+    # Debug counts
+    correct_count = 0
+    bonus_count = 0
     
     # Add a classes field to each team if it doesn't exist
     for region in ["midwest", "west", "south", "east"]:
@@ -111,26 +116,33 @@ def compare_with_truth(bracket):
                         if team["name"] == truth_team["name"] and team["seed"] == truth_team["seed"]:
                             team["classes"] += " correct"
                             team["correct"] = True
+                            correct_count += 1
                             
                             # Add bonus points if this is a correct pick and we have chalk bracket
                             if chalk_bracket and round_idx > 0:
-                                # Find the same team in chalk bracket for this round
+                                # Find the same POSITION in chalk bracket for this round
                                 chalk_team = None
                                 if round_idx < len(chalk_bracket[region]):
-                                    # Try to find the matching team in chalk bracket
-                                    for chalk_idx, chalk_t in enumerate(chalk_bracket[region][round_idx]):
-                                        if chalk_t and chalk_t.get("name") == truth_team.get("name"):
-                                            chalk_team = chalk_t
-                                            break
+                                    # Get the team at the same position in chalk bracket
+                                    if i < len(chalk_bracket[region][round_idx]):
+                                        chalk_team = chalk_bracket[region][round_idx][i]
                                 
                                 # Calculate bonus if we found the team in chalk bracket
                                 if chalk_team:
                                     seed_diff = abs(int(chalk_team.get("seed", 0)) - int(truth_team.get("seed", 0)))
                                     if seed_diff > 0:
+                                        # If truth_team's seed is higher (numerically) than chalk_team's seed, it's an upset
                                         bonus = seed_diff * UPSET_BONUS_MULTIPLIERS[f"round_{round_idx}"]
-                                        team["bonus"] = bonus
+                                        team["bonus"] = int(bonus)  # Ensure it's an integer
+                                        bonus_count += 1
+                                        print(f"Added bonus of {bonus} to {team['name']} in {region} round {round_idx} position {i}")
+                                        print(f"Truth team: {truth_team['name']} (seed {truth_team['seed']}), Chalk team: {chalk_team['name']} (seed {chalk_team['seed']})")
+                                        # Debug the team object to see its JSON representation
+                                        team_json = json.dumps(team)
+                                        print(f"Team JSON: {team_json}")
                                     else:
-                                        team["bonus"] = 0
+                                        team["bonus"] = 0  # Explicitly set to zero instead of None
+                                        print(f"Set bonus to 0 for {team['name']} in {region} round {round_idx} (no upset)")
                                         
                         else:
                             team["classes"] += " incorrect"
@@ -158,21 +170,18 @@ def compare_with_truth(bracket):
                     
                     # Add bonus points for correct Final Four pick
                     if chalk_bracket:
-                        # Find this team in chalk bracket final four
+                        # Get the chalk team at the same position in the Final Four
                         chalk_team = None
-                        for region in ["midwest", "west", "south", "east"]:
-                            # Look in Elite 8 of chalk bracket (round 3)
-                            if region in chalk_bracket and len(chalk_bracket[region]) > 3:
-                                for chalk_t in chalk_bracket[region][3]:
-                                    if chalk_t and chalk_t.get("name") == truth_team.get("name"):
-                                        chalk_team = chalk_t
-                                        break
+                        if i < len(chalk_bracket["finalFour"]):
+                            chalk_team = chalk_bracket["finalFour"][i]
                         
                         if chalk_team:
                             seed_diff = abs(int(chalk_team.get("seed", 0)) - int(truth_team.get("seed", 0)))
                             if seed_diff > 0:
                                 bonus = seed_diff * UPSET_BONUS_MULTIPLIERS["final_four"]
-                                team["bonus"] = bonus
+                                team["bonus"] = int(bonus)  # Ensure it's an integer
+                                print(f"Added Final Four bonus of {bonus} to {team['name']} (pos {i})")
+                                print(f"Truth FF team: {truth_team['name']} (seed {truth_team['seed']}), Chalk FF team: {chalk_team['name']} (seed {chalk_team['seed']})")
                             else:
                                 team["bonus"] = 0
                 else:
@@ -200,18 +209,18 @@ def compare_with_truth(bracket):
                     
                     # Add bonus points for correct Championship pick
                     if chalk_bracket:
-                        # Find this team in chalk bracket championship
+                        # Get the chalk team at the same position in the Championship
                         chalk_team = None
-                        for chalk_idx, chalk_t in enumerate(chalk_bracket["finalFour"]):
-                            if chalk_t and chalk_t.get("name") == truth_team.get("name"):
-                                chalk_team = chalk_t
-                                break
+                        if i < len(chalk_bracket["championship"]):
+                            chalk_team = chalk_bracket["championship"][i]
                         
                         if chalk_team:
                             seed_diff = abs(int(chalk_team.get("seed", 0)) - int(truth_team.get("seed", 0)))
                             if seed_diff > 0:
                                 bonus = seed_diff * UPSET_BONUS_MULTIPLIERS["championship"]
-                                team["bonus"] = bonus
+                                team["bonus"] = int(bonus)  # Ensure it's an integer
+                                print(f"Added Championship bonus of {bonus} to {team['name']} (pos {i})")
+                                print(f"Truth Champ team: {truth_team['name']} (seed {truth_team['seed']}), Chalk Champ team: {chalk_team['name']} (seed {chalk_team['seed']})")
                             else:
                                 team["bonus"] = 0
                 else:
@@ -235,18 +244,16 @@ def compare_with_truth(bracket):
                     
                     # Add bonus points for correct Champion pick
                     if chalk_bracket:
-                        # Find this team in chalk bracket champion
-                        chalk_team = None
-                        for chalk_idx, chalk_t in enumerate(chalk_bracket["championship"]):
-                            if chalk_t and chalk_t.get("name") == truth_champion.get("name"):
-                                chalk_team = chalk_t
-                                break
+                        # Get the chalk champion
+                        chalk_team = chalk_bracket.get("champion")
                         
                         if chalk_team:
                             seed_diff = abs(int(chalk_team.get("seed", 0)) - int(truth_champion.get("seed", 0)))
                             if seed_diff > 0:
                                 bonus = seed_diff * UPSET_BONUS_MULTIPLIERS["champion"]
-                                result_bracket["champion"]["bonus"] = bonus
+                                result_bracket["champion"]["bonus"] = int(bonus)  # Ensure it's an integer
+                                print(f"Added Champion bonus of {bonus} to {truth_champion['name']}")
+                                print(f"Truth Champion: {truth_champion['name']} (seed {truth_champion['seed']}), Chalk Champion: {chalk_team['name']} (seed {chalk_team['seed']})")
                             else:
                                 result_bracket["champion"]["bonus"] = 0
                 else:
