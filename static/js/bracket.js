@@ -772,7 +772,7 @@ function MarchMadnessBracket() {
         const hasBonus = team.bonus !== undefined && team.bonus > 0;
         const bonusValue = team.bonus;
         const bonusType = typeof team.bonus;
-        const bonusText = hasBonus ? ` (+${team.bonus})` : '';
+        const bonusText = hasBonus ? `+${team.bonus}` : '';
         const isReadOnly = readOnly || bracket.read_only === true;
         const showBonus = isReadOnly && serverClasses.includes('correct') && hasBonus;
 
