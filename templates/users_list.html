@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -34,6 +34,12 @@
         th {
             background-color: #f2f2f2;
             font-weight: bold;
+        }
+
+        th[colspan] {
+            background-color: #e0e0e0;
+            text-align: center;
+            border-bottom: 2px solid #003478;
         }
 
         tr:hover {
@@ -62,6 +68,16 @@
             color: #666;
             margin-bottom: 20px;
         }
+
+        .correct-picks-value {
+            color: #28a745;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .empty {
+            color: #666;
+        }
     </style>
 </head>
 
@@ -82,10 +98,20 @@
     <table>
         <thead>
             <tr>
-                <th>Username</th>
-                <th>Last Updated</th>
-                <th>Picks remaining</th>
+                <th rowspan="2">Username</th>
+                <th rowspan="2">Last Updated</th>
+                <th rowspan="2">Picks remaining</th>
+                <th rowspan="2">Champion</th>
+                <th colspan="7" style="text-align: center;">Correct Picks</th>
+            </tr>
+            <tr>
+                <th>Round of 32</th>
+                <th>Sweet 16</th>
+                <th>Elite 8</th>
+                <th>Final Four</th>
+                <th>Final</th>
                 <th>Champion</th>
+                <th>Total</th>
             </tr>
         </thead>
         <tbody>
@@ -96,7 +122,15 @@
                 </td>
                 <td>{{ user.last_updated }}</td>
                 <td>{{ user.picks_remaining }}</td>
-                <td>{{ user.champion }}</td>
+                <td>{% if user.champion %}{{ user.champion }}{% else %}<span class="empty">Not selected</span>{% endif
+                    %}</td>
+                <td><span class="correct-picks-value">{{ user.correct_picks.round_1 }}</span></td>
+                <td><span class="correct-picks-value">{{ user.correct_picks.round_2 }}</span></td>
+                <td><span class="correct-picks-value">{{ user.correct_picks.round_3 }}</span></td>
+                <td><span class="correct-picks-value">{{ user.correct_picks.final_four }}</span></td>
+                <td><span class="correct-picks-value">{{ user.correct_picks.championship }}</span></td>
+                <td><span class="correct-picks-value">{{ user.correct_picks.champion }}</span></td>
+                <td><span class="correct-picks-value">{{ user.correct_picks.total }}</span></td>
             </tr>
             {% endfor %}
         </tbody>

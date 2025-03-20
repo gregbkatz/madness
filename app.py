@@ -933,6 +933,85 @@ def users_list():
                                 
                                 # Calculate remaining picks
                                 picks_remaining = 63 - completed_picks
+                                
+                                # Compare with truth bracket to count correct picks
+                                correct_picks = {
+                                    "round_1": 0,  # Round 1
+                                    "round_2": 0,  # Round 2
+                                    "round_3": 0,  # Round 3
+                                    "final_four": 0,  # Final Four
+                                    "championship": 0,  # Championship
+                                    "champion": 0,     # The champion
+                                    "total": 0         # Total correct picks
+                                }
+                                
+                                # Get the most recent truth bracket
+                                truth_bracket = get_most_recent_truth_bracket()
+                                if truth_bracket:
+                                    # Count correct picks in regular rounds (1-3)
+                                    for region in ["midwest", "west", "south", "east"]:
+                                        for round_idx in range(1, 4):
+                                            # Skip if region or round doesn't exist in either bracket
+                                            if region not in bracket_data or round_idx >= len(bracket_data[region]) or \
+                                               region not in truth_bracket or round_idx >= len(truth_bracket[region]):
+                                                continue
+                                                
+                                            # Compare each position
+                                            for i in range(min(len(bracket_data[region][round_idx]), len(truth_bracket[region][round_idx]))):
+                                                user_team = bracket_data[region][round_idx][i]
+                                                truth_team = truth_bracket[region][round_idx][i]
+                                                
+                                                # Skip empty slots
+                                                if not user_team or not truth_team:
+                                                    continue
+                                                    
+                                                # Compare teams by name and seed
+                                                if (user_team.get('name') == truth_team.get('name') and 
+                                                    user_team.get('seed') == truth_team.get('seed')):
+                                                    # Track each round separately
+                                                    if round_idx == 1:
+                                                        correct_picks["round_1"] += 1
+                                                    elif round_idx == 2:
+                                                        correct_picks["round_2"] += 1
+                                                    elif round_idx == 3:
+                                                        correct_picks["round_3"] += 1
+                                                    correct_picks["total"] += 1
+                                    
+                                    # Count correct picks in Final Four
+                                    for i in range(min(len(bracket_data.get("finalFour", [])), len(truth_bracket.get("finalFour", [])))):
+                                        user_team = bracket_data["finalFour"][i]
+                                        truth_team = truth_bracket["finalFour"][i]
+                                        
+                                        if not user_team or not truth_team:
+                                            continue
+                                            
+                                        if (user_team.get('name') == truth_team.get('name') and 
+                                            user_team.get('seed') == truth_team.get('seed')):
+                                            correct_picks["final_four"] += 1
+                                            correct_picks["total"] += 1
+                                    
+                                    # Count correct picks in Championship
+                                    for i in range(min(len(bracket_data.get("championship", [])), len(truth_bracket.get("championship", [])))):
+                                        user_team = bracket_data["championship"][i]
+                                        truth_team = truth_bracket["championship"][i]
+                                        
+                                        if not user_team or not truth_team:
+                                            continue
+                                            
+                                        if (user_team.get('name') == truth_team.get('name') and 
+                                            user_team.get('seed') == truth_team.get('seed')):
+                                            correct_picks["championship"] += 1
+                                            correct_picks["total"] += 1
+                                    
+                                    # Check if champion is correct
+                                    user_champion = bracket_data.get("champion")
+                                    truth_champion = truth_bracket.get("champion")
+                                    
+                                    if user_champion and truth_champion and \
+                                       user_champion.get('name') == truth_champion.get('name') and \
+                                       user_champion.get('seed') == truth_champion.get('seed'):
+                                        correct_picks["champion"] = 1
+                                        correct_picks["total"] += 1
                             except Exception as e:
                                 print(f"Error calculating picks remaining for {username}: {str(e)}")
                         
@@ -942,7 +1021,16 @@ def users_list():
                             "last_updated": formatted_time,
                             "bracket_count": len(user_brackets),
                             "picks_remaining": picks_remaining,
-                            "champion": champion
+                            "champion": champion,
+                            "correct_picks": correct_picks if 'correct_picks' in locals() else {
+                                "round_1": 0, 
+                                "round_2": 0, 
+                                "round_3": 0,
+                                "final_four": 0, 
+                                "championship": 0,
+                                "champion": 0,
+                                "total": 0
+                            }
                         })
                         users.add(username)
         
