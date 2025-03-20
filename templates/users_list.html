@@ -102,7 +102,7 @@
                 <th rowspan="2">Last Updated</th>
                 <th rowspan="2">Picks remaining</th>
                 <th rowspan="2">Champion</th>
-                <th colspan="7" style="text-align: center;">Correct Picks</th>
+                <th colspan="7" style="text-align: center;">Scores (pts)</th>
             </tr>
             <tr>
                 <th>Round of 32</th>
@@ -124,13 +124,13 @@
                 <td>{{ user.picks_remaining }}</td>
                 <td>{% if user.champion %}{{ user.champion }}{% else %}<span class="empty">Not selected</span>{% endif
                     %}</td>
-                <td><span class="correct-picks-value">{{ user.correct_picks.round_1 }}</span></td>
-                <td><span class="correct-picks-value">{{ user.correct_picks.round_2 }}</span></td>
-                <td><span class="correct-picks-value">{{ user.correct_picks.round_3 }}</span></td>
-                <td><span class="correct-picks-value">{{ user.correct_picks.final_four }}</span></td>
-                <td><span class="correct-picks-value">{{ user.correct_picks.championship }}</span></td>
-                <td><span class="correct-picks-value">{{ user.correct_picks.champion }}</span></td>
-                <td><span class="correct-picks-value">{{ user.correct_picks.total }}</span></td>
+                <td><span class="correct-picks-value">{{ user.correct_picks.round_1_score }}</span></td>
+                <td><span class="correct-picks-value">{{ user.correct_picks.round_2_score }}</span></td>
+                <td><span class="correct-picks-value">{{ user.correct_picks.round_3_score }}</span></td>
+                <td><span class="correct-picks-value">{{ user.correct_picks.final_four_score }}</span></td>
+                <td><span class="correct-picks-value">{{ user.correct_picks.championship_score }}</span></td>
+                <td><span class="correct-picks-value">{{ user.correct_picks.champion_score }}</span></td>
+                <td><span class="correct-picks-value">{{ user.correct_picks.total_score }}</span></td>
             </tr>
             {% endfor %}
         </tbody>

@@ -1012,6 +1012,24 @@ def users_list():
                                        user_champion.get('seed') == truth_champion.get('seed'):
                                         correct_picks["champion"] = 1
                                         correct_picks["total"] += 1
+                                    
+                                    # Calculate scores based on pick counts
+                                    correct_picks["round_1_score"] = correct_picks["round_1"] * 10
+                                    correct_picks["round_2_score"] = correct_picks["round_2"] * 20
+                                    correct_picks["round_3_score"] = correct_picks["round_3"] * 40
+                                    correct_picks["final_four_score"] = correct_picks["final_four"] * 80
+                                    correct_picks["championship_score"] = correct_picks["championship"] * 120
+                                    correct_picks["champion_score"] = correct_picks["champion"] * 160
+                                    
+                                    # Calculate total score
+                                    correct_picks["total_score"] = (
+                                        correct_picks["round_1_score"] + 
+                                        correct_picks["round_2_score"] + 
+                                        correct_picks["round_3_score"] + 
+                                        correct_picks["final_four_score"] + 
+                                        correct_picks["championship_score"] + 
+                                        correct_picks["champion_score"]
+                                    )
                             except Exception as e:
                                 print(f"Error calculating picks remaining for {username}: {str(e)}")
                         
@@ -1029,13 +1047,20 @@ def users_list():
                                 "final_four": 0, 
                                 "championship": 0,
                                 "champion": 0,
-                                "total": 0
+                                "total": 0,
+                                "round_1_score": 0,
+                                "round_2_score": 0,
+                                "round_3_score": 0,
+                                "final_four_score": 0,
+                                "championship_score": 0,
+                                "champion_score": 0,
+                                "total_score": 0
                             }
                         })
                         users.add(username)
         
-        # Sort by username
-        user_data.sort(key=lambda x: x["username"].lower())
+        # Sort by total score (descending)
+        user_data.sort(key=lambda x: x["correct_picks"]["total_score"], reverse=True)
         
         return render_template('users_list.html', users=user_data)
     except Exception as e:
