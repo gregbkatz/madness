@@ -99,8 +99,8 @@
         <thead>
             <tr>
                 <th rowspan="2">Username</th>
-                <th rowspan="2">Last Updated</th>
-                <th rowspan="2">Picks remaining</th>
+                <!-- <th rowspan="2">Last Updated</th> -->
+                <!-- <th rowspan="2">Picks remaining</th> -->
                 <th rowspan="2">Champion</th>
                 <th colspan="7" style="text-align: center;">Scores (pts)</th>
             </tr>
@@ -120,8 +120,8 @@
                 <td>
                     <a href="/?username={{ user.username }}">{{ user.username }}</a>
                 </td>
-                <td>{{ user.last_updated }}</td>
-                <td>{{ user.picks_remaining }}</td>
+                <!-- <td>{{ user.last_updated }}</td> -->
+                <!-- <td>{{ user.picks_remaining }}</td> -->
                 <td>{% if user.champion %}{{ user.champion }}{% else %}<span class="empty">Not selected</span>{% endif
                     %}</td>
                 <td><span class="correct-picks-value">{{ user.correct_picks.round_1_score }}</span></td>
