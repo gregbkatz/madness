@@ -777,30 +777,18 @@ function MarchMadnessBracket() {
 
         // Get any server-provided classes for truth comparison
         const serverClasses = team.classes || '';
+        const isIncorrect = serverClasses.includes('incorrect');
+        const isReadOnly = readOnly || bracket.read_only === true;
 
         // Check for bonus points - only show if greater than 0
         const hasBonus = team.bonus !== undefined && team.bonus > 0;
         const bonusValue = team.bonus;
         const bonusType = typeof team.bonus;
         const bonusText = hasBonus ? `+${team.bonus}` : '';
-        const isReadOnly = readOnly || bracket.read_only === true;
         const showBonus = isReadOnly && serverClasses.includes('correct') && hasBonus;
 
         // Get shortened team name if available, otherwise use original name
         const displayName = teamNameShortcuts[team.name] || team.name;
-
-        // Debug logging
-        if (serverClasses.includes('correct')) {
-            console.log('Correct team found:', team.name);
-            console.log('  - hasBonus:', hasBonus);
-            console.log('  - bonus value:', bonusValue);
-            console.log('  - bonus type:', bonusType);
-            console.log('  - bonus === undefined:', team.bonus === undefined);
-            console.log('  - bonus == null:', team.bonus == null);
-            console.log('  - isReadOnly:', isReadOnly);
-            console.log('  - showBonus:', showBonus);
-            console.log('  - complete team object:', JSON.stringify(team));
-        }
 
         // Style for team boxes
         const teamStyle = {
@@ -828,6 +816,19 @@ function MarchMadnessBracket() {
             } : {}
         };
 
+        // Style for correct pick indicator
+        const correctPickStyle = {
+            backgroundColor: '#E8F5E9',
+            border: '1px solid #A5D6A7',
+            padding: '2px 5px',
+            marginTop: '2px',
+            fontSize: '9px',
+            borderRadius: '2px',
+            display: 'flex',
+            alignItems: 'center',
+            color: '#2E7D32'
+        };
+
         // If it's a TBD placeholder
         if (isTBD) {
             return (
@@ -837,6 +838,57 @@ function MarchMadnessBracket() {
             );
         }
 
+        // For read-only mode with incorrect picks, we want to show both the
+        // incorrect pick and what the correct pick should have been
+        if (isReadOnly && isIncorrect && team.truthTeam) {
+            const truthTeamName = teamNameShortcuts[team.truthTeam.name] || team.truthTeam.name;
+
+            return (
+                <div className={`team ${isWinner ? 'winner' : ''} ${serverClasses}`} onClick={onClick}>
+                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                        {/* User's incorrect pick with strikethrough */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            textDecoration: 'line-through',
+                            color: '#D32F2F',
+                            opacity: 0.8
+                        }}>
+                            <div style={{
+                                width: '16px',
+                                height: '16px',
+                                borderRadius: '50%',
+                                backgroundColor: '#f2f2f2',
+                                border: '1px solid #ddd',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                marginRight: '6px',
+                                fontSize: '9px',
+                                fontWeight: 'bold'
+                            }}>
+                                {team.seed}
+                            </div>
+                            <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100px' }}>
+                                {displayName}
+                            </div>
+                        </div>
+
+                        {/* Correct pick that should have been made - simple green text */}
+                        <div style={{
+                            fontSize: '10px',
+                            color: '#2E7D32',
+                            marginTop: '2px',
+                            marginLeft: '4px'
+                        }}>
+                            ({team.truthTeam.seed}) {truthTeamName}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Regular team display
         return (
             <div
                 style={teamStyle}
@@ -1126,9 +1178,37 @@ function MarchMadnessBracket() {
                             }}
                                 className={bracket.champion.classes || ''}
                             >
-                                <div style={{ fontWeight: 'bold', fontSize: '16px' }}>
-                                    {teamNameShortcuts[bracket.champion.name] || bracket.champion.name} ({bracket.champion.seed})
-                                </div>
+                                {/* Check if it's an incorrect pick in read-only mode */}
+                                {(readOnly || bracket.read_only) &&
+                                    bracket.champion.classes &&
+                                    bracket.champion.classes.includes('incorrect') &&
+                                    bracket.champion.truthTeam ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        {/* User's incorrect pick with strikethrough */}
+                                        <div style={{
+                                            fontWeight: 'bold',
+                                            fontSize: '16px',
+                                            textDecoration: 'line-through',
+                                            color: '#D32F2F',
+                                            opacity: 0.8
+                                        }}>
+                                            {teamNameShortcuts[bracket.champion.name] || bracket.champion.name} ({bracket.champion.seed})
+                                        </div>
+
+                                        {/* Correct champion that should have been picked - simple green text */}
+                                        <div style={{
+                                            color: '#2E7D32',
+                                            fontSize: '14px',
+                                            marginTop: '5px'
+                                        }}>
+                                            ({bracket.champion.truthTeam.seed}) {teamNameShortcuts[bracket.champion.truthTeam.name] || bracket.champion.truthTeam.name}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div style={{ fontWeight: 'bold', fontSize: '16px' }}>
+                                        {teamNameShortcuts[bracket.champion.name] || bracket.champion.name} ({bracket.champion.seed})
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div style={{

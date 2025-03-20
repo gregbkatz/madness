@@ -147,6 +147,13 @@ def compare_with_truth(bracket):
                         else:
                             team["classes"] += " incorrect"
                             team["correct"] = False
+                            # Add the truth team data for incorrect picks
+                            if truth_team:
+                                team["truthTeam"] = {
+                                    "name": truth_team["name"],
+                                    "seed": truth_team["seed"],
+                                    "abbrev": truth_team.get("abbrev", "")
+                                }
                     except (IndexError, KeyError, TypeError) as e:
                         # If any error occurs, skip comparison for this team
                         print(f"Error comparing team in {region} round {round_idx} position {i}: {str(e)}")
@@ -187,6 +194,13 @@ def compare_with_truth(bracket):
                 else:
                     team["classes"] += " incorrect"
                     team["correct"] = False
+                    # Add the truth team data for incorrect picks
+                    if truth_team:
+                        team["truthTeam"] = {
+                            "name": truth_team["name"],
+                            "seed": truth_team["seed"],
+                            "abbrev": truth_team.get("abbrev", "")
+                        }
             except (IndexError, KeyError, TypeError) as e:
                 print(f"Error comparing Final Four team at position {i}: {str(e)}")
                 continue
@@ -226,6 +240,13 @@ def compare_with_truth(bracket):
                 else:
                     team["classes"] += " incorrect"
                     team["correct"] = False
+                    # Add the truth team data for incorrect picks
+                    if truth_team:
+                        team["truthTeam"] = {
+                            "name": truth_team["name"],
+                            "seed": truth_team["seed"],
+                            "abbrev": truth_team.get("abbrev", "")
+                        }
             except (IndexError, KeyError, TypeError) as e:
                 print(f"Error comparing Championship team at position {i}: {str(e)}")
                 continue
@@ -259,6 +280,13 @@ def compare_with_truth(bracket):
                 else:
                     result_bracket["champion"]["classes"] += " incorrect"
                     result_bracket["champion"]["correct"] = False
+                    # Add the truth team data for incorrect picks
+                    if truth_champion:
+                        result_bracket["champion"]["truthTeam"] = {
+                            "name": truth_champion["name"],
+                            "seed": truth_champion["seed"],
+                            "abbrev": truth_champion.get("abbrev", "")
+                        }
         except (KeyError, TypeError) as e:
             print(f"Error comparing Champion: {str(e)}")
             pass
