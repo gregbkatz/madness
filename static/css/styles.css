@@ -861,3 +861,18 @@ html {
     /* Slightly darker red */
     box-shadow: 0 1px 3px rgba(139, 0, 0, 0.2) !important;
 }
+
+/* Champion display styles for truth comparison */
+div.correct {
+    background-color: rgba(50, 205, 50, 0.4) !important;
+    /* Light green */
+    border-color: rgba(0, 128, 0, 0.5) !important;
+    /* Dark green border */
+}
+
+div.incorrect {
+    background-color: rgba(255, 99, 71, 0.4) !important;
+    /* Light red */
+    border-color: rgba(178, 34, 34, 0.5) !important;
+    /* Dark red border */
+}

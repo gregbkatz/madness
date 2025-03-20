@@ -977,10 +977,10 @@ function MarchMadnessBracket() {
         const championDisplayStyle = {
             margin: '0 auto 15px auto',
             padding: '15px',
-            backgroundColor: '#e8f5e9',
+            backgroundColor: '#f8f9fa', // Light gray background instead of green
             borderRadius: '8px',
             boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-            border: '2px solid #4caf50',
+            border: '2px solid #ccc', // Gray border instead of green
             textAlign: 'center',
             maxWidth: '200px'
         };
@@ -1075,16 +1075,17 @@ function MarchMadnessBracket() {
                     <div style={championDisplayStyle}>
                         <div style={{ marginBottom: '10px' }}>
                             <span role="img" aria-label="trophy" style={{ fontSize: '24px' }}>🏆</span>
-                            <div style={{ fontWeight: 'bold', fontSize: '16px', color: '#2e7d32' }}>Champion</div>
+                            <div style={{ fontWeight: 'bold', fontSize: '16px', color: '#333' }}>Champion</div>
                         </div>
                         {bracket.champion ? (
                             <div style={{
                                 padding: '10px',
                                 backgroundColor: 'white',
                                 borderRadius: '4px',
-                                border: '1px solid #4caf50',
+                                border: '1px solid #ccc', // Neutral gray border instead of green
                                 cursor: 'pointer'
                             }}
+                                className={bracket.champion.classes || ''}
                             >
                                 <div style={{ fontWeight: 'bold', fontSize: '16px' }}>{bracket.champion.name} ({bracket.champion.seed})</div>
                             </div>
