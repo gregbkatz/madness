@@ -732,7 +732,6 @@ def users_list():
                     if username not in users:
                         # Get the most recent file for this user
                         timestamp = extract_timestamp_from_filename(file)
-                        formatted_time = timestamp.strftime("%Y-%m-%d %I:%M %p") if timestamp else "Unknown"
                         
                         # Get number of brackets for this user
                         user_brackets = [f for f in os.listdir('saved_brackets') 
@@ -750,9 +749,11 @@ def users_list():
                         # Calculate picks remaining for latest bracket
                         picks_remaining = 63  # Default - all picks remaining
                         champion = "None"  # Default - no champion selected
+                        formatted_time = "Unknown"
                         
                         if sorted_brackets:
                             latest_bracket_file = sorted_brackets[0][0]
+                            formatted_time = sorted_brackets[0][1].strftime("%Y-%m-%d %I:%M %p")
                             file_path = os.path.join('saved_brackets', latest_bracket_file)
                             try:
                                 with open(file_path, 'r') as f:
