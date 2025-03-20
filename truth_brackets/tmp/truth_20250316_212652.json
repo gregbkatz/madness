@@ -1,0 +1,457 @@
+{
+  "midwest": [
+    [
+      {
+        "seed": 1,
+        "name": "Houston",
+        "abbrev": "KU"
+      },
+      {
+        "seed": 16,
+        "name": "SIUE",
+        "abbrev": "HOW"
+      },
+      {
+        "seed": 8,
+        "name": "Gonzaga",
+        "abbrev": "ARK"
+      },
+      {
+        "seed": 9,
+        "name": "Georgia",
+        "abbrev": "ILL"
+      },
+      {
+        "seed": 5,
+        "name": "Clemson",
+        "abbrev": "SMC"
+      },
+      {
+        "seed": 12,
+        "name": "McNeese",
+        "abbrev": "VCU"
+      },
+      {
+        "seed": 4,
+        "name": "Purdue",
+        "abbrev": "CONN"
+      },
+      {
+        "seed": 13,
+        "name": "High Point",
+        "abbrev": "IONA"
+      },
+      {
+        "seed": 6,
+        "name": "Illinois",
+        "abbrev": "TCU"
+      },
+      {
+        "seed": 11,
+        "name": "Texas/Xavier",
+        "abbrev": "ASU"
+      },
+      {
+        "seed": 3,
+        "name": "Kentucky",
+        "abbrev": "GON"
+      },
+      {
+        "seed": 14,
+        "name": "Troy",
+        "abbrev": "GCU"
+      },
+      {
+        "seed": 7,
+        "name": "UCLA",
+        "abbrev": "NW"
+      },
+      {
+        "seed": 10,
+        "name": "Utah St",
+        "abbrev": "BSU"
+      },
+      {
+        "seed": 2,
+        "name": "Tennessee",
+        "abbrev": "UCLA"
+      },
+      {
+        "seed": 15,
+        "name": "Wofford",
+        "abbrev": "UNCA"
+      }
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ]
+  ],
+  "west": [
+    [
+      {
+        "seed": 1,
+        "name": "Florida",
+        "abbrev": "PUR"
+      },
+      {
+        "seed": 16,
+        "name": "Norfolk St",
+        "abbrev": "FDU"
+      },
+      {
+        "seed": 8,
+        "name": "UConn",
+        "abbrev": "MEM"
+      },
+      {
+        "seed": 9,
+        "name": "Oklahoma",
+        "abbrev": "FAU"
+      },
+      {
+        "seed": 5,
+        "name": "Memphis",
+        "abbrev": "DUKE"
+      },
+      {
+        "seed": 12,
+        "name": "Colorado St",
+        "abbrev": "ORU"
+      },
+      {
+        "seed": 4,
+        "name": "Maryland",
+        "abbrev": "TENN"
+      },
+      {
+        "seed": 13,
+        "name": "Grand Canyon",
+        "abbrev": "ULL"
+      },
+      {
+        "seed": 6,
+        "name": "Missouri",
+        "abbrev": "UK"
+      },
+      {
+        "seed": 11,
+        "name": "Drake",
+        "abbrev": "PROV"
+      },
+      {
+        "seed": 3,
+        "name": "Texas Tech",
+        "abbrev": "KSU"
+      },
+      {
+        "seed": 14,
+        "name": "UNC Wilmington",
+        "abbrev": "MONT"
+      },
+      {
+        "seed": 7,
+        "name": "Kansas",
+        "abbrev": "MSU"
+      },
+      {
+        "seed": 10,
+        "name": "Arkansas",
+        "abbrev": "USC"
+      },
+      {
+        "seed": 2,
+        "name": "St John's",
+        "abbrev": "MARQ"
+      },
+      {
+        "seed": 15,
+        "name": "Omaha",
+        "abbrev": "UVM"
+      }
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ]
+  ],
+  "south": [
+    [
+      {
+        "seed": 1,
+        "name": "Auburn",
+        "abbrev": "ALA"
+      },
+      {
+        "seed": 16,
+        "name": "AL St/St Francis U",
+        "abbrev": "TAMC"
+      },
+      {
+        "seed": 8,
+        "name": "Louisville",
+        "abbrev": "MD"
+      },
+      {
+        "seed": 9,
+        "name": "Creighton",
+        "abbrev": "WVU"
+      },
+      {
+        "seed": 5,
+        "name": "Michigan",
+        "abbrev": "SDSU"
+      },
+      {
+        "seed": 12,
+        "name": "UC San Diego",
+        "abbrev": "COFC"
+      },
+      {
+        "seed": 4,
+        "name": "Texas A&M",
+        "abbrev": "UVA"
+      },
+      {
+        "seed": 13,
+        "name": "Yale",
+        "abbrev": "FUR"
+      },
+      {
+        "seed": 6,
+        "name": "Ole Miss",
+        "abbrev": "CREI"
+      },
+      {
+        "seed": 11,
+        "name": "San Diego St/NC",
+        "abbrev": "NCST"
+      },
+      {
+        "seed": 3,
+        "name": "Iowa St",
+        "abbrev": "BAY"
+      },
+      {
+        "seed": 14,
+        "name": "Lipscomb",
+        "abbrev": "UCSB"
+      },
+      {
+        "seed": 7,
+        "name": "Marquette",
+        "abbrev": "MIZ"
+      },
+      {
+        "seed": 10,
+        "name": "New Mexico",
+        "abbrev": "USU"
+      },
+      {
+        "seed": 2,
+        "name": "Michigan St",
+        "abbrev": "ARIZ"
+      },
+      {
+        "seed": 15,
+        "name": "Bryant",
+        "abbrev": "PRIN"
+      }
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ]
+  ],
+  "east": [
+    [
+      {
+        "seed": 1,
+        "name": "Duke",
+        "abbrev": "HOU"
+      },
+      {
+        "seed": 16,
+        "name": "AU/Mt St Mary's",
+        "abbrev": "NKU"
+      },
+      {
+        "seed": 8,
+        "name": "Mississppi St",
+        "abbrev": "IOWA"
+      },
+      {
+        "seed": 9,
+        "name": "Baylor",
+        "abbrev": "AUB"
+      },
+      {
+        "seed": 5,
+        "name": "Oregon",
+        "abbrev": "MIA"
+      },
+      {
+        "seed": 12,
+        "name": "Liberty",
+        "abbrev": "DRKE"
+      },
+      {
+        "seed": 4,
+        "name": "Arizona",
+        "abbrev": "IND"
+      },
+      {
+        "seed": 13,
+        "name": "Akron",
+        "abbrev": "KENT"
+      },
+      {
+        "seed": 6,
+        "name": "BYU",
+        "abbrev": "ISU"
+      },
+      {
+        "seed": 11,
+        "name": "VCU",
+        "abbrev": "PITT"
+      },
+      {
+        "seed": 3,
+        "name": "Wisconsin",
+        "abbrev": "XAV"
+      },
+      {
+        "seed": 14,
+        "name": "Montana",
+        "abbrev": "KENN"
+      },
+      {
+        "seed": 7,
+        "name": "St Mary's",
+        "abbrev": "TAMU"
+      },
+      {
+        "seed": 10,
+        "name": "Vanderbilt",
+        "abbrev": "PSU"
+      },
+      {
+        "seed": 2,
+        "name": "Alabama",
+        "abbrev": "TEX"
+      },
+      {
+        "seed": 15,
+        "name": "Robert Morris",
+        "abbrev": "COLG"
+      }
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ]
+  ],
+  "finalFour": [
+    null,
+    null,
+    null,
+    null
+  ],
+  "championship": [
+    null,
+    null
+  ],
+  "champion": null,
+  "winners": {
+    "midwest": [
+      [],
+      [],
+      [],
+      []
+    ],
+    "west": [
+      [],
+      [],
+      [],
+      []
+    ],
+    "south": [
+      [],
+      [],
+      [],
+      []
+    ],
+    "east": [
+      [],
+      [],
+      [],
+      []
+    ],
+    "finalFour": [],
+    "championship": []
+  }
+}
