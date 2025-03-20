@@ -8,6 +8,7 @@ import copy
 import re
 import sys
 import argparse
+import glob  # For finding truth bracket files
 
 # Add command-line argument parsing
 parser = argparse.ArgumentParser(description='March Madness Bracket Application')
@@ -24,6 +25,128 @@ READ_ONLY_MODE = args.read_only
 
 # Ensure the saved_brackets directory exists
 os.makedirs('saved_brackets', exist_ok=True)
+# Ensure the truth_brackets directory exists
+os.makedirs('truth_brackets', exist_ok=True)
+
+# Function to find the most recent truth bracket
+def get_most_recent_truth_bracket():
+    """Find and load the most recent truth bracket file."""
+    try:
+        # Get all bracket files in the truth_brackets directory
+        truth_files = glob.glob('truth_brackets/*.json')
+        
+        if not truth_files:
+            return None
+            
+        # Sort by modification time, most recent first
+        truth_files.sort(key=os.path.getmtime, reverse=True)
+        
+        # Load the most recent file
+        with open(truth_files[0], 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading truth bracket: {str(e)}")
+        return None
+
+# Function to compare a bracket with the truth bracket and add comparison CSS classes
+def compare_with_truth(bracket):
+    """Compare a bracket with the most recent truth bracket and add CSS classes."""
+    truth_bracket = get_most_recent_truth_bracket()
+    if not truth_bracket or not bracket:
+        return bracket
+        
+    # Deep copy the bracket to avoid modifying the original
+    result_bracket = copy.deepcopy(bracket)
+    
+    # Add a classes field to each team if it doesn't exist
+    for region in ["midwest", "west", "south", "east"]:
+        for round_idx in range(len(result_bracket[region])):
+            for i in range(len(result_bracket[region][round_idx])):
+                team = result_bracket[region][round_idx][i]
+                if team:
+                    if not isinstance(team, dict):
+                        # Skip if team is not a dictionary
+                        continue
+                    
+                    # Initialize the classes field if it doesn't exist
+                    if "classes" not in team:
+                        team["classes"] = ""
+                    
+                    # Skip first round as it's pre-filled
+                    if round_idx == 0:
+                        continue
+                        
+                    # Compare with truth bracket
+                    try:
+                        truth_team = truth_bracket[region][round_idx][i]
+                        
+                        # If truth team is None, leave as is
+                        if not truth_team:
+                            continue
+                            
+                        # Compare teams by name and seed
+                        if team["name"] == truth_team["name"] and team["seed"] == truth_team["seed"]:
+                            team["classes"] += " correct"
+                        else:
+                            team["classes"] += " incorrect"
+                    except (IndexError, KeyError, TypeError):
+                        # If any error occurs, skip comparison for this team
+                        continue
+    
+    # Compare Final Four
+    for i in range(len(result_bracket["finalFour"])):
+        team = result_bracket["finalFour"][i]
+        if team:
+            if "classes" not in team:
+                team["classes"] = ""
+                
+            try:
+                truth_team = truth_bracket["finalFour"][i]
+                if not truth_team:
+                    continue
+                    
+                if team["name"] == truth_team["name"] and team["seed"] == truth_team["seed"]:
+                    team["classes"] += " correct"
+                else:
+                    team["classes"] += " incorrect"
+            except (IndexError, KeyError, TypeError):
+                continue
+                
+    # Compare Championship
+    for i in range(len(result_bracket["championship"])):
+        team = result_bracket["championship"][i]
+        if team:
+            if "classes" not in team:
+                team["classes"] = ""
+                
+            try:
+                truth_team = truth_bracket["championship"][i]
+                if not truth_team:
+                    continue
+                    
+                if team["name"] == truth_team["name"] and team["seed"] == truth_team["seed"]:
+                    team["classes"] += " correct"
+                else:
+                    team["classes"] += " incorrect"
+            except (IndexError, KeyError, TypeError):
+                continue
+    
+    # Compare Champion
+    if result_bracket["champion"]:
+        if "classes" not in result_bracket["champion"]:
+            result_bracket["champion"]["classes"] = ""
+            
+        try:
+            truth_champion = truth_bracket["champion"]
+            if truth_champion:
+                if result_bracket["champion"]["name"] == truth_champion["name"] and result_bracket["champion"]["seed"] == truth_champion["seed"]:
+                    result_bracket["champion"]["classes"] += " correct"
+                else:
+                    result_bracket["champion"]["classes"] += " incorrect"
+        except (KeyError, TypeError):
+            pass
+    
+    return result_bracket
 
 # Helper function to validate username contains only filename-safe characters
 def is_valid_username(username):
@@ -693,6 +816,10 @@ def manage_bracket():
     # Ensure winners are updated before returning
     user_bracket = update_winners(user_bracket)
     update_user_bracket(user_bracket)
+    
+    # If in read-only mode, compare with truth bracket
+    if session.get('read_only', False):
+        user_bracket = compare_with_truth(user_bracket)
     
     print('Bracket data being returned:', pretty_print_bracket(user_bracket))
     return jsonify(user_bracket)

@@ -765,6 +765,9 @@ function MarchMadnessBracket() {
             );
         }
 
+        // Get any server-provided classes for truth comparison
+        const serverClasses = team.classes || '';
+
         // Style for team boxes
         const teamStyle = {
             display: 'flex',
@@ -794,7 +797,7 @@ function MarchMadnessBracket() {
         // If it's a TBD placeholder
         if (isTBD) {
             return (
-                <div style={teamStyle} className="team tbd">
+                <div style={teamStyle} className={`team tbd ${serverClasses}`}>
                     TBD
                 </div>
             );
@@ -803,7 +806,7 @@ function MarchMadnessBracket() {
         return (
             <div
                 style={teamStyle}
-                className={`team ${isWinner ? 'winner' : ''}`}
+                className={`team ${isWinner ? 'winner' : ''} ${serverClasses}`}
                 onClick={onClick}
             >
                 <div style={{ display: 'flex', alignItems: 'center' }}>
