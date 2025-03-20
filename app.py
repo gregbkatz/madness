@@ -6,9 +6,19 @@ import json
 import os
 import copy
 import re
+import sys
+import argparse
+
+# Add command-line argument parsing
+parser = argparse.ArgumentParser(description='March Madness Bracket Application')
+parser.add_argument('--read-only', action='store_true', help='Run the application in read-only mode')
+args = parser.parse_args()
 
 app = Flask(__name__)
 app.secret_key = 'march_madness_simple_key'  # Secret key for session
+
+# Store read-only mode as a global application setting
+READ_ONLY_MODE = args.read_only
 
 # No longer using a global bracket - each user will have their own in their session
 
@@ -89,8 +99,8 @@ def index():
     if 'username' not in session:
         return redirect(url_for('show_login'))
     
-    # Check for read_only parameter in query string
-    read_only = request.args.get('read_only', 'false').lower() == 'true'
+    # Use the global read-only setting instead of URL parameter
+    read_only = READ_ONLY_MODE
     
     # Check if there's a username parameter for viewing another user's bracket
     view_username = request.args.get('username')
@@ -111,7 +121,7 @@ def index():
                         latest_bracket = file
             
             if latest_bracket:
-                # Set read-only mode (force it when viewing another user's bracket)
+                # Set read-only mode when viewing another user's bracket, regardless of global setting
                 read_only = True
                 
                 # Load the bracket

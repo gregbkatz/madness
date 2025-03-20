@@ -164,14 +164,6 @@ function MarchMadnessBracket() {
 
     // Fetch initial data
     React.useEffect(() => {
-        // Check for read-only mode in URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const readOnlyParam = urlParams.get('readOnly');
-        if (readOnlyParam === 'true') {
-            setReadOnly(true);
-            console.log('Bracket is in read-only mode');
-        }
-
         // Fetch teams
         fetch('/api/teams')
             .then(response => response.json())
@@ -186,6 +178,12 @@ function MarchMadnessBracket() {
             .then(data => {
                 if (data.success) {
                     setBracketStatus(data.status);
+
+                    // Get read-only state from API response instead of URL
+                    if (data.read_only) {
+                        setReadOnly(true);
+                        console.log('Bracket is in read-only mode (server-controlled)');
+                    }
 
                     // Update save status based on bracket status
                     const saveStatus = document.getElementById('save-status');

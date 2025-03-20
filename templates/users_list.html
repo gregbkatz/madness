@@ -92,7 +92,7 @@
             {% for user in users %}
             <tr>
                 <td>
-                    <a href="/?readOnly=true&username={{ user.username }}">{{ user.username }}</a>
+                    <a href="/?username={{ user.username }}">{{ user.username }}</a>
                 </td>
                 <td>{{ user.last_updated }}</td>
                 <td>{{ user.picks_remaining }}</td>
