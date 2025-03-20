@@ -33,7 +33,7 @@ def get_most_recent_truth_bracket():
     """Find and load the most recent truth bracket file."""
     try:
         # Get all bracket files in the truth_brackets directory
-        truth_files = glob.glob('truth_brackets/tmp/*.json')
+        truth_files = glob.glob('truth_brackets/*.json')
         
         if not truth_files:
             return None
