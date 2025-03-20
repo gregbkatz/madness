@@ -738,11 +738,60 @@ def users_list():
                         user_brackets = [f for f in os.listdir('saved_brackets') 
                                        if f.endswith('.json') and f.startswith(f"bracket_{username}_")]
                         
+                        # Sort brackets by timestamp to find the latest one
+                        sorted_brackets = []
+                        for bracket_file in user_brackets:
+                            bracket_timestamp = extract_timestamp_from_filename(bracket_file)
+                            if bracket_timestamp:
+                                sorted_brackets.append((bracket_file, bracket_timestamp))
+                        
+                        sorted_brackets.sort(key=lambda x: x[1], reverse=True)
+                        
+                        # Calculate picks remaining for latest bracket
+                        picks_remaining = 63  # Default - all picks remaining
+                        
+                        if sorted_brackets:
+                            latest_bracket_file = sorted_brackets[0][0]
+                            file_path = os.path.join('saved_brackets', latest_bracket_file)
+                            try:
+                                with open(file_path, 'r') as f:
+                                    bracket_data = json.load(f)
+                                
+                                # Count completed picks (similar to calculateCompletionStatus in bracket.js)
+                                completed_picks = 0
+                                
+                                # Count teams in regional rounds (rounds 1-3)
+                                for region in ["midwest", "west", "south", "east"]:
+                                    for round_idx in range(1, 4):
+                                        for team in bracket_data[region][round_idx]:
+                                            if team is not None:
+                                                completed_picks += 1
+                                
+                                # Count Final Four picks
+                                for team in bracket_data["finalFour"]:
+                                    if team is not None:
+                                        completed_picks += 1
+                                
+                                # Count Championship picks
+                                for team in bracket_data["championship"]:
+                                    if team is not None:
+                                        completed_picks += 1
+                                
+                                # Count Champion
+                                if bracket_data["champion"] is not None:
+                                    completed_picks += 1
+                                
+                                # Calculate remaining picks
+                                picks_remaining = 63 - completed_picks
+                            except Exception as e:
+                                print(f"Error calculating picks remaining for {username}: {str(e)}")
+                        
                         # Add to user data
                         user_data.append({
                             "username": username,
                             "last_updated": formatted_time,
-                            "bracket_count": len(user_brackets)
+                            "bracket_count": len(user_brackets),
+                            "picks_remaining": picks_remaining
                         })
                         users.add(username)
         

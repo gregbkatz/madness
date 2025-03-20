@@ -84,17 +84,17 @@
             <tr>
                 <th>Username</th>
                 <th>Last Updated</th>
-                <th>View</th>
+                <th>Picks remaining</th>
             </tr>
         </thead>
         <tbody>
             {% for user in users %}
             <tr>
-                <td>{{ user.username }}</td>
-                <td>{{ user.last_updated }}</td>
                 <td>
-                    <a href="/?readOnly=true&username={{ user.username }}" target="_blank">View</a>
+                    <a href="/?readOnly=true&username={{ user.username }}" target="_blank">{{ user.username }}</a>
                 </td>
+                <td>{{ user.last_updated }}</td>
+                <td>{{ user.picks_remaining }}</td>
             </tr>
             {% endfor %}
         </tbody>
