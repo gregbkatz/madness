@@ -84,7 +84,6 @@
             <tr>
                 <th>Username</th>
                 <th>Last Updated</th>
-                <th>Number of Brackets</th>
                 <th>View</th>
             </tr>
         </thead>
@@ -93,9 +92,8 @@
             <tr>
                 <td>{{ user.username }}</td>
                 <td>{{ user.last_updated }}</td>
-                <td>{{ user.bracket_count }}</td>
                 <td>
-                    <a href="/?readOnly=true&username={{ user.username }}" target="_blank">View Latest</a>
+                    <a href="/?readOnly=true&username={{ user.username }}" target="_blank">View</a>
                 </td>
             </tr>
             {% endfor %}
