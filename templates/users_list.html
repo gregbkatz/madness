@@ -103,6 +103,7 @@
                 <!-- <th rowspan="2">Picks remaining</th> -->
                 <th rowspan="2">Champion</th>
                 <th colspan="7" style="text-align: center;">Scores (pts)</th>
+                <th colspan="2" style="text-align: center;">Bonus & Total</th>
             </tr>
             <tr>
                 <th>Round of 32</th>
@@ -112,6 +113,8 @@
                 <th>Final</th>
                 <th>Champion</th>
                 <th>Total</th>
+                <th>Bonus</th>
+                <th>Total+Bonus</th>
             </tr>
         </thead>
         <tbody>
@@ -131,6 +134,8 @@
                 <td><span class="correct-picks-value">{{ user.correct_picks.championship_score }}</span></td>
                 <td><span class="correct-picks-value">{{ user.correct_picks.champion_score }}</span></td>
                 <td><span class="correct-picks-value">{{ user.correct_picks.total_score }}</span></td>
+                <td><span class="correct-picks-value">{{ user.correct_picks.total_bonus }}</span></td>
+                <td><span class="correct-picks-value">{{ user.correct_picks.total_with_bonus }}</span></td>
             </tr>
             {% endfor %}
         </tbody>

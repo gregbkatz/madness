@@ -33,7 +33,7 @@ def get_most_recent_truth_bracket():
     """Find and load the most recent truth bracket file."""
     try:
         # Get all bracket files in the truth_brackets directory
-        truth_files = glob.glob('truth_brackets/*.json')
+        truth_files = glob.glob('truth_brackets/tmp/*.json')
         
         if not truth_files:
             return None
@@ -47,6 +47,26 @@ def get_most_recent_truth_bracket():
     except Exception as e:
         print(f"Error loading truth bracket: {str(e)}")
         return None
+
+# Function to load the "all chalk" bracket
+def get_chalk_bracket():
+    """Load the all chalk bracket from the predefined file."""
+    try:
+        with open('data/bracket_all_chalk.json', 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading chalk bracket: {str(e)}")
+        return None
+
+# Define upset bonus multipliers for each round
+UPSET_BONUS_MULTIPLIERS = {
+    "round_1": 2,
+    "round_2": 5, 
+    "round_3": 10,
+    "final_four": 20,
+    "championship": 20,
+    "champion": 20
+}
 
 # Function to compare a bracket with the truth bracket and add comparison CSS classes
 def compare_with_truth(bracket):
@@ -1030,6 +1050,151 @@ def users_list():
                                         correct_picks["championship_score"] + 
                                         correct_picks["champion_score"]
                                     )
+                                    
+                                    # Calculate upset bonus
+                                    # Load the chalk bracket
+                                    chalk_bracket = get_chalk_bracket()
+                                    if chalk_bracket and truth_bracket:
+                                        # Initialize bonus counters
+                                        correct_picks["round_1_bonus"] = 0
+                                        correct_picks["round_2_bonus"] = 0
+                                        correct_picks["round_3_bonus"] = 0
+                                        correct_picks["final_four_bonus"] = 0
+                                        correct_picks["championship_bonus"] = 0
+                                        correct_picks["champion_bonus"] = 0
+                                        correct_picks["total_bonus"] = 0
+                                        
+                                        # Calculate upset bonus for regional rounds
+                                        for region in ["midwest", "west", "south", "east"]:
+                                            for round_idx in range(1, 4):
+                                                # Skip if region or round doesn't exist in any bracket
+                                                if (region not in bracket_data or round_idx >= len(bracket_data[region]) or
+                                                    region not in truth_bracket or round_idx >= len(truth_bracket[region]) or
+                                                    region not in chalk_bracket or round_idx >= len(chalk_bracket[region])):
+                                                    continue
+                                                
+                                                # Compare each position
+                                                for i in range(min(len(bracket_data[region][round_idx]), 
+                                                                  len(truth_bracket[region][round_idx]),
+                                                                  len(chalk_bracket[region][round_idx]))):
+                                                    user_team = bracket_data[region][round_idx][i]
+                                                    truth_team = truth_bracket[region][round_idx][i]
+                                                    chalk_team = chalk_bracket[region][round_idx][i]
+                                                    
+                                                    # Skip empty slots
+                                                    if not user_team or not truth_team or not chalk_team:
+                                                        continue
+                                                    
+                                                    # If user correctly picked this team
+                                                    if (user_team.get('name') == truth_team.get('name') and 
+                                                        user_team.get('seed') == truth_team.get('seed')):
+                                                        
+                                                        # Calculate seed difference with chalk team
+                                                        truth_seed = int(truth_team.get('seed', 0))
+                                                        chalk_seed = int(chalk_team.get('seed', 0))
+                                                        
+                                                        # Only consider upsets (when actual winner's seed is higher than chalk winner's seed)
+                                                        if truth_seed > chalk_seed:
+                                                            seed_diff = truth_seed - chalk_seed
+                                                            
+                                                            # Apply bonus based on round
+                                                            if round_idx == 1:
+                                                                bonus = seed_diff * UPSET_BONUS_MULTIPLIERS["round_1"]
+                                                                correct_picks["round_1_bonus"] += bonus
+                                                            elif round_idx == 2:
+                                                                bonus = seed_diff * UPSET_BONUS_MULTIPLIERS["round_2"]
+                                                                correct_picks["round_2_bonus"] += bonus
+                                                            elif round_idx == 3:
+                                                                bonus = seed_diff * UPSET_BONUS_MULTIPLIERS["round_3"]
+                                                                correct_picks["round_3_bonus"] += bonus
+                                                            
+                                                            correct_picks["total_bonus"] += bonus
+                                        
+                                        # Calculate upset bonus for Final Four
+                                        for i in range(min(len(bracket_data.get("finalFour", [])),
+                                                          len(truth_bracket.get("finalFour", [])),
+                                                          len(chalk_bracket.get("finalFour", [])))):
+                                            user_team = bracket_data["finalFour"][i]
+                                            truth_team = truth_bracket["finalFour"][i]
+                                            chalk_team = chalk_bracket["finalFour"][i]
+                                            
+                                            if not user_team or not truth_team or not chalk_team:
+                                                continue
+                                            
+                                            # If user correctly picked this team
+                                            if (user_team.get('name') == truth_team.get('name') and 
+                                                user_team.get('seed') == truth_team.get('seed')):
+                                                
+                                                # Calculate seed difference with chalk team
+                                                truth_seed = int(truth_team.get('seed', 0))
+                                                chalk_seed = int(chalk_team.get('seed', 0))
+                                                
+                                                # Only consider upsets
+                                                if truth_seed > chalk_seed:
+                                                    seed_diff = truth_seed - chalk_seed
+                                                    bonus = seed_diff * UPSET_BONUS_MULTIPLIERS["final_four"]
+                                                    correct_picks["final_four_bonus"] += bonus
+                                                    correct_picks["total_bonus"] += bonus
+                                        
+                                        # Calculate upset bonus for Championship
+                                        for i in range(min(len(bracket_data.get("championship", [])),
+                                                          len(truth_bracket.get("championship", [])),
+                                                          len(chalk_bracket.get("championship", [])))):
+                                            user_team = bracket_data["championship"][i]
+                                            truth_team = truth_bracket["championship"][i]
+                                            chalk_team = chalk_bracket["championship"][i]
+                                            
+                                            if not user_team or not truth_team or not chalk_team:
+                                                continue
+                                            
+                                            # If user correctly picked this team
+                                            if (user_team.get('name') == truth_team.get('name') and 
+                                                user_team.get('seed') == truth_team.get('seed')):
+                                                
+                                                # Calculate seed difference with chalk team
+                                                truth_seed = int(truth_team.get('seed', 0))
+                                                chalk_seed = int(chalk_team.get('seed', 0))
+                                                
+                                                # Only consider upsets
+                                                if truth_seed > chalk_seed:
+                                                    seed_diff = truth_seed - chalk_seed
+                                                    bonus = seed_diff * UPSET_BONUS_MULTIPLIERS["championship"]
+                                                    correct_picks["championship_bonus"] += bonus
+                                                    correct_picks["total_bonus"] += bonus
+                                        
+                                        # Calculate upset bonus for Champion
+                                        user_champion = bracket_data.get("champion")
+                                        truth_champion = truth_bracket.get("champion")
+                                        chalk_champion = chalk_bracket.get("champion")
+                                        
+                                        if user_champion and truth_champion and chalk_champion:
+                                            # If user correctly picked the champion
+                                            if (user_champion.get('name') == truth_champion.get('name') and 
+                                                user_champion.get('seed') == truth_champion.get('seed')):
+                                                
+                                                # Calculate seed difference with chalk champion
+                                                truth_seed = int(truth_champion.get('seed', 0))
+                                                chalk_seed = int(chalk_champion.get('seed', 0))
+                                                
+                                                # Only consider upsets
+                                                if truth_seed > chalk_seed:
+                                                    seed_diff = truth_seed - chalk_seed
+                                                    bonus = seed_diff * UPSET_BONUS_MULTIPLIERS["champion"]
+                                                    correct_picks["champion_bonus"] = bonus
+                                                    correct_picks["total_bonus"] += bonus
+                                        
+                                        # Calculate total score with bonus
+                                        correct_picks["total_with_bonus"] = correct_picks["total_score"] + correct_picks["total_bonus"]
+                                    else:
+                                        # Initialize bonus fields with zero values if chalk bracket is missing
+                                        correct_picks["round_1_bonus"] = 0
+                                        correct_picks["round_2_bonus"] = 0
+                                        correct_picks["round_3_bonus"] = 0
+                                        correct_picks["final_four_bonus"] = 0
+                                        correct_picks["championship_bonus"] = 0
+                                        correct_picks["champion_bonus"] = 0
+                                        correct_picks["total_bonus"] = 0
+                                        correct_picks["total_with_bonus"] = correct_picks["total_score"]
                             except Exception as e:
                                 print(f"Error calculating picks remaining for {username}: {str(e)}")
                         
@@ -1054,13 +1219,21 @@ def users_list():
                                 "final_four_score": 0,
                                 "championship_score": 0,
                                 "champion_score": 0,
-                                "total_score": 0
+                                "total_score": 0,
+                                "round_1_bonus": 0,
+                                "round_2_bonus": 0,
+                                "round_3_bonus": 0,
+                                "final_four_bonus": 0,
+                                "championship_bonus": 0,
+                                "champion_bonus": 0,
+                                "total_bonus": 0,
+                                "total_with_bonus": 0
                             }
                         })
                         users.add(username)
         
-        # Sort by total score (descending)
-        user_data.sort(key=lambda x: x["correct_picks"]["total_score"], reverse=True)
+        # Sort by total score with bonus (descending)
+        user_data.sort(key=lambda x: x["correct_picks"]["total_with_bonus"], reverse=True)
         
         return render_template('users_list.html', users=user_data)
     except Exception as e:
