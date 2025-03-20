@@ -768,8 +768,8 @@ function MarchMadnessBracket() {
         // Get any server-provided classes for truth comparison
         const serverClasses = team.classes || '';
 
-        // Check for bonus points
-        const hasBonus = team.bonus !== undefined;
+        // Check for bonus points - only show if greater than 0
+        const hasBonus = team.bonus !== undefined && team.bonus > 0;
         const bonusValue = team.bonus;
         const bonusType = typeof team.bonus;
         const bonusText = hasBonus ? ` (+${team.bonus})` : '';
