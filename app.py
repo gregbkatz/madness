@@ -95,7 +95,11 @@ def auto_save_bracket(bracket):
 
 @app.route('/')
 def index():
-    # Check if user is logged in
+    # When in read-only mode, redirect to users list instead of login
+    if READ_ONLY_MODE and 'username' not in session:
+        return redirect(url_for('users_list'))
+        
+    # Regular behavior: check if user is logged in
     if 'username' not in session:
         return redirect(url_for('show_login'))
     
@@ -722,6 +726,11 @@ def get_bracket_status():
 def users_list():
     """Show a list of all users who have created brackets."""
     try:
+        # In read-only mode, ensure there's a session username for viewing brackets
+        if READ_ONLY_MODE and 'username' not in session:
+            session['username'] = 'viewer'
+            session['read_only'] = True
+            
         # Get all unique usernames from saved bracket files
         users = set()
         user_data = []

@@ -6,6 +6,15 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover, height=device-height">
     <title>March Madness Bracket</title>
+    <style>
+        .change-user-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+            text-decoration: none;
+            color: #888;
+        }
+    </style>
     <!-- Mobile Scrolling Fix -->
     <script>
         // iOS-specific scroll fix
@@ -48,8 +57,16 @@
             <div id="save-status" class="save-status">📋 No changes yet</div>
             <div id="completion-status" class="completion-status">⚠️ 63 picks remaining</div>
             <div class="change-user">
-                <a href="/logout" class="change-user-button">Change User</a>
-                <a href="/users-list" class="change-user-button" style="margin-left: 10px;">Users List</a>
+                <a href="{% if session.read_only %}#{% else %}/logout{% endif %}"
+                    class="change-user-button {% if session.read_only %}disabled{% endif %}" {% if session.read_only
+                    %}onclick="return false;" {% endif %}>
+                    Change User
+                </a>
+                <a href="{% if not session.read_only %}#{% else %}/users-list{% endif %}"
+                    class="change-user-button {% if not session.read_only %}disabled{% endif %}"
+                    style="margin-left: 10px;" {% if not session.read_only %}onclick="return false;" {% endif %}>
+                    Users List
+                </a>
             </div>
             {% endif %}
         </div>
