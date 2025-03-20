@@ -45,8 +45,10 @@
         <div class="header-info">
             {% if username %}
             <div class="user-info">User: {{ username }}</div>
+            {% if not session.read_only %}
             <div id="save-status" class="save-status">📋 No changes yet</div>
             <div id="completion-status" class="completion-status">⚠️ 63 picks remaining</div>
+            {% endif %}
             <div class="change-user">
                 {% if not session.read_only %}
                 <a href="/logout" class="change-user-button">Change User</a>
