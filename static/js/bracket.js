@@ -768,6 +768,12 @@ function MarchMadnessBracket() {
         // Get any server-provided classes for truth comparison
         const serverClasses = team.classes || '';
 
+        // Check for bonus points
+        const hasBonus = team.bonus !== undefined;
+        const bonusText = hasBonus ? ` (+${team.bonus})` : '';
+        const isReadOnly = readOnly || bracket.read_only === true;
+        const showBonus = isReadOnly && serverClasses.includes('correct') && hasBonus;
+
         // Style for team boxes
         const teamStyle = {
             display: 'flex',
@@ -827,6 +833,11 @@ function MarchMadnessBracket() {
                     </div>
                     <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100px' }}>
                         {team.name}
+                        {showBonus && (
+                            <span style={{ color: '#F9A825', fontWeight: 'bold', marginLeft: '3px' }}>
+                                {bonusText}
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>

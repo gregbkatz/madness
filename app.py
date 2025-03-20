@@ -78,6 +78,9 @@ def compare_with_truth(bracket):
     # Deep copy the bracket to avoid modifying the original
     result_bracket = copy.deepcopy(bracket)
     
+    # Try to get the chalk bracket for bonus calculations
+    chalk_bracket = get_chalk_bracket()
+    
     # Add a classes field to each team if it doesn't exist
     for region in ["midwest", "west", "south", "east"]:
         for round_idx in range(len(result_bracket[region])):
@@ -107,10 +110,34 @@ def compare_with_truth(bracket):
                         # Compare teams by name and seed
                         if team["name"] == truth_team["name"] and team["seed"] == truth_team["seed"]:
                             team["classes"] += " correct"
+                            team["correct"] = True
+                            
+                            # Add bonus points if this is a correct pick and we have chalk bracket
+                            if chalk_bracket and round_idx > 0:
+                                # Find the same team in chalk bracket for this round
+                                chalk_team = None
+                                if round_idx < len(chalk_bracket[region]):
+                                    # Try to find the matching team in chalk bracket
+                                    for chalk_idx, chalk_t in enumerate(chalk_bracket[region][round_idx]):
+                                        if chalk_t and chalk_t.get("name") == truth_team.get("name"):
+                                            chalk_team = chalk_t
+                                            break
+                                
+                                # Calculate bonus if we found the team in chalk bracket
+                                if chalk_team:
+                                    seed_diff = abs(int(chalk_team.get("seed", 0)) - int(truth_team.get("seed", 0)))
+                                    if seed_diff > 0:
+                                        bonus = seed_diff * UPSET_BONUS_MULTIPLIERS[f"round_{round_idx}"]
+                                        team["bonus"] = bonus
+                                    else:
+                                        team["bonus"] = 0
+                                        
                         else:
                             team["classes"] += " incorrect"
-                    except (IndexError, KeyError, TypeError):
+                            team["correct"] = False
+                    except (IndexError, KeyError, TypeError) as e:
                         # If any error occurs, skip comparison for this team
+                        print(f"Error comparing team in {region} round {round_idx} position {i}: {str(e)}")
                         continue
     
     # Compare Final Four
@@ -127,9 +154,32 @@ def compare_with_truth(bracket):
                     
                 if team["name"] == truth_team["name"] and team["seed"] == truth_team["seed"]:
                     team["classes"] += " correct"
+                    team["correct"] = True
+                    
+                    # Add bonus points for correct Final Four pick
+                    if chalk_bracket:
+                        # Find this team in chalk bracket final four
+                        chalk_team = None
+                        for region in ["midwest", "west", "south", "east"]:
+                            # Look in Elite 8 of chalk bracket (round 3)
+                            if region in chalk_bracket and len(chalk_bracket[region]) > 3:
+                                for chalk_t in chalk_bracket[region][3]:
+                                    if chalk_t and chalk_t.get("name") == truth_team.get("name"):
+                                        chalk_team = chalk_t
+                                        break
+                        
+                        if chalk_team:
+                            seed_diff = abs(int(chalk_team.get("seed", 0)) - int(truth_team.get("seed", 0)))
+                            if seed_diff > 0:
+                                bonus = seed_diff * UPSET_BONUS_MULTIPLIERS["final_four"]
+                                team["bonus"] = bonus
+                            else:
+                                team["bonus"] = 0
                 else:
                     team["classes"] += " incorrect"
-            except (IndexError, KeyError, TypeError):
+                    team["correct"] = False
+            except (IndexError, KeyError, TypeError) as e:
+                print(f"Error comparing Final Four team at position {i}: {str(e)}")
                 continue
                 
     # Compare Championship
@@ -146,9 +196,29 @@ def compare_with_truth(bracket):
                     
                 if team["name"] == truth_team["name"] and team["seed"] == truth_team["seed"]:
                     team["classes"] += " correct"
+                    team["correct"] = True
+                    
+                    # Add bonus points for correct Championship pick
+                    if chalk_bracket:
+                        # Find this team in chalk bracket championship
+                        chalk_team = None
+                        for chalk_idx, chalk_t in enumerate(chalk_bracket["finalFour"]):
+                            if chalk_t and chalk_t.get("name") == truth_team.get("name"):
+                                chalk_team = chalk_t
+                                break
+                        
+                        if chalk_team:
+                            seed_diff = abs(int(chalk_team.get("seed", 0)) - int(truth_team.get("seed", 0)))
+                            if seed_diff > 0:
+                                bonus = seed_diff * UPSET_BONUS_MULTIPLIERS["championship"]
+                                team["bonus"] = bonus
+                            else:
+                                team["bonus"] = 0
                 else:
                     team["classes"] += " incorrect"
-            except (IndexError, KeyError, TypeError):
+                    team["correct"] = False
+            except (IndexError, KeyError, TypeError) as e:
+                print(f"Error comparing Championship team at position {i}: {str(e)}")
                 continue
     
     # Compare Champion
@@ -161,9 +231,29 @@ def compare_with_truth(bracket):
             if truth_champion:
                 if result_bracket["champion"]["name"] == truth_champion["name"] and result_bracket["champion"]["seed"] == truth_champion["seed"]:
                     result_bracket["champion"]["classes"] += " correct"
+                    result_bracket["champion"]["correct"] = True
+                    
+                    # Add bonus points for correct Champion pick
+                    if chalk_bracket:
+                        # Find this team in chalk bracket champion
+                        chalk_team = None
+                        for chalk_idx, chalk_t in enumerate(chalk_bracket["championship"]):
+                            if chalk_t and chalk_t.get("name") == truth_champion.get("name"):
+                                chalk_team = chalk_t
+                                break
+                        
+                        if chalk_team:
+                            seed_diff = abs(int(chalk_team.get("seed", 0)) - int(truth_champion.get("seed", 0)))
+                            if seed_diff > 0:
+                                bonus = seed_diff * UPSET_BONUS_MULTIPLIERS["champion"]
+                                result_bracket["champion"]["bonus"] = bonus
+                            else:
+                                result_bracket["champion"]["bonus"] = 0
                 else:
                     result_bracket["champion"]["classes"] += " incorrect"
-        except (KeyError, TypeError):
+                    result_bracket["champion"]["correct"] = False
+        except (KeyError, TypeError) as e:
+            print(f"Error comparing Champion: {str(e)}")
             pass
     
     return result_bracket
