@@ -237,6 +237,22 @@
         .hidden-round {
             display: none;
         }
+
+        /* Add a new CSS class for numeric columns */
+        .numeric-column {
+            width: 90px;
+            text-align: center;
+        }
+
+        .numeric-column .correct-picks-value {
+            display: block;
+            text-align: center;
+        }
+
+        /* Update the sortable header styles for numeric columns */
+        th.sortable.numeric-column {
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -272,22 +288,24 @@
                 <!-- <th colspan="5" style="text-align: center;">Bonus & Total</th> -->
             </tr>
             <tr>
-                <th class="sortable round-col hidden-round" data-sort="round_1_score" data-round="round_1">Round of 32
-                </th>
-                <th class="sortable round-col hidden-round" data-sort="round_2_score" data-round="round_2">Sweet 16</th>
-                <th class="sortable round-col hidden-round" data-sort="round_3_score" data-round="round_3">Elite 8</th>
-                <th class="sortable round-col hidden-round" data-sort="final_four_score" data-round="final_four">Final
-                    Four</th>
-                <th class="sortable round-col hidden-round" data-sort="championship_score" data-round="championship">
-                    Final</th>
-                <th class="sortable round-col hidden-round" data-sort="champion_score" data-round="champion">Champion
-                </th>
-                <th class="sortable" data-sort="total_score">Base</th>
-                <th class="sortable" data-sort="total_bonus">Bonus</th>
-                <th class="sortable" data-sort="total_with_bonus">Total</th>
-                <th class="sortable" data-sort="max_possible_base">Max Possible Base</th>
-                <th class="sortable" data-sort="max_possible_bonus">Max Possible Bonus</th>
-                <th class="sortable" data-sort="max_possible_total">Max Possible Total</th>
+                <th class="sortable round-col hidden-round numeric-column" data-sort="round_1_score"
+                    data-round="round_1">Round of 32</th>
+                <th class="sortable round-col hidden-round numeric-column" data-sort="round_2_score"
+                    data-round="round_2">Sweet 16</th>
+                <th class="sortable round-col hidden-round numeric-column" data-sort="round_3_score"
+                    data-round="round_3">Elite 8</th>
+                <th class="sortable round-col hidden-round numeric-column" data-sort="final_four_score"
+                    data-round="final_four">Final Four</th>
+                <th class="sortable round-col hidden-round numeric-column" data-sort="championship_score"
+                    data-round="championship">Final</th>
+                <th class="sortable round-col hidden-round numeric-column" data-sort="champion_score"
+                    data-round="champion">Champion</th>
+                <th class="sortable numeric-column" data-sort="total_score">Base</th>
+                <th class="sortable numeric-column" data-sort="total_bonus">Bonus</th>
+                <th class="sortable numeric-column" data-sort="total_with_bonus">Total</th>
+                <th class="sortable numeric-column" data-sort="max_possible_base">Max Possible Base</th>
+                <th class="sortable numeric-column" data-sort="max_possible_bonus">Max Possible Bonus</th>
+                <th class="sortable numeric-column" data-sort="max_possible_total">Max Possible Total</th>
             </tr>
         </thead>
         <tbody>
@@ -303,24 +321,36 @@
                         {% endif %}
                     </td>
                     <td>{% if user.champion %}{{ user.champion }}{% else %}<span class="empty">-</span>{% endif %}</td>
-                    <td class="round-col hidden-round" data-round="round_1"><span class="correct-picks-value">{{
+                    <td class="round-col hidden-round numeric-column" data-round="round_1"><span
+                            class="correct-picks-value">{{
                             user.correct_picks.round_1_score }}</span></td>
-                    <td class="round-col hidden-round" data-round="round_2"><span class="correct-picks-value">{{
+                    <td class="round-col hidden-round numeric-column" data-round="round_2"><span
+                            class="correct-picks-value">{{
                             user.correct_picks.round_2_score }}</span></td>
-                    <td class="round-col hidden-round" data-round="round_3"><span class="correct-picks-value">{{
+                    <td class="round-col hidden-round numeric-column" data-round="round_3"><span
+                            class="correct-picks-value">{{
                             user.correct_picks.round_3_score }}</span></td>
-                    <td class="round-col hidden-round" data-round="final_four"><span class="correct-picks-value">{{
+                    <td class="round-col hidden-round numeric-column" data-round="final_four"><span
+                            class="correct-picks-value">{{
                             user.correct_picks.final_four_score }}</span></td>
-                    <td class="round-col hidden-round" data-round="championship"><span class="correct-picks-value">{{
+                    <td class="round-col hidden-round numeric-column" data-round="championship"><span
+                            class="correct-picks-value">{{
                             user.correct_picks.championship_score }}</span></td>
-                    <td class="round-col hidden-round" data-round="champion"><span class="correct-picks-value">{{
+                    <td class="round-col hidden-round numeric-column" data-round="champion"><span
+                            class="correct-picks-value">{{
                             user.correct_picks.champion_score }}</span></td>
-                    <td><span class="correct-picks-value">{{ user.correct_picks.total_score }}</span></td>
-                    <td><span class="correct-picks-value">{{ user.correct_picks.total_bonus }}</span></td>
-                    <td><span class="correct-picks-value">{{ user.correct_picks.total_with_bonus }}</span></td>
-                    <td><span class="correct-picks-value">{{ user.max_possible_base }}</span></td>
-                    <td><span class="correct-picks-value">{{ user.max_possible_bonus }}</span></td>
-                    <td><span class="correct-picks-value">{{ user.max_possible_total }}</span></td>
+                    <td class="numeric-column"><span class="correct-picks-value">{{ user.correct_picks.total_score
+                            }}</span></td>
+                    <td class="numeric-column"><span class="correct-picks-value">{{ user.correct_picks.total_bonus
+                            }}</span></td>
+                    <td class="numeric-column"><span class="correct-picks-value">{{ user.correct_picks.total_with_bonus
+                            }}</span></td>
+                    <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_base }}</span>
+                    </td>
+                    <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_bonus }}</span>
+                    </td>
+                    <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_total }}</span>
+                    </td>
                     </tr>
                     {% endfor %}
         </tbody>
