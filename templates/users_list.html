@@ -106,6 +106,34 @@
         .perfect-row .correct-picks-value {
             color: #007bff;
         }
+
+        /* Styling for the rank column */
+        td:first-child {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Top ranks styling */
+        .rank-1 {
+            color: gold;
+            font-size: 1.1em;
+        }
+
+        .rank-2 {
+            color: silver;
+            font-size: 1.05em;
+        }
+
+        .rank-3 {
+            color: #cd7f32;
+            /* Bronze color */
+        }
+
+        /* Make sure the PERFECT row dash has normal styling */
+        .perfect-row td:first-child {
+            color: inherit;
+            font-size: inherit;
+        }
     </style>
 </head>
 
@@ -126,6 +154,7 @@
     <table>
         <thead>
             <tr>
+                <th rowspan="2">Rank</th>
                 <th rowspan="2">Username</th>
                 <!-- <th rowspan="2">Last Updated</th> -->
                 <!-- <th rowspan="2">Picks remaining</th> -->
@@ -148,28 +177,31 @@
         <tbody>
             {% for user in users %}
             <tr{% if user.username=="PERFECT" %} class="perfect-row" {% endif %}>
-                <td>
-                    {% if user.username == "PERFECT" %}
-                    <strong>Maximum Possible</strong>
-                    {% else %}
-                    <a href="/?username={{ user.username }}">{{ user.username }}</a>
-                    {% endif %}
-                </td>
-                <!-- <td>{{ user.last_updated }}</td> -->
-                <!-- <td>{{ user.picks_remaining }}</td> -->
-                <td>{% if user.champion %}{{ user.champion }}{% else %}<span class="empty">Not selected</span>{% endif
-                    %}</td>
-                <td><span class="correct-picks-value">{{ user.correct_picks.round_1_score }}</span></td>
-                <td><span class="correct-picks-value">{{ user.correct_picks.round_2_score }}</span></td>
-                <td><span class="correct-picks-value">{{ user.correct_picks.round_3_score }}</span></td>
-                <td><span class="correct-picks-value">{{ user.correct_picks.final_four_score }}</span></td>
-                <td><span class="correct-picks-value">{{ user.correct_picks.championship_score }}</span></td>
-                <td><span class="correct-picks-value">{{ user.correct_picks.champion_score }}</span></td>
-                <td><span class="correct-picks-value">{{ user.correct_picks.total_score }}</span></td>
-                <td><span class="correct-picks-value">{{ user.correct_picks.total_bonus }}</span></td>
-                <td><span class="correct-picks-value">{{ user.correct_picks.total_with_bonus }}</span></td>
-                </tr>
-                {% endfor %}
+                <td{% if user.rank==1 %} class="rank-1" {% elif user.rank==2 %} class="rank-2" {% elif user.rank==3 %}
+                    class="rank-3" {% endif %}>{{ user.rank }}</td>
+                    <td>
+                        {% if user.username == "PERFECT" %}
+                        <strong>Maximum Possible</strong>
+                        {% else %}
+                        <a href="/?username={{ user.username }}">{{ user.username }}</a>
+                        {% endif %}
+                    </td>
+                    <!-- <td>{{ user.last_updated }}</td> -->
+                    <!-- <td>{{ user.picks_remaining }}</td> -->
+                    <td>{% if user.champion %}{{ user.champion }}{% else %}<span class="empty">Not selected</span>{%
+                        endif
+                        %}</td>
+                    <td><span class="correct-picks-value">{{ user.correct_picks.round_1_score }}</span></td>
+                    <td><span class="correct-picks-value">{{ user.correct_picks.round_2_score }}</span></td>
+                    <td><span class="correct-picks-value">{{ user.correct_picks.round_3_score }}</span></td>
+                    <td><span class="correct-picks-value">{{ user.correct_picks.final_four_score }}</span></td>
+                    <td><span class="correct-picks-value">{{ user.correct_picks.championship_score }}</span></td>
+                    <td><span class="correct-picks-value">{{ user.correct_picks.champion_score }}</span></td>
+                    <td><span class="correct-picks-value">{{ user.correct_picks.total_score }}</span></td>
+                    <td><span class="correct-picks-value">{{ user.correct_picks.total_bonus }}</span></td>
+                    <td><span class="correct-picks-value">{{ user.correct_picks.total_with_bonus }}</span></td>
+                    </tr>
+                    {% endfor %}
         </tbody>
     </table>
     {% else %}

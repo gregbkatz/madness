@@ -1428,6 +1428,31 @@ def users_list():
         # Sort user data to put PERFECT at the top, then by score
         user_data.sort(key=lambda x: (0 if x["username"] == "PERFECT" else 1, -x["correct_picks"]["total_with_bonus"]))
         
+        # Add ranking to user data (handling ties)
+        current_rank = 1
+        previous_score = None
+        skip_count = 0
+        
+        for i, user in enumerate(user_data):
+            # Skip ranking the PERFECT row
+            if user["username"] == "PERFECT":
+                user["rank"] = "-"
+                continue
+                
+            current_score = user["correct_picks"]["total_with_bonus"]
+            
+            if previous_score is not None and current_score != previous_score:
+                # If score is different from previous, increment rank by the number of tied users plus 1
+                current_rank += skip_count + 1
+                skip_count = 0
+            else:
+                # For the first user or tied users, increment skip counter
+                if previous_score is not None:
+                    skip_count += 1
+                    
+            user["rank"] = current_rank
+            previous_score = current_score
+        
         return render_template('users_list.html', users=user_data, error=None)
     except Exception as e:
         # Log the error and return empty user list
