@@ -353,6 +353,13 @@
                         // For username text, get from the link text or content
                         aValue = a.cells[1].textContent.trim().toLowerCase();
                         bValue = b.cells[1].textContent.trim().toLowerCase();
+
+                        // String comparison for usernames
+                        if (direction === 'asc') {
+                            return aValue.localeCompare(bValue);
+                        } else {
+                            return bValue.localeCompare(aValue);
+                        }
                     }
                     else if (column === 'champion') {
                         // For champion, get the text content
@@ -362,6 +369,13 @@
                         // Handle "Not selected" values
                         aValue = aValue === 'Not selected' ? '' : aValue;
                         bValue = bValue === 'Not selected' ? '' : bValue;
+
+                        // String comparison for champion names
+                        if (direction === 'asc') {
+                            return aValue.localeCompare(bValue);
+                        } else {
+                            return bValue.localeCompare(aValue);
+                        }
                     }
                     else {
                         // For score columns, find the right cell index
@@ -382,17 +396,17 @@
                         // Extract the numerical value
                         aValue = parseInt(a.cells[cellIndex].textContent.trim());
                         bValue = parseInt(b.cells[cellIndex].textContent.trim());
-                    }
 
-                    // Handle non-numeric values
-                    if (isNaN(aValue)) aValue = 0;
-                    if (isNaN(bValue)) bValue = 0;
+                        // Handle non-numeric values
+                        if (isNaN(aValue)) aValue = 0;
+                        if (isNaN(bValue)) bValue = 0;
 
-                    // Compare based on direction
-                    if (direction === 'asc') {
-                        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
-                    } else {
-                        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+                        // Numeric comparison
+                        if (direction === 'asc') {
+                            return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+                        } else {
+                            return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+                        }
                     }
                 });
 
