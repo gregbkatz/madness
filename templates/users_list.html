@@ -134,6 +134,83 @@
             color: inherit;
             font-size: inherit;
         }
+
+        /* Sortable table styles */
+        th.sortable {
+            cursor: pointer;
+            position: relative;
+            padding-right: 20px;
+            transition: background-color 0.2s, color 0.2s;
+            user-select: none;
+        }
+
+        th.sortable:hover {
+            background-color: #e6e6e6;
+        }
+
+        th.sortable:active {
+            background-color: #d9d9d9;
+        }
+
+        th.sortable::after {
+            content: "⇅";
+            position: absolute;
+            right: 5px;
+            color: #aaa;
+            font-size: 0.9em;
+            transition: transform 0.2s;
+        }
+
+        th.sortable.asc::after {
+            content: "↑";
+            color: #003478;
+            font-weight: bold;
+        }
+
+        th.sortable.desc::after {
+            content: "↓";
+            color: #003478;
+            font-weight: bold;
+        }
+
+        th.sortable.asc,
+        th.sortable.desc {
+            background-color: #e8f0f8;
+            border-bottom: 2px solid #003478;
+            color: #003478;
+        }
+
+        /* For the total+bonus column, add special styling since it's the default sort */
+        th.sortable[data-sort="total_with_bonus"] {
+            background-color: #e8f0f8;
+        }
+
+        /* Animation for sorting */
+        @keyframes highlightRow {
+            0% {
+                background-color: rgba(255, 255, 184, 0.5);
+            }
+
+            100% {
+                background-color: transparent;
+            }
+        }
+
+        tr.highlight {
+            animation: highlightRow 1s ease-out;
+        }
+
+        /* Better touch support */
+        @media (max-width: 768px) {
+            th.sortable {
+                padding: 10px 25px 10px 10px;
+            }
+
+            th.sortable::after {
+                right: 8px;
+                font-size: 1.1em;
+            }
+        }
     </style>
 </head>
 
@@ -144,6 +221,10 @@
         Total Users: {{ users|length }}
     </div>
 
+    <div class="sorting-help" style="text-align: center; color: #555; margin-bottom: 15px;">
+        Click on any column header to sort. Click again to reverse the sort order.
+    </div>
+
     {% if error %}
     <div class="error">
         Error: {{ error }}
@@ -151,27 +232,27 @@
     {% endif %}
 
     {% if users %}
-    <table>
+    <table id="usersTable">
         <thead>
             <tr>
-                <th rowspan="2">Rank</th>
-                <th rowspan="2">Username</th>
+                <th rowspan="2" class="sortable" data-sort="rank">Rank</th>
+                <th rowspan="2" class="sortable" data-sort="username">Username</th>
                 <!-- <th rowspan="2">Last Updated</th> -->
                 <!-- <th rowspan="2">Picks remaining</th> -->
-                <th rowspan="2">Champion</th>
+                <th rowspan="2" class="sortable" data-sort="champion">Champion</th>
                 <th colspan="7" style="text-align: center;">Scores (pts)</th>
                 <th colspan="2" style="text-align: center;">Bonus & Total</th>
             </tr>
             <tr>
-                <th>Round of 32</th>
-                <th>Sweet 16</th>
-                <th>Elite 8</th>
-                <th>Final Four</th>
-                <th>Final</th>
-                <th>Champion</th>
-                <th>Total</th>
-                <th>Bonus</th>
-                <th>Total+Bonus</th>
+                <th class="sortable" data-sort="round_1_score">Round of 32</th>
+                <th class="sortable" data-sort="round_2_score">Sweet 16</th>
+                <th class="sortable" data-sort="round_3_score">Elite 8</th>
+                <th class="sortable" data-sort="final_four_score">Final Four</th>
+                <th class="sortable" data-sort="championship_score">Final</th>
+                <th class="sortable" data-sort="champion_score">Champion</th>
+                <th class="sortable" data-sort="total_score">Total</th>
+                <th class="sortable" data-sort="total_bonus">Bonus</th>
+                <th class="sortable" data-sort="total_with_bonus">Total+Bonus</th>
             </tr>
         </thead>
         <tbody>
@@ -209,6 +290,146 @@
     {% endif %}
 
     <a href="/" class="back-link">← Back to Bracket</a>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const table = document.getElementById('usersTable');
+            if (!table) return;
+
+            // Store the original table for resetting
+            const originalTable = table.cloneNode(true);
+
+            // Track current sort state
+            let currentSort = {
+                column: 'total_with_bonus',
+                direction: 'desc'
+            };
+
+            // Define sortableHeaders first before using it
+            const sortableHeaders = document.querySelectorAll('th.sortable');
+
+            // Mark the initial default sort column
+            const initialSortHeader = Array.from(sortableHeaders).find(
+                header => header.getAttribute('data-sort') === currentSort.column
+            );
+            if (initialSortHeader) {
+                initialSortHeader.classList.add(currentSort.direction);
+            }
+
+            // Initialize with default sort
+            sortTable('total_with_bonus', 'desc');
+
+            // Add click event listeners to sortable headers
+            sortableHeaders.forEach(header => {
+                header.addEventListener('click', function () {
+                    const column = this.getAttribute('data-sort');
+                    const direction = currentSort.column === column && currentSort.direction === 'asc' ? 'desc' : 'asc';
+                    sortTable(column, direction);
+                });
+            });
+
+            function sortTable(column, direction) {
+                const tbody = table.querySelector('tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+
+                // Always keep PERFECT row at the top
+                const perfectRow = rows.find(row => row.classList.contains('perfect-row'));
+                const otherRows = rows.filter(row => !row.classList.contains('perfect-row'));
+
+                // Sort the rows (excluding the PERFECT row)
+                otherRows.sort((a, b) => {
+                    let aValue, bValue;
+
+                    if (column === 'rank') {
+                        // Handle rank specially since it's the first column
+                        aValue = a.cells[0].textContent.trim();
+                        bValue = b.cells[0].textContent.trim();
+
+                        // Convert to numbers for numerical sorting
+                        aValue = aValue === '-' ? Infinity : parseInt(aValue);
+                        bValue = bValue === '-' ? Infinity : parseInt(bValue);
+                    }
+                    else if (column === 'username') {
+                        // For username text, get from the link text or content
+                        aValue = a.cells[1].textContent.trim().toLowerCase();
+                        bValue = b.cells[1].textContent.trim().toLowerCase();
+                    }
+                    else if (column === 'champion') {
+                        // For champion, get the text content
+                        aValue = a.cells[2].textContent.trim();
+                        bValue = b.cells[2].textContent.trim();
+
+                        // Handle "Not selected" values
+                        aValue = aValue === 'Not selected' ? '' : aValue;
+                        bValue = bValue === 'Not selected' ? '' : bValue;
+                    }
+                    else {
+                        // For score columns, find the right cell index
+                        let cellIndex;
+                        switch (column) {
+                            case 'round_1_score': cellIndex = 3; break;
+                            case 'round_2_score': cellIndex = 4; break;
+                            case 'round_3_score': cellIndex = 5; break;
+                            case 'final_four_score': cellIndex = 6; break;
+                            case 'championship_score': cellIndex = 7; break;
+                            case 'champion_score': cellIndex = 8; break;
+                            case 'total_score': cellIndex = 9; break;
+                            case 'total_bonus': cellIndex = 10; break;
+                            case 'total_with_bonus': cellIndex = 11; break;
+                            default: cellIndex = 9; // Default to total score
+                        }
+
+                        // Extract the numerical value
+                        aValue = parseInt(a.cells[cellIndex].textContent.trim());
+                        bValue = parseInt(b.cells[cellIndex].textContent.trim());
+                    }
+
+                    // Handle non-numeric values
+                    if (isNaN(aValue)) aValue = 0;
+                    if (isNaN(bValue)) bValue = 0;
+
+                    // Compare based on direction
+                    if (direction === 'asc') {
+                        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+                    } else {
+                        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+                    }
+                });
+
+                // Clear the table
+                while (tbody.firstChild) {
+                    tbody.removeChild(tbody.firstChild);
+                }
+
+                // Add PERFECT row first, then sorted rows
+                if (perfectRow) {
+                    tbody.appendChild(perfectRow);
+                }
+
+                // Add the sorted rows
+                otherRows.forEach(row => {
+                    tbody.appendChild(row);
+                    // Add a brief highlight effect
+                    row.classList.add('highlight');
+                    setTimeout(() => {
+                        row.classList.remove('highlight');
+                    }, 1000); // Remove after 1 second
+                });
+
+                // Update sort indicators
+                sortableHeaders.forEach(header => {
+                    header.classList.remove('asc', 'desc');
+                    if (header.getAttribute('data-sort') === column) {
+                        header.classList.add(direction);
+                    }
+                });
+
+                // Update current sort state
+                currentSort.column = column;
+                currentSort.direction = direction;
+            }
+        });
+    </script>
 </body>
 
 </html>
