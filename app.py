@@ -12,7 +12,11 @@ import glob  # For finding truth bracket files
 
 # Add command-line argument parsing
 parser = argparse.ArgumentParser(description='March Madness Bracket Application')
-parser.add_argument('--read-only', action='store_true', help='Run the application in read-only mode')
+parser.add_argument('--read-only', 
+                   dest='read_only',
+                   type=lambda x: (str(x).lower() == 'true'),
+                   default=True, 
+                   help='Run the application in read-only mode (defaults to true)')
 args = parser.parse_args()
 
 app = Flask(__name__)
