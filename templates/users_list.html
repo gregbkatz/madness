@@ -241,7 +241,7 @@
                 <!-- <th rowspan="2">Picks remaining</th> -->
                 <th rowspan="2" class="sortable" data-sort="champion">Champion</th>
                 <th colspan="7" style="text-align: center;">Scores (pts)</th>
-                <th colspan="2" style="text-align: center;">Bonus & Total</th>
+                <th colspan="3" style="text-align: center;">Bonus & Total</th>
             </tr>
             <tr>
                 <th class="sortable" data-sort="round_1_score">Round of 32</th>
@@ -252,7 +252,8 @@
                 <th class="sortable" data-sort="champion_score">Champion</th>
                 <th class="sortable" data-sort="total_score">Total</th>
                 <th class="sortable" data-sort="total_bonus">Bonus</th>
-                <th class="sortable" data-sort="total_with_bonus">Total+Bonus</th>
+                <th class="sortable" data-sort="total_with_bonus">Current</th>
+                <th class="sortable" data-sort="max_possible_total">Max Possible</th>
             </tr>
         </thead>
         <tbody>
@@ -281,6 +282,7 @@
                     <td><span class="correct-picks-value">{{ user.correct_picks.total_score }}</span></td>
                     <td><span class="correct-picks-value">{{ user.correct_picks.total_bonus }}</span></td>
                     <td><span class="correct-picks-value">{{ user.correct_picks.total_with_bonus }}</span></td>
+                    <td><span class="correct-picks-value">{{ user.max_possible_total }}</span></td>
                     </tr>
                     {% endfor %}
         </tbody>
@@ -390,6 +392,7 @@
                             case 'total_score': cellIndex = 9; break;
                             case 'total_bonus': cellIndex = 10; break;
                             case 'total_with_bonus': cellIndex = 11; break;
+                            case 'max_possible_total': cellIndex = 12; break;
                             default: cellIndex = 9; // Default to total score
                         }
 
