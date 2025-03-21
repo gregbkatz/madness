@@ -78,6 +78,34 @@
         .empty {
             color: #666;
         }
+
+        /* Style for the perfect row */
+        .perfect-row {
+            background-color: #f8f9d7;
+            font-weight: bold;
+            position: relative;
+        }
+
+        .perfect-row td {
+            border-top: 2px solid #ffc107;
+            border-bottom: 2px solid #ffc107;
+        }
+
+        .perfect-row td:first-child {
+            border-left: 2px solid #ffc107;
+        }
+
+        .perfect-row td:last-child {
+            border-right: 2px solid #ffc107;
+        }
+
+        .perfect-row:hover {
+            background-color: #f8f9d7;
+        }
+
+        .perfect-row .correct-picks-value {
+            color: #007bff;
+        }
     </style>
 </head>
 
@@ -119,9 +147,13 @@
         </thead>
         <tbody>
             {% for user in users %}
-            <tr>
+            <tr{% if user.username=="PERFECT" %} class="perfect-row" {% endif %}>
                 <td>
+                    {% if user.username == "PERFECT" %}
+                    <strong>Maximum Possible</strong>
+                    {% else %}
                     <a href="/?username={{ user.username }}">{{ user.username }}</a>
+                    {% endif %}
                 </td>
                 <!-- <td>{{ user.last_updated }}</td> -->
                 <!-- <td>{{ user.picks_remaining }}</td> -->
@@ -136,8 +168,8 @@
                 <td><span class="correct-picks-value">{{ user.correct_picks.total_score }}</span></td>
                 <td><span class="correct-picks-value">{{ user.correct_picks.total_bonus }}</span></td>
                 <td><span class="correct-picks-value">{{ user.correct_picks.total_with_bonus }}</span></td>
-            </tr>
-            {% endfor %}
+                </tr>
+                {% endfor %}
         </tbody>
     </table>
     {% else %}
