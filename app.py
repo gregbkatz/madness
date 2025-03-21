@@ -90,6 +90,9 @@ def compare_with_truth(bracket):
     correct_count = 0
     bonus_count = 0
     
+    # Track eliminated teams - teams that were picked but are marked as incorrect
+    eliminated_teams = set()
+    
     # Add a classes field to each team if it doesn't exist
     for region in ["midwest", "west", "south", "east"]:
         for round_idx in range(len(result_bracket[region])):
@@ -110,9 +113,9 @@ def compare_with_truth(bracket):
                         
                     # Compare with truth bracket
                     try:
-                        truth_team = truth_bracket[region][round_idx][i]
+                        truth_team = truth_bracket[region][round_idx][i] if round_idx < len(truth_bracket[region]) else None
                         
-                        # If truth team is None, leave as is
+                        # If truth team is None (future round), leave as is for now
                         if not truth_team:
                             continue
                             
@@ -158,6 +161,9 @@ def compare_with_truth(bracket):
                                     "seed": truth_team["seed"],
                                     "abbrev": truth_team.get("abbrev", "")
                                 }
+                            
+                            # Add this team to the eliminated teams set
+                            eliminated_teams.add(team["name"])
                     except (IndexError, KeyError, TypeError) as e:
                         # If any error occurs, skip comparison for this team
                         print(f"Error comparing team in {region} round {round_idx} position {i}: {str(e)}")
@@ -171,7 +177,7 @@ def compare_with_truth(bracket):
                 team["classes"] = ""
                 
             try:
-                truth_team = truth_bracket["finalFour"][i]
+                truth_team = truth_bracket["finalFour"][i] if i < len(truth_bracket["finalFour"]) else None
                 if not truth_team:
                     continue
                     
@@ -205,6 +211,9 @@ def compare_with_truth(bracket):
                             "seed": truth_team["seed"],
                             "abbrev": truth_team.get("abbrev", "")
                         }
+                    
+                    # Add this team to the eliminated teams set
+                    eliminated_teams.add(team["name"])
             except (IndexError, KeyError, TypeError) as e:
                 print(f"Error comparing Final Four team at position {i}: {str(e)}")
                 continue
@@ -217,7 +226,7 @@ def compare_with_truth(bracket):
                 team["classes"] = ""
                 
             try:
-                truth_team = truth_bracket["championship"][i]
+                truth_team = truth_bracket["championship"][i] if i < len(truth_bracket["championship"]) else None
                 if not truth_team:
                     continue
                     
@@ -251,6 +260,9 @@ def compare_with_truth(bracket):
                             "seed": truth_team["seed"],
                             "abbrev": truth_team.get("abbrev", "")
                         }
+                    
+                    # Add this team to the eliminated teams set
+                    eliminated_teams.add(team["name"])
             except (IndexError, KeyError, TypeError) as e:
                 print(f"Error comparing Championship team at position {i}: {str(e)}")
                 continue
@@ -291,9 +303,64 @@ def compare_with_truth(bracket):
                             "seed": truth_champion["seed"],
                             "abbrev": truth_champion.get("abbrev", "")
                         }
+                    
+                    # Add this team to the eliminated teams set
+                    eliminated_teams.add(result_bracket["champion"]["name"])
         except (KeyError, TypeError) as e:
             print(f"Error comparing Champion: {str(e)}")
             pass
+    
+    # Now check for impossible future picks (teams that have been eliminated)
+    print(f"Eliminated teams: {eliminated_teams}")
+    
+    # Check regions for future rounds
+    for region in ["midwest", "west", "south", "east"]:
+        for round_idx in range(len(result_bracket[region])):
+            # Skip first round since it's pre-filled
+            if round_idx == 0:
+                continue
+                
+            for i in range(len(result_bracket[region][round_idx])):
+                team = result_bracket[region][round_idx][i]
+                if team and isinstance(team, dict):
+                    # Skip if team is already marked as correct or incorrect
+                    if "correct" in team:
+                        continue
+                        
+                    # Check if this team is in the eliminated teams set
+                    if team["name"] in eliminated_teams:
+                        team["classes"] += " incorrect"
+                        team["correct"] = False
+                        team["isEliminated"] = True
+                        print(f"Marked future pick {team['name']} in {region} round {round_idx} as eliminated")
+    
+    # Check Final Four for eliminated teams
+    for i in range(len(result_bracket["finalFour"])):
+        team = result_bracket["finalFour"][i]
+        if team and isinstance(team, dict) and "correct" not in team:
+            if team["name"] in eliminated_teams:
+                team["classes"] += " incorrect"
+                team["correct"] = False
+                team["isEliminated"] = True
+                print(f"Marked future pick {team['name']} in Final Four as eliminated")
+                
+    # Check Championship for eliminated teams
+    for i in range(len(result_bracket["championship"])):
+        team = result_bracket["championship"][i]
+        if team and isinstance(team, dict) and "correct" not in team:
+            if team["name"] in eliminated_teams:
+                team["classes"] += " incorrect"
+                team["correct"] = False
+                team["isEliminated"] = True
+                print(f"Marked future pick {team['name']} in Championship as eliminated")
+                
+    # Check Champion for eliminated teams
+    if result_bracket["champion"] and isinstance(result_bracket["champion"], dict) and "correct" not in result_bracket["champion"]:
+        if result_bracket["champion"]["name"] in eliminated_teams:
+            result_bracket["champion"]["classes"] += " incorrect"
+            result_bracket["champion"]["correct"] = False
+            result_bracket["champion"]["isEliminated"] = True
+            print(f"Marked future pick {result_bracket['champion']['name']} as Champion as eliminated")
     
     return result_bracket
 
