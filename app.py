@@ -1249,7 +1249,62 @@ def users_list():
             # Calculate remaining picks
             picks_remaining = 63 - completed_picks
             
-            # Create the perfect entry
+            # Generate an optimal future bracket that maximizes upset potential
+            optimal_future_bracket = generate_optimal_future_bracket(truth_bracket)
+            
+            # Score the optimal bracket using existing compare_with_truth function
+            scored_optimal_bracket = compare_with_truth(optimal_future_bracket)
+            
+            # Calculate max possible scores from the scored optimal bracket
+            max_possible_score = {
+                "max_base": 0,
+                "max_bonus": 0,
+                "max_total": 0
+            }
+            
+            # Calculate scores for the optimal bracket
+            for region in ["midwest", "west", "south", "east"]:
+                for round_idx in range(4):  # 0 to 3 (First round through Elite Eight)
+                    for team_idx, team in enumerate(scored_optimal_bracket[region][round_idx]):
+                        if team:
+                            # Calculate base points
+                            base_points, _ = calculate_points_for_pick(team, round_idx + 1)
+                            max_possible_score["max_base"] += base_points
+                            
+                            # Add bonus if exists
+                            if 'bonus' in team and team['bonus']:
+                                max_possible_score["max_bonus"] += team['bonus']
+            
+            # Final Four
+            for i, team in enumerate(scored_optimal_bracket["finalFour"]):
+                if team:
+                    base_points, _ = calculate_points_for_pick(team, 4)
+                    max_possible_score["max_base"] += base_points
+                    
+                    if 'bonus' in team and team['bonus']:
+                        max_possible_score["max_bonus"] += team['bonus']
+            
+            # Championship
+            for i, team in enumerate(scored_optimal_bracket["championship"]):
+                if team:
+                    base_points, _ = calculate_points_for_pick(team, 5)
+                    max_possible_score["max_base"] += base_points
+                    
+                    if 'bonus' in team and team['bonus']:
+                        max_possible_score["max_bonus"] += team['bonus']
+            
+            # Champion
+            if scored_optimal_bracket["champion"]:
+                base_points, _ = calculate_points_for_pick(scored_optimal_bracket["champion"], 6)
+                max_possible_score["max_base"] += base_points
+                
+                if 'bonus' in scored_optimal_bracket["champion"] and scored_optimal_bracket["champion"]['bonus']:
+                    max_possible_score["max_bonus"] += scored_optimal_bracket["champion"]['bonus']
+            
+            # Calculate total max possible points
+            max_possible_score["max_total"] = max_possible_score["max_base"] + max_possible_score["max_bonus"]
+            
+            # Create the perfect entry with maximum possible points
             perfect_entry = {
                 "username": "PERFECT",
                 "last_updated": "Current truth bracket",
@@ -1257,9 +1312,9 @@ def users_list():
                 "picks_remaining": picks_remaining,
                 "champion": champion,
                 "correct_picks": perfect_score,
-                "max_possible_base": perfect_score["total_score"],
-                "max_possible_bonus": perfect_score["total_bonus"],
-                "max_possible_total": perfect_score["total_with_bonus"]
+                "max_possible_base": max_possible_score["max_base"],
+                "max_possible_bonus": max_possible_score["max_bonus"],
+                "max_possible_total": max_possible_score["max_total"],
             }
             
             # Add the perfect entry to the user data
@@ -1563,6 +1618,167 @@ def users_list():
         # Log the error and return empty user list
         print(f"Error in users_list route: {str(e)}")
         return render_template('users_list.html', users=[], error=str(e))
+
+# Add this function after compare_with_truth and before users_list
+def generate_optimal_future_bracket(truth_bracket):
+    """
+    Generate a bracket that maximizes potential upset bonuses for future games.
+    For games already played (in truth bracket), keep those results.
+    For future games, pick teams with the highest seed number to maximize upset potential.
+    Only picks from teams that are not eliminated.
+    
+    Args:
+        truth_bracket: The current truth bracket with actual results
+        
+    Returns:
+        A bracket with optimal future picks to maximize bonus potential
+    """
+    # Create a deep copy to avoid modifying the original
+    optimal_bracket = copy.deepcopy(truth_bracket)
+    
+    # Process each region
+    for region in ["midwest", "west", "south", "east"]:
+        # Track teams that have been eliminated in this region
+        eliminated_teams = set()
+        
+        # First, identify teams that have already been eliminated based on truth bracket
+        for round_idx in range(4):  # Process rounds 0-3
+            games_in_round = 2 ** (3 - round_idx)
+            for game_idx in range(games_in_round):
+                team1_idx = game_idx * 2
+                team2_idx = game_idx * 2 + 1
+                
+                # If we have teams in this round of the truth bracket
+                if round_idx < len(truth_bracket[region]) and team1_idx < len(truth_bracket[region][round_idx]) and team2_idx < len(truth_bracket[region][round_idx]):
+                    team1 = truth_bracket[region][round_idx][team1_idx]
+                    team2 = truth_bracket[region][round_idx][team2_idx]
+                    
+                    # If we have a result in the next round, one team must have been eliminated
+                    if round_idx < 3:  # Not Elite Eight yet
+                        next_round_idx = round_idx + 1
+                        next_game_idx = game_idx // 2
+                        next_team_idx = game_idx % 2
+                        next_slot = next_game_idx * 2 + next_team_idx
+                        
+                        if (next_round_idx < len(truth_bracket[region]) and 
+                            next_slot < len(truth_bracket[region][next_round_idx]) and 
+                            truth_bracket[region][next_round_idx][next_slot] is not None):
+                            
+                            advancing_team = truth_bracket[region][next_round_idx][next_slot]
+                            
+                            # The other team must have been eliminated
+                            if team1 and team2:
+                                if team1["name"] == advancing_team["name"]:
+                                    eliminated_teams.add(team2["name"])
+                                elif team2["name"] == advancing_team["name"]:
+                                    eliminated_teams.add(team1["name"])
+        
+        # Now fill in future games, starting from the earliest incomplete round
+        for round_idx in range(4):
+            games_in_round = 2 ** (3 - round_idx)
+            
+            for game_idx in range(games_in_round):
+                # For each game position
+                next_round_idx = round_idx + 1
+                next_game_idx = game_idx // 2
+                next_team_idx = game_idx % 2
+                next_slot = next_game_idx * 2 + next_team_idx
+                
+                # Check if this position feeds into a position that's not yet decided in the truth bracket
+                if (round_idx < 3 and  # Not Elite Eight
+                    next_round_idx < len(truth_bracket[region]) and
+                    next_slot < len(truth_bracket[region][next_round_idx]) and
+                    truth_bracket[region][next_round_idx][next_slot] is None):
+                    
+                    # This is a future game - get the two teams in the current matchup
+                    team1_idx = game_idx * 2
+                    team2_idx = game_idx * 2 + 1
+                    
+                    if team1_idx < len(optimal_bracket[region][round_idx]) and team2_idx < len(optimal_bracket[region][round_idx]):
+                        team1 = optimal_bracket[region][round_idx][team1_idx]
+                        team2 = optimal_bracket[region][round_idx][team2_idx]
+                        
+                        # Skip if either team is missing
+                        if not team1 or not team2:
+                            continue
+                            
+                        # Skip if both teams are eliminated
+                        if team1["name"] in eliminated_teams and team2["name"] in eliminated_teams:
+                            continue
+                            
+                        # If only one team is not eliminated, that team advances
+                        if team1["name"] in eliminated_teams:
+                            optimal_bracket[region][next_round_idx][next_slot] = team2
+                            continue
+                        if team2["name"] in eliminated_teams:
+                            optimal_bracket[region][next_round_idx][next_slot] = team1
+                            continue
+                        
+                        # Both teams are available - choose the one with higher seed number (bigger upset potential)
+                        if int(team1["seed"]) > int(team2["seed"]):
+                            optimal_bracket[region][next_round_idx][next_slot] = team1
+                        else:
+                            optimal_bracket[region][next_round_idx][next_slot] = team2
+    
+    # Process Elite Eight to Final Four
+    for region in ["midwest", "west", "south", "east"]:
+        # Find which Final Four slot this region feeds into
+        ff_idx = 0 if region == "midwest" else 1 if region == "west" else 2 if region == "south" else 3
+        
+        # Skip if this Final Four position is already filled in truth bracket
+        if truth_bracket["finalFour"][ff_idx] is not None:
+            continue
+            
+        # Get the Elite Eight teams for this region
+        elite_eight_teams = []
+        if optimal_bracket[region][3][0] is not None:
+            elite_eight_teams.append(optimal_bracket[region][3][0])
+        if optimal_bracket[region][3][1] is not None:
+            elite_eight_teams.append(optimal_bracket[region][3][1])
+            
+        # Pick the team with highest seed number that advances
+        if elite_eight_teams:
+            best_upset_team = max(elite_eight_teams, key=lambda team: int(team["seed"]))
+            optimal_bracket["finalFour"][ff_idx] = best_upset_team
+    
+    # Process Final Four to Championship
+    # First semifinal: slots 0 and 1 of finalFour feed into championship[0]
+    if truth_bracket["championship"][0] is None:
+        semifinal1_teams = []
+        if optimal_bracket["finalFour"][0] is not None:
+            semifinal1_teams.append(optimal_bracket["finalFour"][0])
+        if optimal_bracket["finalFour"][1] is not None:
+            semifinal1_teams.append(optimal_bracket["finalFour"][1])
+            
+        if semifinal1_teams:
+            best_upset_team = max(semifinal1_teams, key=lambda team: int(team["seed"]))
+            optimal_bracket["championship"][0] = best_upset_team
+    
+    # Second semifinal: slots 2 and 3 of finalFour feed into championship[1]
+    if truth_bracket["championship"][1] is None:
+        semifinal2_teams = []
+        if optimal_bracket["finalFour"][2] is not None:
+            semifinal2_teams.append(optimal_bracket["finalFour"][2])
+        if optimal_bracket["finalFour"][3] is not None:
+            semifinal2_teams.append(optimal_bracket["finalFour"][3])
+            
+        if semifinal2_teams:
+            best_upset_team = max(semifinal2_teams, key=lambda team: int(team["seed"]))
+            optimal_bracket["championship"][1] = best_upset_team
+    
+    # Process Championship to Champion
+    if truth_bracket["champion"] is None:
+        championship_teams = []
+        if optimal_bracket["championship"][0] is not None:
+            championship_teams.append(optimal_bracket["championship"][0])
+        if optimal_bracket["championship"][1] is not None:
+            championship_teams.append(optimal_bracket["championship"][1])
+            
+        if championship_teams:
+            best_upset_team = max(championship_teams, key=lambda team: int(team["seed"]))
+            optimal_bracket["champion"] = best_upset_team
+    
+    return optimal_bracket
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 80))
