@@ -785,7 +785,7 @@ function MarchMadnessBracket() {
         const bonusValue = team.bonus;
         const bonusType = typeof team.bonus;
         const bonusText = hasBonus ? `+${team.bonus}` : '';
-        const showBonus = isReadOnly && serverClasses.includes('correct') && hasBonus;
+        const showBonus = isReadOnly && hasBonus;
 
         // Get shortened team name if available, otherwise use original name
         const displayName = teamNameShortcuts[team.name] || team.name;
