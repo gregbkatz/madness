@@ -253,6 +253,20 @@
         th.sortable.numeric-column {
             text-align: center;
         }
+
+        /* Remove the existing total-column styling if present */
+        /* Add new styling to make the Total column stand out using only font properties */
+        .total-column .correct-picks-value {
+            font-weight: 900;
+            font-size: 1.3em;
+        }
+
+        /* Add styling for the Total column header to match */
+        th.total-column {
+            font-weight: 900;
+            font-size: 1.5em;
+            border: 2px solid #000000;
+        }
     </style>
 </head>
 
@@ -302,7 +316,7 @@
                     data-round="champion">Champion</th>
                 <th class="sortable numeric-column" data-sort="total_score">Base</th>
                 <th class="sortable numeric-column" data-sort="total_bonus">Bonus</th>
-                <th class="sortable numeric-column" data-sort="total_with_bonus">Total</th>
+                <th class="sortable numeric-column total-column" data-sort="total_with_bonus">Total</th>
                 <th class="sortable numeric-column" data-sort="max_possible_base">Max Possible Base</th>
                 <th class="sortable numeric-column" data-sort="max_possible_bonus">Max Possible Bonus</th>
                 <th class="sortable numeric-column" data-sort="max_possible_total">Max Possible Total</th>
@@ -343,7 +357,8 @@
                             }}</span></td>
                     <td class="numeric-column"><span class="correct-picks-value">{{ user.correct_picks.total_bonus
                             }}</span></td>
-                    <td class="numeric-column"><span class="correct-picks-value">{{ user.correct_picks.total_with_bonus
+                    <td class="numeric-column total-column"><span class="correct-picks-value">{{
+                            user.correct_picks.total_with_bonus
                             }}</span></td>
                     <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_base }}</span>
                     </td>
