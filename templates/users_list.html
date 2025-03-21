@@ -211,6 +211,32 @@
                 font-size: 1.1em;
             }
         }
+
+        /* Toggle button styles */
+        .toggle-container {
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .toggle-button {
+            background-color: #003478;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .toggle-button:hover {
+            background-color: #00255a;
+        }
+
+        /* Column visibility classes */
+        .hidden-round {
+            display: none;
+        }
     </style>
 </head>
 
@@ -225,6 +251,10 @@
         Click on any column header to sort. Click again to reverse the sort order.
     </div>
 
+    <div class="toggle-container">
+        <button id="toggleRounds" class="toggle-button">Show Rounds</button>
+    </div>
+
     {% if error %}
     <div class="error">
         Error: {{ error }}
@@ -237,22 +267,24 @@
             <tr>
                 <th rowspan="2" class="sortable" data-sort="rank">Rank</th>
                 <th rowspan="2" class="sortable" data-sort="username">Username</th>
-                <!-- <th rowspan="2">Last Updated</th> -->
-                <!-- <th rowspan="2">Picks remaining</th> -->
                 <th rowspan="2" class="sortable" data-sort="champion">Champion</th>
-                <th colspan="7" style="text-align: center;">Scores (pts)</th>
-                <th colspan="5" style="text-align: center;">Bonus & Total</th>
+                <!-- <th colspan="7" style="text-align: center;">Scores (pts)</th> -->
+                <!-- <th colspan="5" style="text-align: center;">Bonus & Total</th> -->
             </tr>
             <tr>
-                <th class="sortable" data-sort="round_1_score">Round of 32</th>
-                <th class="sortable" data-sort="round_2_score">Sweet 16</th>
-                <th class="sortable" data-sort="round_3_score">Elite 8</th>
-                <th class="sortable" data-sort="final_four_score">Final Four</th>
-                <th class="sortable" data-sort="championship_score">Final</th>
-                <th class="sortable" data-sort="champion_score">Champion</th>
-                <th class="sortable" data-sort="total_score">Total</th>
+                <th class="sortable round-col hidden-round" data-sort="round_1_score" data-round="round_1">Round of 32
+                </th>
+                <th class="sortable round-col hidden-round" data-sort="round_2_score" data-round="round_2">Sweet 16</th>
+                <th class="sortable round-col hidden-round" data-sort="round_3_score" data-round="round_3">Elite 8</th>
+                <th class="sortable round-col hidden-round" data-sort="final_four_score" data-round="final_four">Final
+                    Four</th>
+                <th class="sortable round-col hidden-round" data-sort="championship_score" data-round="championship">
+                    Final</th>
+                <th class="sortable round-col hidden-round" data-sort="champion_score" data-round="champion">Champion
+                </th>
+                <th class="sortable" data-sort="total_score">Base</th>
                 <th class="sortable" data-sort="total_bonus">Bonus</th>
-                <th class="sortable" data-sort="total_with_bonus">Current</th>
+                <th class="sortable" data-sort="total_with_bonus">Total</th>
                 <th class="sortable" data-sort="max_possible_base">Max Base</th>
                 <th class="sortable" data-sort="max_possible_bonus">Max Bonus</th>
                 <th class="sortable" data-sort="max_possible_total">Max Total</th>
@@ -270,17 +302,19 @@
                         <a href="/?username={{ user.username }}">{{ user.username }}</a>
                         {% endif %}
                     </td>
-                    <!-- <td>{{ user.last_updated }}</td> -->
-                    <!-- <td>{{ user.picks_remaining }}</td> -->
-                    <td>{% if user.champion %}{{ user.champion }}{% else %}<span class="empty">-</span>{%
-                        endif
-                        %}</td>
-                    <td><span class="correct-picks-value">{{ user.correct_picks.round_1_score }}</span></td>
-                    <td><span class="correct-picks-value">{{ user.correct_picks.round_2_score }}</span></td>
-                    <td><span class="correct-picks-value">{{ user.correct_picks.round_3_score }}</span></td>
-                    <td><span class="correct-picks-value">{{ user.correct_picks.final_four_score }}</span></td>
-                    <td><span class="correct-picks-value">{{ user.correct_picks.championship_score }}</span></td>
-                    <td><span class="correct-picks-value">{{ user.correct_picks.champion_score }}</span></td>
+                    <td>{% if user.champion %}{{ user.champion }}{% else %}<span class="empty">-</span>{% endif %}</td>
+                    <td class="round-col hidden-round" data-round="round_1"><span class="correct-picks-value">{{
+                            user.correct_picks.round_1_score }}</span></td>
+                    <td class="round-col hidden-round" data-round="round_2"><span class="correct-picks-value">{{
+                            user.correct_picks.round_2_score }}</span></td>
+                    <td class="round-col hidden-round" data-round="round_3"><span class="correct-picks-value">{{
+                            user.correct_picks.round_3_score }}</span></td>
+                    <td class="round-col hidden-round" data-round="final_four"><span class="correct-picks-value">{{
+                            user.correct_picks.final_four_score }}</span></td>
+                    <td class="round-col hidden-round" data-round="championship"><span class="correct-picks-value">{{
+                            user.correct_picks.championship_score }}</span></td>
+                    <td class="round-col hidden-round" data-round="champion"><span class="correct-picks-value">{{
+                            user.correct_picks.champion_score }}</span></td>
                     <td><span class="correct-picks-value">{{ user.correct_picks.total_score }}</span></td>
                     <td><span class="correct-picks-value">{{ user.correct_picks.total_bonus }}</span></td>
                     <td><span class="correct-picks-value">{{ user.correct_picks.total_with_bonus }}</span></td>
@@ -313,6 +347,30 @@
 
             // Define sortableHeaders first before using it
             const sortableHeaders = document.querySelectorAll('th.sortable');
+
+            // Set up toggle functionality
+            const toggleButton = document.getElementById('toggleRounds');
+            if (toggleButton) {
+                let showingAllRounds = false;
+                toggleButton.addEventListener('click', function () {
+                    showingAllRounds = !showingAllRounds;
+                    const roundCols = document.querySelectorAll('.round-col');
+
+                    if (showingAllRounds) {
+                        // Show all rounds
+                        roundCols.forEach(col => {
+                            col.classList.remove('hidden-round');
+                        });
+                        toggleButton.textContent = 'Hide Rounds';
+                    } else {
+                        // Hide all rounds
+                        roundCols.forEach(col => {
+                            col.classList.add('hidden-round');
+                        });
+                        toggleButton.textContent = 'Show All Rounds';
+                    }
+                });
+            }
 
             // Mark the initial default sort column
             const initialSortHeader = Array.from(sortableHeaders).find(
@@ -384,38 +442,29 @@
                         }
                     }
                     else {
-                        // For score columns, find the right cell index
-                        let cellIndex;
-                        switch (column) {
-                            case 'round_1_score': cellIndex = 3; break;
-                            case 'round_2_score': cellIndex = 4; break;
-                            case 'round_3_score': cellIndex = 5; break;
-                            case 'final_four_score': cellIndex = 6; break;
-                            case 'championship_score': cellIndex = 7; break;
-                            case 'champion_score': cellIndex = 8; break;
-                            case 'total_score': cellIndex = 9; break;
-                            case 'total_bonus': cellIndex = 10; break;
-                            case 'total_with_bonus': cellIndex = 11; break;
-                            case 'max_possible_base': cellIndex = 12; break;
-                            case 'max_possible_bonus': cellIndex = 13; break;
-                            case 'max_possible_total': cellIndex = 14; break;
-                            default: cellIndex = 9; // Default to total score
+                        // For score columns, find the right cell index based on visible columns
+                        // This is more complex now that columns can be hidden
+                        let cellIndex = findCellIndexForColumn(a, column);
+
+                        if (cellIndex !== -1) {
+                            // Extract the numerical value
+                            aValue = parseInt(a.cells[cellIndex].textContent.trim());
+                            bValue = parseInt(b.cells[cellIndex].textContent.trim());
+
+                            // Handle non-numeric values
+                            if (isNaN(aValue)) aValue = 0;
+                            if (isNaN(bValue)) bValue = 0;
+
+                            // Numeric comparison
+                            if (direction === 'asc') {
+                                return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+                            } else {
+                                return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+                            }
                         }
 
-                        // Extract the numerical value
-                        aValue = parseInt(a.cells[cellIndex].textContent.trim());
-                        bValue = parseInt(b.cells[cellIndex].textContent.trim());
-
-                        // Handle non-numeric values
-                        if (isNaN(aValue)) aValue = 0;
-                        if (isNaN(bValue)) bValue = 0;
-
-                        // Numeric comparison
-                        if (direction === 'asc') {
-                            return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
-                        } else {
-                            return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
-                        }
+                        // Fallback if cell index not found
+                        return 0;
                     }
                 });
 
@@ -450,6 +499,31 @@
                 // Update current sort state
                 currentSort.column = column;
                 currentSort.direction = direction;
+            }
+
+            // Function to find the cell index for a column based on sort type
+            function findCellIndexForColumn(row, column) {
+                // Define mappings for each column to potential indexes
+                const columnMappings = {
+                    'round_1_score': 3,
+                    'round_2_score': 4,
+                    'round_3_score': 5,
+                    'final_four_score': 6,
+                    'championship_score': 7,
+                    'champion_score': 8,
+                    'total_score': 9,
+                    'total_bonus': 10,
+                    'total_with_bonus': 11,
+                    'max_possible_base': 12,
+                    'max_possible_bonus': 13,
+                    'max_possible_total': 14
+                };
+
+                // Adjust mappings based on which columns are hidden
+                let adjustedIndex = columnMappings[column];
+
+                // Return the appropriate cell index, adjusted for visible columns
+                return adjustedIndex;
             }
         });
     </script>

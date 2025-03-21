@@ -1118,12 +1118,14 @@ def users_list():
             session['username'] = 'viewer'
             session['read_only'] = True
             
+        # Get the truth bracket
+        truth_bracket = get_most_recent_truth_bracket()
+        
         # Get all unique usernames from saved bracket files
         users = set()
         user_data = []
 
         # Create "PERFECT" entry - get the truth bracket first
-        truth_bracket = get_most_recent_truth_bracket()
         if truth_bracket:
             # Use the existing compare_with_truth function to compare the truth bracket with itself
             # This will mark all teams as correct and calculate bonus points
@@ -1299,10 +1301,11 @@ def users_list():
                 max_possible_score["max_base"] += base_points
                 
                 if 'bonus' in scored_optimal_bracket["champion"] and scored_optimal_bracket["champion"]['bonus']:
-                    max_possible_score["max_bonus"] += scored_optimal_bracket["champion"]['bonus']
+                    max_possible_score["max_bonus"] += scored_optimal_bracket["champion"]["bonus"]
             
             # Calculate total max possible points
             max_possible_score["max_total"] = max_possible_score["max_base"] + max_possible_score["max_bonus"]
+            max_possible_total = max_possible_score["max_total"]
             
             # Create the perfect entry with maximum possible points
             perfect_entry = {
