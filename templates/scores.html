@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Basketball Scores</title>
+    <style>
+        body {
+            font-family: monospace;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .last-updated {
+            text-align: right;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        .game {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Live Basketball Scores</h1>
+
+    {% if error %}
+    <div class="error">
+        Error: {{ error }}
+    </div>
+    {% else %}
+
+    <div class="last-updated">
+        Last updated: {{ scores.last_updated|default('Unknown') }}
+    </div>
+
+    {% if scores.games %}
+    {% for game in scores.games %}
+    <div class="game">
+        <div class="status">Status: {{ game.status }}</div>
+        <div class="clock">{% if game.clock %}Time: {{ game.clock }}{% endif %}</div>
+        <div class="teams">
+            {{ game.away_team }}: {{ game.away_score }}<br>
+            {{ game.home_team }}: {{ game.home_score }}
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p>No games found.</p>
+    {% endif %}
+
+    {% endif %}
+
+    <a href="/" class="back-link">← Back to Bracket</a>
+    <a href="/users-list" class="back-link" style="margin-left: 20px;">View Users List</a>
+</body>
+
+</html>

@@ -1792,6 +1792,36 @@ def generate_optimal_future_bracket(truth_bracket):
     
     return optimal_bracket
 
+# Import for scores service
+from services.scores_service import ScoresService
+
+@app.route('/scores')
+def scores():
+    """Display live basketball scores from ESPN API."""
+    try:
+        # Create scores service
+        scores_service = ScoresService()
+        
+        # Get scores data
+        scores_data = scores_service.get_tournament_scores()
+        
+        # Check for errors
+        if 'error' in scores_data:
+            return render_template('scores.html', error=scores_data['error'])
+        
+        # Format the last_updated timestamp for display
+        if 'last_updated' in scores_data:
+            try:
+                dt = datetime.fromisoformat(scores_data['last_updated'])
+                scores_data['last_updated'] = dt.strftime('%Y-%m-%d %H:%M:%S')
+            except (ValueError, TypeError):
+                pass  # Keep original format if parsing fails
+        
+        return render_template('scores.html', scores=scores_data)
+    except Exception as e:
+        print(f"Error getting scores: {str(e)}")
+        return render_template('scores.html', error=str(e))
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 80))
     app.run(host='0.0.0.0', port=port) 
