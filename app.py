@@ -1315,9 +1315,15 @@ def users_list():
                 "picks_remaining": picks_remaining,
                 "champion": champion,
                 "correct_picks": perfect_score,
-                "max_possible_base": max_possible_score["max_base"],
-                "max_possible_bonus": max_possible_score["max_bonus"],
-                "max_possible_total": max_possible_score["max_total"],
+                # "max_possible_base": max_possible_score["max_base"],
+                # "max_possible_bonus": max_possible_score["max_bonus"],
+                # "max_possible_total": max_possible_score["max_total"],
+                "max_possible_base": 1680,
+                "max_possible_bonus": "-",
+                "max_possible_total": "-",
+                "max_possible_base_remaining": 1680 - perfect_score["total_score"],
+                "max_possible_bonus_remaining": "-",
+                "max_possible_total_remaining": "-",
             }
             
             # Add the perfect entry to the user data
@@ -1582,7 +1588,10 @@ def users_list():
                             },
                             "max_possible_base": max_possible_base if 'max_possible_base' in locals() else correct_picks["total_score"],
                             "max_possible_bonus": max_possible_bonus if 'max_possible_bonus' in locals() else correct_picks["total_bonus"],
-                            "max_possible_total": max_possible_total if 'max_possible_total' in locals() else correct_picks["total_with_bonus"]
+                            "max_possible_total": max_possible_total if 'max_possible_total' in locals() else correct_picks["total_with_bonus"],
+                            "max_possible_base_remaining": max_possible_base - correct_picks["total_score"],
+                            "max_possible_bonus_remaining": max_possible_bonus - correct_picks["total_bonus"],
+                            "max_possible_total_remaining": max_possible_total - correct_picks["total_with_bonus"]
                         })
                         
                         # Add to users set

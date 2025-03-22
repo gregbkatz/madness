@@ -318,8 +318,11 @@
                 <th class="sortable numeric-column" data-sort="total_score">Base</th>
                 <th class="sortable numeric-column" data-sort="total_bonus">Bonus</th>
                 <th class="sortable numeric-column total-column" data-sort="total_with_bonus">Total</th>
+                <th class="sortable numeric-column" data-sort="max_possible_base_remaining">Max Possible Base Remaining
+                </th>
+                <th class="sortable numeric-column" data-sort="max_possible_bonus_remaining">Max Possible Bonus
+                    Remaining</th>
                 <th class="sortable numeric-column" data-sort="max_possible_base">Max Possible Base</th>
-                <th class="sortable numeric-column" data-sort="max_possible_bonus">Max Possible Bonus</th>
                 <th class="sortable numeric-column" data-sort="max_possible_total">Max Possible Total</th>
             </tr>
         </thead>
@@ -361,9 +364,13 @@
                     <td class="numeric-column total-column"><span class="correct-picks-value">{{
                             user.correct_picks.total_with_bonus
                             }}</span></td>
-                    <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_base }}</span>
+                    <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_base_remaining
+                            }}</span>
                     </td>
-                    <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_bonus }}</span>
+                    <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_bonus_remaining
+                            }}</span>
+                    </td>
+                    <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_base }}</span>
                     </td>
                     <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_total }}</span>
                     </td>
@@ -551,6 +558,9 @@
             function findCellIndexForColumn(row, column) {
                 // Define mappings for each column to potential indexes
                 const columnMappings = {
+                    'rank': 0,
+                    'username': 1,
+                    'champion': 2,
                     'round_1_score': 3,
                     'round_2_score': 4,
                     'round_3_score': 5,
@@ -560,9 +570,10 @@
                     'total_score': 9,
                     'total_bonus': 10,
                     'total_with_bonus': 11,
-                    'max_possible_base': 12,
-                    'max_possible_bonus': 13,
-                    'max_possible_total': 14
+                    'max_possible_base_remaining': 12,
+                    'max_possible_bonus_remaining': 13,
+                    'max_possible_base': 14,
+                    'max_possible_total': 15
                 };
 
                 // Adjust mappings based on which columns are hidden
