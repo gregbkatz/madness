@@ -42,7 +42,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const index = sliderValueToIndex(sliderValue);
 
             if (fileNames && index >= 0 && index < fileNames.length) {
-                currentTruthFile.textContent = fileNames[index];
+                // Remove the .json extension before displaying
+                const displayName = fileNames[index].replace('.json', '');
+                currentTruthFile.textContent = displayName;
             }
 
             // Update button states
