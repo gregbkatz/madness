@@ -3,6 +3,7 @@ import os
 import glob
 import shutil
 from datetime import datetime
+from collections import defaultdict
 
 def analyze_bracket(json_file_path):
     """
@@ -21,7 +22,7 @@ def analyze_bracket(json_file_path):
             bracket = json.load(f)
         
         # Initialize counters
-        completed_games = 0
+        completed_games = defaultdict(int)
         max_round = 0
         
         # Count completed games in each region for rounds 0-3
@@ -38,7 +39,7 @@ def analyze_bracket(json_file_path):
                     
                 for team in round_data:
                     if team:  # If there's a team in this slot, a game has been completed
-                        completed_games += 1
+                        completed_games[round_idx] += 1
         
         # Check Final Four
         if 'finalFour' in bracket and any(bracket['finalFour']):
@@ -46,7 +47,7 @@ def analyze_bracket(json_file_path):
                 max_round = 4
             for team in bracket['finalFour']:
                 if team:
-                    completed_games += 1
+                    completed_games[4] += 1
         
         # Check Championship
         if 'championship' in bracket and any(bracket['championship']):
@@ -54,15 +55,15 @@ def analyze_bracket(json_file_path):
                 max_round = 5
             for team in bracket['championship']:
                 if team:
-                    completed_games += 1
+                    completed_games[5] += 1
         
         # Check Champion
         if 'champion' in bracket and bracket['champion']:
             if max_round < 6:
                 max_round = 6
-            completed_games += 1
+            completed_games[6] += 1
         
-        new_filename = f"round_{max_round}_game_{completed_games}.json"
+        new_filename = f"round_{max_round}_game_{completed_games[max_round]}.json"
 
         return {
             'rounds': max_round,
