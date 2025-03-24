@@ -268,15 +268,112 @@
             /* font-size: 1.5em; */
             /* border: 2px solid #000000; */
         }
+
+        /* Truth bracket slider styles */
+        .truth-slider-container {
+            margin: 20px auto;
+            max-width: 600px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .truth-slider-container h3 {
+            text-align: center;
+            margin-top: 0;
+            color: #003478;
+            margin-bottom: 10px;
+        }
+
+        .slider-with-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .slider {
+            width: 90%;
+            margin: 10px 0;
+        }
+
+        #current-truth-file {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        #truth-file-name {
+            font-weight: bold;
+            color: #003478;
+        }
+
+        /* Loading indicator */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.2s;
+        }
+
+        .loading-overlay.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #003478;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
 <body>
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
     <h1>March Madness Bracket Users</h1>
 
     <div class="user-count">
         Total Users: {{ users|length }}
     </div>
+
+    {% if truth_file_names %}
+    <div class="truth-slider-container">
+        <h3>Truth Bracket Timeline</h3>
+        <div class="slider-with-label">
+            <input type="range" id="truth-file-slider" min="0" max="{{ truth_file_names|length - 1 }}"
+                value="{{ selected_index }}" class="slider">
+            <div id="current-truth-file">
+                Current: <span id="truth-file-name">{{ current_truth_file }}</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <div class="sorting-help" style="text-align: center; color: #555; margin-bottom: 15px;">
         Click on any column header to sort. Click again to reverse the sort order.
@@ -401,6 +498,35 @@
 
             // Define sortableHeaders first before using it
             const sortableHeaders = document.querySelectorAll('th.sortable');
+
+            // Truth file slider functionality
+            const truthSlider = document.getElementById('truth-file-slider');
+            const truthFileName = document.getElementById('truth-file-name');
+            const loadingOverlay = document.getElementById('loading-overlay');
+
+            // Timer for debouncing slider updates
+            let sliderTimer;
+
+            if (truthSlider && truthFileName) {
+                // Update filename display as slider moves
+                truthSlider.addEventListener('input', function () {
+                    // Update the displayed filename immediately
+                    const fileNames = JSON.parse('{{ truth_file_names|tojson|safe }}');
+                    const index = parseInt(this.value);
+
+                    if (fileNames && index >= 0 && index < fileNames.length) {
+                        truthFileName.textContent = fileNames[index];
+                    }
+
+                    // Clear any existing timer
+                    clearTimeout(sliderTimer);
+
+                    // Set a new timer to update the page 
+                    sliderTimer = setTimeout(function () {
+                        updateWithTruthFile(index);
+                    }, 300); // 300ms delay to avoid too many requests
+                });
+            }
 
             // Set up toggle functionality
             const toggleButton = document.getElementById('toggleRounds');
@@ -582,6 +708,15 @@
 
                 // Return the appropriate cell index, adjusted for visible columns
                 return adjustedIndex;
+            }
+
+            // Function to update the page with the selected truth file
+            function updateWithTruthFile(index) {
+                // Show loading indicator
+                loadingOverlay.classList.add('visible');
+
+                // Navigate to the same page with the selected truth file index
+                window.location.href = `/users-list?truth_index=${index}`;
             }
         });
     </script>

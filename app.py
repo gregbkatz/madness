@@ -33,32 +33,62 @@ os.makedirs('saved_brackets', exist_ok=True)
 os.makedirs('truth_brackets', exist_ok=True)
 
 # Function to find the most recent truth bracket
-def get_most_recent_truth_bracket():
-    """Find and load the most recent truth bracket file."""
+def get_most_recent_truth_bracket(index=0):
+    """
+    Find and load a truth bracket file by index.
+    Index 0 is the most recent file, higher indexes are older files.
+    
+    Args:
+        index (int): The index of the truth file to load (0 = newest)
+        
+    Returns:
+        dict: The loaded bracket data or None if no files exist or an error occurs
+    """
     try:
-        # Get all bracket files in the truth_brackets directory
-        truth_files = glob.glob('truth_brackets/*.json')
+        # Get all sorted truth files
+        truth_files = get_sorted_truth_files()
         
         if not truth_files:
             return None
-            
-        # Sort by modification time, most recent first
-        def extract_round_game(filename):
-            match = re.search(r'round_(\d+)_game_(\d+)', filename)
-            if match:
-                round_num = int(match.group(1))
-                game_num = int(match.group(2))
-                return (round_num, game_num)
-            return (0, 0)  # Default for non-matching files
-            
-        truth_files.sort(key=extract_round_game, reverse=True)
         
-        # Load the most recent file
-        with open(truth_files[0], 'r') as f:
+        print("index, len", index, len(truth_files))
+        # Check if the requested index is valid
+        if index < 0 or index >= len(truth_files):
+            # If invalid, default to the most recent
+            index = 0
+            
+        # Load the requested file
+        print(f"Loading truth bracket file: {index}, {truth_files[index]}")
+        with open(truth_files[index], 'r') as f:
             return json.load(f)
     except Exception as e:
         print(f"Error loading truth bracket: {str(e)}")
         return None
+
+def get_sorted_truth_files():
+    """
+    Get all truth bracket files sorted by round and game number (newest first).
+    
+    Returns:
+        list: Sorted list of truth file paths
+    """
+    # Get all bracket files in the truth_brackets directory
+    truth_files = glob.glob('truth_brackets/*.json')
+    
+    if not truth_files:
+        return []
+        
+    # Sort by round and game numbers, newest first
+    def extract_round_game(filename):
+        match = re.search(r'round_(\d+)_game_(\d+)', filename)
+        if match:
+            round_num = int(match.group(1))
+            game_num = int(match.group(2))
+            return (round_num, game_num)
+        return (0, 0)  # Default for non-matching files
+        
+    truth_files.sort(key=extract_round_game, reverse=True)
+    return truth_files
 
 # Function to load the "all chalk" bracket
 def get_chalk_bracket():
@@ -101,9 +131,17 @@ def calculate_points_for_pick(team, round_idx):
     return base_points, bonus_points
 
 # Function to compare a bracket with the truth bracket and add comparison CSS classes
-def compare_with_truth(bracket):
-    """Compare a bracket with the most recent truth bracket and add CSS classes."""
-    truth_bracket = get_most_recent_truth_bracket()
+def compare_with_truth(bracket, truth_bracket=None):
+    """
+    Compare a bracket with the truth bracket and add CSS classes.
+    
+    Args:
+        bracket: The bracket to compare
+        truth_bracket: Optional truth bracket to compare against. If None,
+                      the most recent truth bracket will be loaded.
+    """
+    if truth_bracket is None:
+        truth_bracket = get_most_recent_truth_bracket()
     if not truth_bracket or not bracket:
         return bracket
         
@@ -112,7 +150,7 @@ def compare_with_truth(bracket):
     
     # Try to get the chalk bracket for bonus calculations
     chalk_bracket = get_chalk_bracket()
-    print(f"Chalk bracket loaded: {chalk_bracket is not None}")
+    # print(f"Chalk bracket loaded: {chalk_bracket is not None}")
     
     # Debug counts
     correct_count = 0
@@ -160,10 +198,10 @@ def compare_with_truth(bracket):
                                     bonus = seed_diff * UPSET_BONUS_MULTIPLIERS[f"round_{round_idx}"]
                                     team["bonus"] = int(bonus)  # Ensure it's an integer
                                     bonus_count += 1
-                                    print(f"Added bonus of {bonus} to {team['name']} in {region} round {round_idx} position {i}")
+                                    # print(f"Added bonus of {bonus} to {team['name']} in {region} round {round_idx} position {i}")
                                 else:
                                     team["bonus"] = 0  # Explicitly set to zero instead of None
-                                    print(f"Set bonus to 0 for {team['name']} in {region} round {round_idx} (no upset)")
+                                    # print(f"Set bonus to 0 for {team['name']} in {region} round {round_idx} (no upset)")
                         
                         # If truth team is None (future round), we're done with this team
                         if not truth_team:
@@ -172,7 +210,7 @@ def compare_with_truth(bracket):
                                 team["classes"] += " incorrect"
                                 team["correct"] = False
                                 team["isEliminated"] = True
-                                print(f"Marked future pick {team['name']} in {region} round {round_idx} as eliminated")
+                                # print(f"Marked future pick {team['name']} in {region} round {round_idx} as eliminated")
                             continue
 
                         # Compare teams by name and seed
@@ -220,7 +258,7 @@ def compare_with_truth(bracket):
                         if seed_diff > 0:
                             bonus = seed_diff * UPSET_BONUS_MULTIPLIERS["final_four"]
                             team["bonus"] = int(bonus)  # Ensure it's an integer
-                            print(f"Added Final Four bonus of {bonus} to {team['name']} (pos {i})")
+                            # print(f"Added Final Four bonus of {bonus} to {team['name']} (pos {i})")
                         else:
                             team["bonus"] = 0
                 
@@ -231,7 +269,7 @@ def compare_with_truth(bracket):
                         team["classes"] += " incorrect"
                         team["correct"] = False
                         team["isEliminated"] = True
-                        print(f"Marked future pick {team['name']} in Final Four as eliminated")
+                        # print(f"Marked future pick {team['name']} in Final Four as eliminated")
                     continue
                 
                 if team["name"] == truth_team["name"] and team["seed"] == truth_team["seed"]:
@@ -276,7 +314,7 @@ def compare_with_truth(bracket):
                         if seed_diff > 0:
                             bonus = seed_diff * UPSET_BONUS_MULTIPLIERS["championship"]
                             team["bonus"] = int(bonus)  # Ensure it's an integer
-                            print(f"Added Championship bonus of {bonus} to {team['name']} (pos {i})")
+                            # print(f"Added Championship bonus of {bonus} to {team['name']} (pos {i})")
                         else:
                             team["bonus"] = 0
                 
@@ -287,7 +325,7 @@ def compare_with_truth(bracket):
                         team["classes"] += " incorrect"
                         team["correct"] = False
                         team["isEliminated"] = True
-                        print(f"Marked future pick {team['name']} in Championship as eliminated")
+                        # print(f"Marked future pick {team['name']} in Championship as eliminated")
                     continue
                 
                 if team["name"] == truth_team["name"] and team["seed"] == truth_team["seed"]:
@@ -328,7 +366,7 @@ def compare_with_truth(bracket):
                     if seed_diff > 0:
                         bonus = seed_diff * UPSET_BONUS_MULTIPLIERS["champion"]
                         result_bracket["champion"]["bonus"] = int(bonus)  # Ensure it's an integer
-                        print(f"Added Champion bonus of {bonus} to {result_bracket['champion']['name']}")
+                        # print(f"Added Champion bonus of {bonus} to {result_bracket['champion']['name']}")
                     else:
                         result_bracket["champion"]["bonus"] = 0
             
@@ -339,7 +377,7 @@ def compare_with_truth(bracket):
                     result_bracket["champion"]["classes"] += " incorrect"
                     result_bracket["champion"]["correct"] = False
                     result_bracket["champion"]["isEliminated"] = True
-                    print(f"Marked future pick {result_bracket['champion']['name']} as Champion as eliminated")
+                    # print(f"Marked future pick {result_bracket['champion']['name']} as Champion as eliminated")
                 return result_bracket
             
             if result_bracket["champion"]["name"] == truth_champion["name"] and result_bracket["champion"]["seed"] == truth_champion["seed"]:
@@ -384,7 +422,7 @@ def compare_with_truth(bracket):
                         team["classes"] += " incorrect"
                         team["correct"] = False
                         team["isEliminated"] = True
-                        print(f"Marked future pick {team['name']} in {region} round {round_idx} as eliminated")
+                        # print(f"Marked future pick {team['name']} in {region} round {round_idx} as eliminated")
     
     # Check Final Four for eliminated teams
     for i in range(len(result_bracket["finalFour"])):
@@ -394,7 +432,7 @@ def compare_with_truth(bracket):
                 team["classes"] += " incorrect"
                 team["correct"] = False
                 team["isEliminated"] = True
-                print(f"Marked future pick {team['name']} in Final Four as eliminated")
+                # print(f"Marked future pick {team['name']} in Final Four as eliminated")
                 
     # Check Championship for eliminated teams
     for i in range(len(result_bracket["championship"])):
@@ -404,7 +442,7 @@ def compare_with_truth(bracket):
                 team["classes"] += " incorrect"
                 team["correct"] = False
                 team["isEliminated"] = True
-                print(f"Marked future pick {team['name']} in Championship as eliminated")
+                # print(f"Marked future pick {team['name']} in Championship as eliminated")
                 
     # Check Champion for eliminated teams
     if result_bracket["champion"] and isinstance(result_bracket["champion"], dict) and "correct" not in result_bracket["champion"]:
@@ -412,7 +450,7 @@ def compare_with_truth(bracket):
             result_bracket["champion"]["classes"] += " incorrect"
             result_bracket["champion"]["correct"] = False
             result_bracket["champion"]["isEliminated"] = True
-            print(f"Marked future pick {result_bracket['champion']['name']} as Champion as eliminated")
+            # print(f"Marked future pick {result_bracket['champion']['name']} as Champion as eliminated")
     
     return result_bracket
 
@@ -1087,7 +1125,12 @@ def manage_bracket():
     
     # If in read-only mode, compare with truth bracket
     if session.get('read_only', False):
-        user_bracket = compare_with_truth(user_bracket)
+        # Get the selected truth bracket index from session or default to 0
+        selected_index = session.get('selected_truth_index', 0)
+        # Get the appropriate truth bracket
+        truth_bracket = get_most_recent_truth_bracket(selected_index)
+        # Compare the user's bracket with the selected truth bracket
+        user_bracket = compare_with_truth(user_bracket, truth_bracket)
     
     print('Bracket data being returned:', pretty_print_bracket(user_bracket))
     return jsonify(user_bracket)
@@ -1125,9 +1168,42 @@ def users_list():
         if READ_ONLY_MODE and 'username' not in session:
             session['username'] = 'viewer'
             session['read_only'] = True
+        
+        # Get all truth files for the slider
+        all_truth_files = get_sorted_truth_files()
+        
+        # Get the selected truth file index from the session or request
+        selected_index = request.args.get('truth_index', None)
+        
+        # If a specific index was requested in the URL, use it and store in session
+        if selected_index is not None:
+            try:
+                selected_index = int(selected_index)
+                if selected_index < 0 or selected_index >= len(all_truth_files):
+                    selected_index = 0
+            except ValueError:
+                selected_index = 0
             
-        # Get the truth bracket
-        truth_bracket = get_most_recent_truth_bracket()
+            # Store in session for subsequent requests
+            session['selected_truth_index'] = selected_index
+        # Otherwise use the value from session, defaulting to 0 (newest)
+        else:
+            selected_index = session.get('selected_truth_index', 0)
+            
+            # Validate the index is still in range (in case files were added/removed)
+            if selected_index < 0 or selected_index >= len(all_truth_files):
+                selected_index = 0
+                session['selected_truth_index'] = selected_index
+        
+        # Get the truth bracket based on the selected index
+        truth_bracket = get_most_recent_truth_bracket(selected_index)
+        
+        # Format truth filenames for display in the slider
+        truth_file_names = []
+        for file_path in all_truth_files:
+            # Extract just the filename without the directory path
+            filename = os.path.basename(file_path)
+            truth_file_names.append(filename)
         
         # Get all unique usernames from saved bracket files
         users = set()
@@ -1138,7 +1214,7 @@ def users_list():
             # Use the existing compare_with_truth function to compare the truth bracket with itself
             # This will mark all teams as correct and calculate bonus points
             perfect_bracket = copy.deepcopy(truth_bracket)
-            compared_bracket = compare_with_truth(perfect_bracket)
+            compared_bracket = compare_with_truth(perfect_bracket, truth_bracket)
             
             # Count completed picks and extract champion
             completed_picks = 0
@@ -1263,7 +1339,7 @@ def users_list():
             optimal_future_bracket = generate_optimal_future_bracket(truth_bracket)
             
             # Score the optimal bracket using existing compare_with_truth function
-            scored_optimal_bracket = compare_with_truth(optimal_future_bracket)
+            scored_optimal_bracket = compare_with_truth(optimal_future_bracket, truth_bracket)
             
             # Calculate max possible scores from the scored optimal bracket
             max_possible_score = {
@@ -1442,7 +1518,7 @@ def users_list():
                                     comparison_bracket = copy.deepcopy(bracket_data)
                                     
                                     # Use the compare_with_truth function to mark correct picks and calculate bonuses
-                                    compared_bracket = compare_with_truth(comparison_bracket)
+                                    compared_bracket = compare_with_truth(comparison_bracket, truth_bracket)
                                     
                                     # Count correct picks in regular rounds (1-3)
                                     for region in ["midwest", "west", "south", "east"]:
@@ -1633,7 +1709,12 @@ def users_list():
             user["rank"] = current_rank
             previous_score = current_score
         
-        return render_template('users_list.html', users=user_data, error=None)
+        return render_template('users_list.html', 
+                              users=user_data, 
+                              error=None, 
+                              truth_file_names=truth_file_names,
+                              selected_index=selected_index,
+                              current_truth_file=truth_file_names[selected_index] if truth_file_names else None)
     except Exception as e:
         # Log the error and return empty user list
         print(f"Error in users_list route: {str(e)}")
