@@ -905,7 +905,6 @@ def manage_bracket():
                 'viewing_own_bracket': viewing_own_bracket,
                 'read_only': read_only
             }
-            print('truth_data:',comparison_data)
             return jsonify(response_data)
                 
         except Exception as e:

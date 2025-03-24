@@ -269,7 +269,26 @@ function MarchMadnessBracket() {
             })
             .then(data => {
                 console.log('Bracket fetched successfully:', data);
-                if (data.bracket) {
+
+                // Update read-only state if provided
+                if (data.read_only !== undefined) {
+                    setReadOnly(data.read_only);
+                }
+
+                // Use the same truth data handling logic as in updateBracketData
+                if (data.truth_data) {
+                    console.log("Truth data received in initial load:", data.truth_data);
+                    setTruthData(data.truth_data);
+                    setBracket(data.truth_data); // Use the truth data with correct/incorrect classes
+
+                    // Calculate and update completion status
+                    const status = calculateCompletionStatus(data.truth_data);
+                    setCompletionStatus(status);
+                    updateCompletionStatus(status);
+                }
+                // Fallback to regular bracket data if no truth data
+                else if (data.bracket) {
+                    console.log("Setting bracket data (no truth data):", data.bracket);
                     setBracket(data.bracket);
 
                     // Calculate and update completion status
