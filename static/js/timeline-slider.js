@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     console.warn('No update function found for timeline slider');
                 }
-            }, 100);
+            }, 10);
         });
 
         // Add handlers for previous and next buttons
