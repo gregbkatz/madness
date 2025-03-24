@@ -1160,6 +1160,522 @@ def get_bracket_status():
         print(f"Error getting bracket status: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+def get_users_list(truth_bracket):
+    """
+    Process and return user data with scores based on the provided truth bracket.
+    
+    Args:
+        truth_bracket: The truth bracket to compare user brackets against
+        
+    Returns:
+        list: List of user data dictionaries with scores and rankings
+    """
+    # Get all unique usernames from saved bracket files
+    users = set()
+    user_data = []
+
+    # Create "PERFECT" entry - get the truth bracket first
+    if truth_bracket:
+        # Use the existing compare_with_truth function to compare the truth bracket with itself
+        # This will mark all teams as correct and calculate bonus points
+        perfect_bracket = copy.deepcopy(truth_bracket)
+        compared_bracket = compare_with_truth(perfect_bracket, truth_bracket)
+        
+        # Count completed picks and extract champion
+        completed_picks = 0
+        champion = None
+        if compared_bracket.get("champion"):
+            champion = compared_bracket["champion"]["name"]
+        
+        # Initialize the perfect score dictionary
+        perfect_score = {
+            "round_1": 0, "round_2": 0, "round_3": 0,
+            "final_four": 0, "championship": 0, "champion": 0,
+            "total": 0,
+            "round_1_score": 0, "round_2_score": 0, "round_3_score": 0,
+            "final_four_score": 0, "championship_score": 0, "champion_score": 0,
+            "total_score": 0,
+            "round_1_bonus": 0, "round_2_bonus": 0, "round_3_bonus": 0,
+            "final_four_bonus": 0, "championship_bonus": 0, "champion_bonus": 0,
+            "total_bonus": 0, "total_with_bonus": 0
+        }
+        
+        # Count regional rounds (1-3)
+        for region in ["midwest", "west", "south", "east"]:
+            for round_idx in range(1, 4):
+                if region not in compared_bracket or round_idx >= len(compared_bracket[region]):
+                    continue
+                    
+                for team in compared_bracket[region][round_idx]:
+                    if not team:
+                        continue
+                        
+                    completed_picks += 1
+                    
+                    if team.get("correct", False):
+                        base_points, bonus_points = calculate_points_for_pick(team, round_idx)
+                        
+                        if round_idx == 1:
+                            perfect_score["round_1"] += 1
+                            perfect_score["round_1_score"] += base_points
+                        elif round_idx == 2:
+                            perfect_score["round_2"] += 1
+                            perfect_score["round_2_score"] += base_points
+                        elif round_idx == 3:
+                            perfect_score["round_3"] += 1
+                            perfect_score["round_3_score"] += base_points
+                        
+                        perfect_score["total"] += 1
+                        perfect_score["total_score"] += base_points
+                        
+                        # Add bonus if any
+                        if bonus_points > 0:
+                            bonus_key = f"round_{round_idx}_bonus"
+                            perfect_score[bonus_key] += bonus_points
+                            perfect_score["total_bonus"] += bonus_points
+        
+        # Count Final Four picks
+        for team in compared_bracket.get("finalFour", []):
+            if not team:
+                continue
+            
+            completed_picks += 1
+            
+            if team.get("correct", False):
+                perfect_score["final_four"] += 1
+                perfect_score["total"] += 1
+                
+                if team.get("bonus", 0) > 0:
+                    perfect_score["final_four_bonus"] += team["bonus"]
+                    perfect_score["total_bonus"] += team["bonus"]
+        
+        # Count Championship picks
+        for team in compared_bracket.get("championship", []):
+            if not team:
+                continue
+            
+            completed_picks += 1
+            
+            if team.get("correct", False):
+                perfect_score["championship"] += 1
+                perfect_score["total"] += 1
+                
+                if team.get("bonus", 0) > 0:
+                    perfect_score["championship_bonus"] += team["bonus"]
+                    perfect_score["total_bonus"] += team["bonus"]
+        
+        # Count Champion pick
+        if compared_bracket.get("champion"):
+            completed_picks += 1
+            
+            if compared_bracket["champion"].get("correct", False):
+                perfect_score["champion"] = 1
+                perfect_score["total"] += 1
+                
+                if compared_bracket["champion"].get("bonus", 0) > 0:
+                    perfect_score["champion_bonus"] = compared_bracket["champion"]["bonus"]
+                    perfect_score["total_bonus"] += compared_bracket["champion"]["bonus"]
+        
+        # Calculate scores using the standard point values
+        perfect_score["round_1_score"] = perfect_score["round_1"] * 10
+        perfect_score["round_2_score"] = perfect_score["round_2"] * 20
+        perfect_score["round_3_score"] = perfect_score["round_3"] * 40
+        perfect_score["final_four_score"] = perfect_score["final_four"] * 80
+        perfect_score["championship_score"] = perfect_score["championship"] * 120
+        perfect_score["champion_score"] = perfect_score["champion"] * 160
+        
+        # Calculate total score
+        perfect_score["total_score"] = (
+            perfect_score["round_1_score"] + 
+            perfect_score["round_2_score"] + 
+            perfect_score["round_3_score"] + 
+            perfect_score["final_four_score"] + 
+            perfect_score["championship_score"] + 
+            perfect_score["champion_score"]
+        )
+        
+        # Calculate total with bonus
+        perfect_score["total_with_bonus"] = perfect_score["total_score"] + perfect_score["total_bonus"]
+        
+        # Calculate remaining picks
+        picks_remaining = 63 - completed_picks
+        
+        # Generate an optimal future bracket that maximizes upset potential
+        optimal_future_bracket = generate_optimal_future_bracket(truth_bracket)
+        
+        # Score the optimal bracket using existing compare_with_truth function
+        scored_optimal_bracket = compare_with_truth(optimal_future_bracket, truth_bracket)
+        
+        # Calculate max possible scores from the scored optimal bracket
+        max_possible_score = {
+            "max_base": 0,
+            "max_bonus": 0,
+            "max_total": 0
+        }
+        
+        # Calculate scores for the optimal bracket
+        for region in ["midwest", "west", "south", "east"]:
+            for round_idx in range(4):  # 0 to 3 (First round through Elite Eight)
+                for team_idx, team in enumerate(scored_optimal_bracket[region][round_idx]):
+                    if team:
+                        # Calculate base points
+                        base_points, _ = calculate_points_for_pick(team, round_idx + 1)
+                        max_possible_score["max_base"] += base_points
+                        
+                        # Add bonus if exists
+                        if 'bonus' in team and team['bonus']:
+                            max_possible_score["max_bonus"] += team['bonus']
+        
+        # Final Four
+        for i, team in enumerate(scored_optimal_bracket["finalFour"]):
+            if team:
+                base_points, _ = calculate_points_for_pick(team, 4)
+                max_possible_score["max_base"] += base_points
+                
+                if 'bonus' in team and team['bonus']:
+                    max_possible_score["max_bonus"] += team['bonus']
+        
+        # Championship
+        for i, team in enumerate(scored_optimal_bracket["championship"]):
+            if team:
+                base_points, _ = calculate_points_for_pick(team, 5)
+                max_possible_score["max_base"] += base_points
+                
+                if 'bonus' in team and team['bonus']:
+                    max_possible_score["max_bonus"] += team['bonus']
+        
+        # Champion
+        if scored_optimal_bracket["champion"]:
+            base_points, _ = calculate_points_for_pick(scored_optimal_bracket["champion"], 6)
+            max_possible_score["max_base"] += base_points
+            
+            if 'bonus' in scored_optimal_bracket["champion"] and scored_optimal_bracket["champion"]['bonus']:
+                max_possible_score["max_bonus"] += scored_optimal_bracket["champion"]["bonus"]
+        
+        # Calculate total max possible points
+        max_possible_score["max_total"] = max_possible_score["max_base"] + max_possible_score["max_bonus"]
+        max_possible_total = max_possible_score["max_total"]
+        
+        # Create the perfect entry with maximum possible points
+        perfect_entry = {
+            "username": "PERFECT",
+            "last_updated": "Current truth bracket",
+            "bracket_count": 1,
+            "picks_remaining": picks_remaining,
+            "champion": champion,
+            "correct_picks": perfect_score,
+            # "max_possible_base": max_possible_score["max_base"],
+            # "max_possible_bonus": max_possible_score["max_bonus"],
+            # "max_possible_total": max_possible_score["max_total"],
+            "max_possible_base": 1680,
+            "max_possible_bonus": "-",
+            "max_possible_total": "-",
+            "max_possible_base_remaining": 1680 - perfect_score["total_score"],
+            "max_possible_bonus_remaining": "-",
+            "max_possible_total_remaining": "-",
+        }
+        
+        # Add the perfect entry to the user data
+        user_data.append(perfect_entry)
+    
+    # Get list of all bracket files
+    for file in os.listdir('saved_brackets'):
+        if file.endswith('.json') and file.startswith("bracket_"):
+            # Extract username from filename (format: bracket_USERNAME_timestamp.json)
+            parts = file.split('_')
+            
+            if len(parts) >= 3:
+                # Username is the part between "bracket_" and the timestamp
+                username = '_'.join(parts[1:-2])
+                
+                # Skip if username is empty or only contains special characters
+                if not username or username == 'anonymous':
+                    continue
+                
+                if username not in users:
+                    # Get the most recent file for this user
+                    timestamp = extract_timestamp_from_filename(file)
+                    
+                    # Get number of brackets for this user
+                    user_brackets = [f for f in os.listdir('saved_brackets') 
+                                   if f.endswith('.json') and f.startswith(f"bracket_{username}_")]
+                    
+                    # Sort brackets by timestamp to find the latest one
+                    sorted_brackets = []
+                    for bracket_file in user_brackets:
+                        bracket_timestamp = extract_timestamp_from_filename(bracket_file)
+                        if bracket_timestamp:
+                            sorted_brackets.append((bracket_file, bracket_timestamp))
+                    
+                    sorted_brackets.sort(key=lambda x: x[1], reverse=True)
+                    
+                    # Calculate picks remaining for latest bracket
+                    picks_remaining = 63  # Default - all picks remaining
+                    champion = "None"  # Default - no champion selected
+                    formatted_time = "Unknown"
+                    
+                    if sorted_brackets:
+                        latest_bracket_file = sorted_brackets[0][0]
+                        formatted_time = sorted_brackets[0][1].strftime("%Y-%m-%d %I:%M %p")
+                        file_path = os.path.join('saved_brackets', latest_bracket_file)
+                        try:
+                            with open(file_path, 'r') as f:
+                                bracket_data = json.load(f)
+                            
+                            # Count completed picks
+                            completed_picks = 0
+                            
+                            # Count teams in regional rounds (rounds 1-3)
+                            for region in ["midwest", "west", "south", "east"]:
+                                for round_idx in range(1, 4):
+                                    for team in bracket_data[region][round_idx]:
+                                        if team is not None:
+                                            completed_picks += 1
+                            
+                            # Count Final Four picks
+                            for team in bracket_data["finalFour"]:
+                                if team is not None:
+                                    completed_picks += 1
+                            
+                            # Count Championship picks
+                            for team in bracket_data["championship"]:
+                                if team is not None:
+                                    completed_picks += 1
+                            
+                            # Count Champion
+                            if bracket_data["champion"] is not None:
+                                completed_picks += 1
+                                # Extract champion name
+                                champion = bracket_data["champion"]["name"]
+                            
+                            # Calculate remaining picks
+                            picks_remaining = 63 - completed_picks
+                            
+                            # Compare with truth bracket to count correct picks
+                            correct_picks = {
+                                "round_1": 0,
+                                "round_2": 0,
+                                "round_3": 0,
+                                "final_four": 0,
+                                "championship": 0,
+                                "champion": 0,
+                                "total": 0,
+                                "round_1_score": 0,
+                                "round_2_score": 0,
+                                "round_3_score": 0,
+                                "final_four_score": 0,
+                                "championship_score": 0,
+                                "champion_score": 0,
+                                "total_score": 0,
+                                "round_1_bonus": 0,
+                                "round_2_bonus": 0,
+                                "round_3_bonus": 0,
+                                "final_four_bonus": 0,
+                                "championship_bonus": 0,
+                                "champion_bonus": 0,
+                                "total_bonus": 0,
+                                "total_with_bonus": 0
+                            }
+                            
+                            # Get the truth bracket
+                            if truth_bracket:
+                                # Create a copy of the user's bracket for comparison
+                                comparison_bracket = copy.deepcopy(bracket_data)
+                                
+                                # Use the compare_with_truth function to mark correct picks and calculate bonuses
+                                compared_bracket = compare_with_truth(comparison_bracket, truth_bracket)
+                                
+                                # Count correct picks in regular rounds (1-3)
+                                for region in ["midwest", "west", "south", "east"]:
+                                    for round_idx in range(1, 4):
+                                        if region not in compared_bracket or round_idx >= len(compared_bracket[region]):
+                                            continue
+                                            
+                                        for team in compared_bracket[region][round_idx]:
+                                            if not team:
+                                                continue
+                                            
+                                            if team.get("correct", False):
+                                                base_points, bonus_points = calculate_points_for_pick(team, round_idx)
+                                                
+                                                if round_idx == 1:
+                                                    correct_picks["round_1"] += 1
+                                                    correct_picks["round_1_score"] += base_points
+                                                elif round_idx == 2:
+                                                    correct_picks["round_2"] += 1
+                                                    correct_picks["round_2_score"] += base_points
+                                                elif round_idx == 3:
+                                                    correct_picks["round_3"] += 1
+                                                    correct_picks["round_3_score"] += base_points
+                                                
+                                                correct_picks["total"] += 1
+                                                correct_picks["total_score"] += base_points
+                                                
+                                                # Add bonus if any
+                                                if bonus_points > 0:
+                                                    bonus_key = f"round_{round_idx}_bonus"
+                                                    correct_picks[bonus_key] += bonus_points
+                                                    correct_picks["total_bonus"] += bonus_points
+                                
+                                # Count Final Four correct picks
+                                for team in compared_bracket.get("finalFour", []):
+                                    if not team:
+                                        continue
+                                    
+                                    if team.get("correct", False):
+                                        correct_picks["final_four"] += 1
+                                        correct_picks["total"] += 1
+                                        
+                                        if team.get("bonus", 0) > 0:
+                                            correct_picks["final_four_bonus"] += team["bonus"]
+                                            correct_picks["total_bonus"] += team["bonus"]
+                                
+                                # Count Championship correct picks
+                                for team in compared_bracket.get("championship", []):
+                                    if not team:
+                                        continue
+                                    
+                                    if team.get("correct", False):
+                                        correct_picks["championship"] += 1
+                                        correct_picks["total"] += 1
+                                        
+                                        if team.get("bonus", 0) > 0:
+                                            correct_picks["championship_bonus"] += team["bonus"]
+                                            correct_picks["total_bonus"] += team["bonus"]
+                                
+                                # Count Champion correct pick
+                                if compared_bracket.get("champion") and compared_bracket["champion"].get("correct", False):
+                                    correct_picks["champion"] = 1
+                                    correct_picks["total"] += 1
+                                    
+                                    if compared_bracket["champion"].get("bonus", 0) > 0:
+                                        correct_picks["champion_bonus"] = compared_bracket["champion"]["bonus"]
+                                        correct_picks["total_bonus"] += compared_bracket["champion"]["bonus"]
+                        
+                            # Calculate scores using standard point values
+                            correct_picks["round_1_score"] = correct_picks["round_1"] * 10
+                            correct_picks["round_2_score"] = correct_picks["round_2"] * 20
+                            correct_picks["round_3_score"] = correct_picks["round_3"] * 40
+                            correct_picks["final_four_score"] = correct_picks["final_four"] * 80
+                            correct_picks["championship_score"] = correct_picks["championship"] * 120
+                            correct_picks["champion_score"] = correct_picks["champion"] * 160
+                            
+                            # Calculate total score
+                            correct_picks["total_score"] = (
+                                correct_picks["round_1_score"] + 
+                                correct_picks["round_2_score"] + 
+                                correct_picks["round_3_score"] + 
+                                correct_picks["final_four_score"] + 
+                                correct_picks["championship_score"] + 
+                                correct_picks["champion_score"]
+                            )
+                            
+                            # Calculate total with bonus
+                            correct_picks["total_with_bonus"] = correct_picks["total_score"] + correct_picks["total_bonus"]
+                            
+                            # Calculate maximum possible points (current + potential)
+                            max_possible_base = correct_picks["total_score"]  # Start with current score
+                            max_possible_bonus = correct_picks["total_bonus"]  # Start with current bonus
+                            
+                            # For each region, calculate potential points
+                            for region in ["midwest", "west", "south", "east"]:
+                                for round_idx in range(1, 4):
+                                    if region not in compared_bracket or round_idx >= len(compared_bracket[region]):
+                                        continue
+                                        
+                                    for team in compared_bracket[region][round_idx]:
+                                        # Only count teams that aren't already scored (not correct/incorrect)
+                                        # and haven't been eliminated
+                                        if team and team.get("correct") is None and not team.get("isEliminated", False):
+                                            base, bonus = calculate_points_for_pick(team, round_idx)
+                                            max_possible_base += base
+                                            max_possible_bonus += bonus
+                            
+                            # Calculate potential points for Final Four
+                            for team in compared_bracket.get("finalFour", []):
+                                if team and team.get("correct") is None and not team.get("isEliminated", False):
+                                    base, bonus = calculate_points_for_pick(team, "final_four")
+                                    max_possible_base += base
+                                    max_possible_bonus += bonus
+                            
+                            # Calculate potential points for Championship
+                            for team in compared_bracket.get("championship", []):
+                                if team and team.get("correct") is None and not team.get("isEliminated", False):
+                                    base, bonus = calculate_points_for_pick(team, "championship")
+                                    max_possible_base += base
+                                    max_possible_bonus += bonus
+                            
+                            # Calculate potential points for Champion
+                            if compared_bracket.get("champion") and compared_bracket["champion"].get("correct") is None and not compared_bracket["champion"].get("isEliminated", False):
+                                base, bonus = calculate_points_for_pick(compared_bracket["champion"], "champion")
+                                max_possible_base += base
+                                max_possible_bonus += bonus
+                            
+                            # Calculate total maximum possible points
+                            max_possible_total = max_possible_base + max_possible_bonus
+
+                        except Exception as e:
+                            print(f"Error calculating picks for {username}: {str(e)}")
+                    
+                    # Add to user data
+                    user_data.append({
+                        "username": username,
+                        "last_updated": formatted_time,
+                        "bracket_count": len(user_brackets),
+                        "picks_remaining": picks_remaining,
+                        "champion": champion,
+                        "correct_picks": correct_picks if 'correct_picks' in locals() else {
+                            "round_1": 0, "round_2": 0, "round_3": 0,
+                            "final_four": 0, "championship": 0, "champion": 0,
+                            "total": 0,
+                            "round_1_score": 0, "round_2_score": 0, "round_3_score": 0,
+                            "final_four_score": 0, "championship_score": 0, "champion_score": 0,
+                            "total_score": 0, 
+                            "round_1_bonus": 0, "round_2_bonus": 0, "round_3_bonus": 0,
+                            "final_four_bonus": 0, "championship_bonus": 0, "champion_bonus": 0,
+                            "total_bonus": 0, "total_with_bonus": 0
+                        },
+                        "max_possible_base": max_possible_base if 'max_possible_base' in locals() else correct_picks["total_score"],
+                        "max_possible_bonus": max_possible_bonus if 'max_possible_bonus' in locals() else correct_picks["total_bonus"],
+                        "max_possible_total": max_possible_total if 'max_possible_total' in locals() else correct_picks["total_with_bonus"],
+                        "max_possible_base_remaining": max_possible_base - correct_picks["total_score"],
+                        "max_possible_bonus_remaining": max_possible_bonus - correct_picks["total_bonus"],
+                        "max_possible_total_remaining": max_possible_total - correct_picks["total_with_bonus"]
+                    })
+                    
+                    # Add to users set
+                    users.add(username)
+    
+    # Sort user data to put PERFECT at the top, then by score
+    user_data.sort(key=lambda x: (0 if x["username"] == "PERFECT" else 1, -x["correct_picks"]["total_with_bonus"]))
+    
+    # Add ranking to user data (handling ties)
+    current_rank = 1
+    previous_score = None
+    skip_count = 0
+    
+    for i, user in enumerate(user_data):
+        # Skip ranking the PERFECT row
+        if user["username"] == "PERFECT":
+            user["rank"] = "-"
+            continue
+            
+        current_score = user["correct_picks"]["total_with_bonus"]
+        
+        if previous_score is not None and current_score != previous_score:
+            # If score is different from previous, increment rank by the number of tied users plus 1
+            current_rank += skip_count + 1
+            skip_count = 0
+        else:
+            # For the first user or tied users, increment skip counter
+            if previous_score is not None:
+                skip_count += 1
+                
+        user["rank"] = current_rank
+        previous_score = current_score
+    
+    return user_data
+
 @app.route('/users-list')
 def users_list():
     """Show a list of all users who have created brackets."""
@@ -1205,509 +1721,8 @@ def users_list():
             filename = os.path.basename(file_path)
             truth_file_names.append(filename)
         
-        # Get all unique usernames from saved bracket files
-        users = set()
-        user_data = []
-
-        # Create "PERFECT" entry - get the truth bracket first
-        if truth_bracket:
-            # Use the existing compare_with_truth function to compare the truth bracket with itself
-            # This will mark all teams as correct and calculate bonus points
-            perfect_bracket = copy.deepcopy(truth_bracket)
-            compared_bracket = compare_with_truth(perfect_bracket, truth_bracket)
-            
-            # Count completed picks and extract champion
-            completed_picks = 0
-            champion = None
-            if compared_bracket.get("champion"):
-                champion = compared_bracket["champion"]["name"]
-            
-            # Initialize the perfect score dictionary
-            perfect_score = {
-                "round_1": 0, "round_2": 0, "round_3": 0,
-                "final_four": 0, "championship": 0, "champion": 0,
-                "total": 0,
-                "round_1_score": 0, "round_2_score": 0, "round_3_score": 0,
-                "final_four_score": 0, "championship_score": 0, "champion_score": 0,
-                "total_score": 0,
-                "round_1_bonus": 0, "round_2_bonus": 0, "round_3_bonus": 0,
-                "final_four_bonus": 0, "championship_bonus": 0, "champion_bonus": 0,
-                "total_bonus": 0, "total_with_bonus": 0
-            }
-            
-            # Count regional rounds (1-3)
-            for region in ["midwest", "west", "south", "east"]:
-                for round_idx in range(1, 4):
-                    if region not in compared_bracket or round_idx >= len(compared_bracket[region]):
-                        continue
-                        
-                    for team in compared_bracket[region][round_idx]:
-                        if not team:
-                            continue
-                            
-                        completed_picks += 1
-                        
-                        if team.get("correct", False):
-                            base_points, bonus_points = calculate_points_for_pick(team, round_idx)
-                            
-                            if round_idx == 1:
-                                perfect_score["round_1"] += 1
-                                perfect_score["round_1_score"] += base_points
-                            elif round_idx == 2:
-                                perfect_score["round_2"] += 1
-                                perfect_score["round_2_score"] += base_points
-                            elif round_idx == 3:
-                                perfect_score["round_3"] += 1
-                                perfect_score["round_3_score"] += base_points
-                            
-                            perfect_score["total"] += 1
-                            perfect_score["total_score"] += base_points
-                            
-                            # Add bonus if any
-                            if bonus_points > 0:
-                                bonus_key = f"round_{round_idx}_bonus"
-                                perfect_score[bonus_key] += bonus_points
-                                perfect_score["total_bonus"] += bonus_points
-            
-            # Count Final Four picks
-            for team in compared_bracket.get("finalFour", []):
-                if not team:
-                    continue
-                
-                completed_picks += 1
-                
-                if team.get("correct", False):
-                    perfect_score["final_four"] += 1
-                    perfect_score["total"] += 1
-                    
-                    if team.get("bonus", 0) > 0:
-                        perfect_score["final_four_bonus"] += team["bonus"]
-                        perfect_score["total_bonus"] += team["bonus"]
-            
-            # Count Championship picks
-            for team in compared_bracket.get("championship", []):
-                if not team:
-                    continue
-                
-                completed_picks += 1
-                
-                if team.get("correct", False):
-                    perfect_score["championship"] += 1
-                    perfect_score["total"] += 1
-                    
-                    if team.get("bonus", 0) > 0:
-                        perfect_score["championship_bonus"] += team["bonus"]
-                        perfect_score["total_bonus"] += team["bonus"]
-            
-            # Count Champion pick
-            if compared_bracket.get("champion"):
-                completed_picks += 1
-                
-                if compared_bracket["champion"].get("correct", False):
-                    perfect_score["champion"] = 1
-                    perfect_score["total"] += 1
-                    
-                    if compared_bracket["champion"].get("bonus", 0) > 0:
-                        perfect_score["champion_bonus"] = compared_bracket["champion"]["bonus"]
-                        perfect_score["total_bonus"] += compared_bracket["champion"]["bonus"]
-            
-            # Calculate scores using the standard point values
-            perfect_score["round_1_score"] = perfect_score["round_1"] * 10
-            perfect_score["round_2_score"] = perfect_score["round_2"] * 20
-            perfect_score["round_3_score"] = perfect_score["round_3"] * 40
-            perfect_score["final_four_score"] = perfect_score["final_four"] * 80
-            perfect_score["championship_score"] = perfect_score["championship"] * 120
-            perfect_score["champion_score"] = perfect_score["champion"] * 160
-            
-            # Calculate total score
-            perfect_score["total_score"] = (
-                perfect_score["round_1_score"] + 
-                perfect_score["round_2_score"] + 
-                perfect_score["round_3_score"] + 
-                perfect_score["final_four_score"] + 
-                perfect_score["championship_score"] + 
-                perfect_score["champion_score"]
-            )
-            
-            # Calculate total with bonus
-            perfect_score["total_with_bonus"] = perfect_score["total_score"] + perfect_score["total_bonus"]
-            
-            # Calculate remaining picks
-            picks_remaining = 63 - completed_picks
-            
-            # Generate an optimal future bracket that maximizes upset potential
-            optimal_future_bracket = generate_optimal_future_bracket(truth_bracket)
-            
-            # Score the optimal bracket using existing compare_with_truth function
-            scored_optimal_bracket = compare_with_truth(optimal_future_bracket, truth_bracket)
-            
-            # Calculate max possible scores from the scored optimal bracket
-            max_possible_score = {
-                "max_base": 0,
-                "max_bonus": 0,
-                "max_total": 0
-            }
-            
-            # Calculate scores for the optimal bracket
-            for region in ["midwest", "west", "south", "east"]:
-                for round_idx in range(4):  # 0 to 3 (First round through Elite Eight)
-                    for team_idx, team in enumerate(scored_optimal_bracket[region][round_idx]):
-                        if team:
-                            # Calculate base points
-                            base_points, _ = calculate_points_for_pick(team, round_idx + 1)
-                            max_possible_score["max_base"] += base_points
-                            
-                            # Add bonus if exists
-                            if 'bonus' in team and team['bonus']:
-                                max_possible_score["max_bonus"] += team['bonus']
-            
-            # Final Four
-            for i, team in enumerate(scored_optimal_bracket["finalFour"]):
-                if team:
-                    base_points, _ = calculate_points_for_pick(team, 4)
-                    max_possible_score["max_base"] += base_points
-                    
-                    if 'bonus' in team and team['bonus']:
-                        max_possible_score["max_bonus"] += team['bonus']
-            
-            # Championship
-            for i, team in enumerate(scored_optimal_bracket["championship"]):
-                if team:
-                    base_points, _ = calculate_points_for_pick(team, 5)
-                    max_possible_score["max_base"] += base_points
-                    
-                    if 'bonus' in team and team['bonus']:
-                        max_possible_score["max_bonus"] += team['bonus']
-            
-            # Champion
-            if scored_optimal_bracket["champion"]:
-                base_points, _ = calculate_points_for_pick(scored_optimal_bracket["champion"], 6)
-                max_possible_score["max_base"] += base_points
-                
-                if 'bonus' in scored_optimal_bracket["champion"] and scored_optimal_bracket["champion"]['bonus']:
-                    max_possible_score["max_bonus"] += scored_optimal_bracket["champion"]["bonus"]
-            
-            # Calculate total max possible points
-            max_possible_score["max_total"] = max_possible_score["max_base"] + max_possible_score["max_bonus"]
-            max_possible_total = max_possible_score["max_total"]
-            
-            # Create the perfect entry with maximum possible points
-            perfect_entry = {
-                "username": "PERFECT",
-                "last_updated": "Current truth bracket",
-                "bracket_count": 1,
-                "picks_remaining": picks_remaining,
-                "champion": champion,
-                "correct_picks": perfect_score,
-                # "max_possible_base": max_possible_score["max_base"],
-                # "max_possible_bonus": max_possible_score["max_bonus"],
-                # "max_possible_total": max_possible_score["max_total"],
-                "max_possible_base": 1680,
-                "max_possible_bonus": "-",
-                "max_possible_total": "-",
-                "max_possible_base_remaining": 1680 - perfect_score["total_score"],
-                "max_possible_bonus_remaining": "-",
-                "max_possible_total_remaining": "-",
-            }
-            
-            # Add the perfect entry to the user data
-            user_data.append(perfect_entry)
-        
-        # Get list of all bracket files
-        for file in os.listdir('saved_brackets'):
-            if file.endswith('.json') and file.startswith("bracket_"):
-                # Extract username from filename (format: bracket_USERNAME_timestamp.json)
-                parts = file.split('_')
-                
-                if len(parts) >= 3:
-                    # Username is the part between "bracket_" and the timestamp
-                    username = '_'.join(parts[1:-2])
-                    
-                    # Skip if username is empty or only contains special characters
-                    if not username or username == 'anonymous':
-                        continue
-                    
-                    if username not in users:
-                        # Get the most recent file for this user
-                        timestamp = extract_timestamp_from_filename(file)
-                        
-                        # Get number of brackets for this user
-                        user_brackets = [f for f in os.listdir('saved_brackets') 
-                                       if f.endswith('.json') and f.startswith(f"bracket_{username}_")]
-                        
-                        # Sort brackets by timestamp to find the latest one
-                        sorted_brackets = []
-                        for bracket_file in user_brackets:
-                            bracket_timestamp = extract_timestamp_from_filename(bracket_file)
-                            if bracket_timestamp:
-                                sorted_brackets.append((bracket_file, bracket_timestamp))
-                        
-                        sorted_brackets.sort(key=lambda x: x[1], reverse=True)
-                        
-                        # Calculate picks remaining for latest bracket
-                        picks_remaining = 63  # Default - all picks remaining
-                        champion = "None"  # Default - no champion selected
-                        formatted_time = "Unknown"
-                        
-                        if sorted_brackets:
-                            latest_bracket_file = sorted_brackets[0][0]
-                            formatted_time = sorted_brackets[0][1].strftime("%Y-%m-%d %I:%M %p")
-                            file_path = os.path.join('saved_brackets', latest_bracket_file)
-                            try:
-                                with open(file_path, 'r') as f:
-                                    bracket_data = json.load(f)
-                                
-                                # Count completed picks
-                                completed_picks = 0
-                                
-                                # Count teams in regional rounds (rounds 1-3)
-                                for region in ["midwest", "west", "south", "east"]:
-                                    for round_idx in range(1, 4):
-                                        for team in bracket_data[region][round_idx]:
-                                            if team is not None:
-                                                completed_picks += 1
-                                
-                                # Count Final Four picks
-                                for team in bracket_data["finalFour"]:
-                                    if team is not None:
-                                        completed_picks += 1
-                                
-                                # Count Championship picks
-                                for team in bracket_data["championship"]:
-                                    if team is not None:
-                                        completed_picks += 1
-                                
-                                # Count Champion
-                                if bracket_data["champion"] is not None:
-                                    completed_picks += 1
-                                    # Extract champion name
-                                    champion = bracket_data["champion"]["name"]
-                                
-                                # Calculate remaining picks
-                                picks_remaining = 63 - completed_picks
-                                
-                                # Compare with truth bracket to count correct picks
-                                correct_picks = {
-                                    "round_1": 0,
-                                    "round_2": 0,
-                                    "round_3": 0,
-                                    "final_four": 0,
-                                    "championship": 0,
-                                    "champion": 0,
-                                    "total": 0,
-                                    "round_1_score": 0,
-                                    "round_2_score": 0,
-                                    "round_3_score": 0,
-                                    "final_four_score": 0,
-                                    "championship_score": 0,
-                                    "champion_score": 0,
-                                    "total_score": 0,
-                                    "round_1_bonus": 0,
-                                    "round_2_bonus": 0,
-                                    "round_3_bonus": 0,
-                                    "final_four_bonus": 0,
-                                    "championship_bonus": 0,
-                                    "champion_bonus": 0,
-                                    "total_bonus": 0,
-                                    "total_with_bonus": 0
-                                }
-                                
-                                # Get the truth bracket
-                                if truth_bracket:
-                                    # Create a copy of the user's bracket for comparison
-                                    comparison_bracket = copy.deepcopy(bracket_data)
-                                    
-                                    # Use the compare_with_truth function to mark correct picks and calculate bonuses
-                                    compared_bracket = compare_with_truth(comparison_bracket, truth_bracket)
-                                    
-                                    # Count correct picks in regular rounds (1-3)
-                                    for region in ["midwest", "west", "south", "east"]:
-                                        for round_idx in range(1, 4):
-                                            if region not in compared_bracket or round_idx >= len(compared_bracket[region]):
-                                                continue
-                                                
-                                            for team in compared_bracket[region][round_idx]:
-                                                if not team:
-                                                    continue
-                                                
-                                                if team.get("correct", False):
-                                                    base_points, bonus_points = calculate_points_for_pick(team, round_idx)
-                                                    
-                                                    if round_idx == 1:
-                                                        correct_picks["round_1"] += 1
-                                                        correct_picks["round_1_score"] += base_points
-                                                    elif round_idx == 2:
-                                                        correct_picks["round_2"] += 1
-                                                        correct_picks["round_2_score"] += base_points
-                                                    elif round_idx == 3:
-                                                        correct_picks["round_3"] += 1
-                                                        correct_picks["round_3_score"] += base_points
-                                                    
-                                                    correct_picks["total"] += 1
-                                                    correct_picks["total_score"] += base_points
-                                                    
-                                                    # Add bonus if any
-                                                    if bonus_points > 0:
-                                                        bonus_key = f"round_{round_idx}_bonus"
-                                                        correct_picks[bonus_key] += bonus_points
-                                                        correct_picks["total_bonus"] += bonus_points
-                                    
-                                    # Count Final Four correct picks
-                                    for team in compared_bracket.get("finalFour", []):
-                                        if not team:
-                                            continue
-                                        
-                                        if team.get("correct", False):
-                                            correct_picks["final_four"] += 1
-                                            correct_picks["total"] += 1
-                                            
-                                            if team.get("bonus", 0) > 0:
-                                                correct_picks["final_four_bonus"] += team["bonus"]
-                                                correct_picks["total_bonus"] += team["bonus"]
-                                    
-                                    # Count Championship correct picks
-                                    for team in compared_bracket.get("championship", []):
-                                        if not team:
-                                            continue
-                                        
-                                        if team.get("correct", False):
-                                            correct_picks["championship"] += 1
-                                            correct_picks["total"] += 1
-                                            
-                                            if team.get("bonus", 0) > 0:
-                                                correct_picks["championship_bonus"] += team["bonus"]
-                                                correct_picks["total_bonus"] += team["bonus"]
-                                    
-                                    # Count Champion correct pick
-                                    if compared_bracket.get("champion") and compared_bracket["champion"].get("correct", False):
-                                        correct_picks["champion"] = 1
-                                        correct_picks["total"] += 1
-                                        
-                                        if compared_bracket["champion"].get("bonus", 0) > 0:
-                                            correct_picks["champion_bonus"] = compared_bracket["champion"]["bonus"]
-                                            correct_picks["total_bonus"] += compared_bracket["champion"]["bonus"]
-                            
-                                # Calculate scores using standard point values
-                                correct_picks["round_1_score"] = correct_picks["round_1"] * 10
-                                correct_picks["round_2_score"] = correct_picks["round_2"] * 20
-                                correct_picks["round_3_score"] = correct_picks["round_3"] * 40
-                                correct_picks["final_four_score"] = correct_picks["final_four"] * 80
-                                correct_picks["championship_score"] = correct_picks["championship"] * 120
-                                correct_picks["champion_score"] = correct_picks["champion"] * 160
-                                
-                                # Calculate total score
-                                correct_picks["total_score"] = (
-                                    correct_picks["round_1_score"] + 
-                                    correct_picks["round_2_score"] + 
-                                    correct_picks["round_3_score"] + 
-                                    correct_picks["final_four_score"] + 
-                                    correct_picks["championship_score"] + 
-                                    correct_picks["champion_score"]
-                                )
-                                
-                                # Calculate total with bonus
-                                correct_picks["total_with_bonus"] = correct_picks["total_score"] + correct_picks["total_bonus"]
-                                
-                                # Calculate maximum possible points (current + potential)
-                                max_possible_base = correct_picks["total_score"]  # Start with current score
-                                max_possible_bonus = correct_picks["total_bonus"]  # Start with current bonus
-                                
-                                # For each region, calculate potential points
-                                for region in ["midwest", "west", "south", "east"]:
-                                    for round_idx in range(1, 4):
-                                        if region not in compared_bracket or round_idx >= len(compared_bracket[region]):
-                                            continue
-                                            
-                                        for team in compared_bracket[region][round_idx]:
-                                            # Only count teams that aren't already scored (not correct/incorrect)
-                                            # and haven't been eliminated
-                                            if team and team.get("correct") is None and not team.get("isEliminated", False):
-                                                base, bonus = calculate_points_for_pick(team, round_idx)
-                                                max_possible_base += base
-                                                max_possible_bonus += bonus
-                                
-                                # Calculate potential points for Final Four
-                                for team in compared_bracket.get("finalFour", []):
-                                    if team and team.get("correct") is None and not team.get("isEliminated", False):
-                                        base, bonus = calculate_points_for_pick(team, "final_four")
-                                        max_possible_base += base
-                                        max_possible_bonus += bonus
-                                
-                                # Calculate potential points for Championship
-                                for team in compared_bracket.get("championship", []):
-                                    if team and team.get("correct") is None and not team.get("isEliminated", False):
-                                        base, bonus = calculate_points_for_pick(team, "championship")
-                                        max_possible_base += base
-                                        max_possible_bonus += bonus
-                                
-                                # Calculate potential points for Champion
-                                if compared_bracket.get("champion") and compared_bracket["champion"].get("correct") is None and not compared_bracket["champion"].get("isEliminated", False):
-                                    base, bonus = calculate_points_for_pick(compared_bracket["champion"], "champion")
-                                    max_possible_base += base
-                                    max_possible_bonus += bonus
-                                
-                                # Calculate total maximum possible points
-                                max_possible_total = max_possible_base + max_possible_bonus
-
-                            except Exception as e:
-                                print(f"Error calculating picks for {username}: {str(e)}")
-                        
-                        # Add to user data
-                        user_data.append({
-                            "username": username,
-                            "last_updated": formatted_time,
-                            "bracket_count": len(user_brackets),
-                            "picks_remaining": picks_remaining,
-                            "champion": champion,
-                            "correct_picks": correct_picks if 'correct_picks' in locals() else {
-                                "round_1": 0, "round_2": 0, "round_3": 0,
-                                "final_four": 0, "championship": 0, "champion": 0,
-                                "total": 0,
-                                "round_1_score": 0, "round_2_score": 0, "round_3_score": 0,
-                                "final_four_score": 0, "championship_score": 0, "champion_score": 0,
-                                "total_score": 0, 
-                                "round_1_bonus": 0, "round_2_bonus": 0, "round_3_bonus": 0,
-                                "final_four_bonus": 0, "championship_bonus": 0, "champion_bonus": 0,
-                                "total_bonus": 0, "total_with_bonus": 0
-                            },
-                            "max_possible_base": max_possible_base if 'max_possible_base' in locals() else correct_picks["total_score"],
-                            "max_possible_bonus": max_possible_bonus if 'max_possible_bonus' in locals() else correct_picks["total_bonus"],
-                            "max_possible_total": max_possible_total if 'max_possible_total' in locals() else correct_picks["total_with_bonus"],
-                            "max_possible_base_remaining": max_possible_base - correct_picks["total_score"],
-                            "max_possible_bonus_remaining": max_possible_bonus - correct_picks["total_bonus"],
-                            "max_possible_total_remaining": max_possible_total - correct_picks["total_with_bonus"]
-                        })
-                        
-                        # Add to users set
-                        users.add(username)
-        
-        # Sort user data to put PERFECT at the top, then by score
-        user_data.sort(key=lambda x: (0 if x["username"] == "PERFECT" else 1, -x["correct_picks"]["total_with_bonus"]))
-        
-        # Add ranking to user data (handling ties)
-        current_rank = 1
-        previous_score = None
-        skip_count = 0
-        
-        for i, user in enumerate(user_data):
-            # Skip ranking the PERFECT row
-            if user["username"] == "PERFECT":
-                user["rank"] = "-"
-                continue
-                
-            current_score = user["correct_picks"]["total_with_bonus"]
-            
-            if previous_score is not None and current_score != previous_score:
-                # If score is different from previous, increment rank by the number of tied users plus 1
-                current_rank += skip_count + 1
-                skip_count = 0
-            else:
-                # For the first user or tied users, increment skip counter
-                if previous_score is not None:
-                    skip_count += 1
-                    
-            user["rank"] = current_rank
-            previous_score = current_score
+        # Process user data with the extracted function
+        user_data = get_users_list(truth_bracket)
         
         return render_template('users_list.html', 
                               users=user_data, 
@@ -1910,6 +1925,64 @@ def scores():
     except Exception as e:
         print(f"Error getting scores: {str(e)}")
         return render_template('scores.html', error=str(e))
+
+@app.route('/api/user-scores', methods=['GET'])
+def api_user_scores():
+    """API endpoint that returns user scores for a specific truth bracket index."""
+    try:
+        # Get truth index from query param
+        truth_index = request.args.get('truth_index', type=int, default=0)
+        
+        # Get all truth files to validate index
+        all_truth_files = get_sorted_truth_files()
+        if not all_truth_files:
+            return jsonify({'error': 'No truth bracket files found'}), 404
+            
+        # Validate index
+        if truth_index < 0 or truth_index >= len(all_truth_files):
+            return jsonify({'error': f'Invalid truth index: {truth_index}. Valid range is 0-{len(all_truth_files)-1}'}), 400
+        
+        # Get truth bracket for the specified index
+        truth_bracket = get_most_recent_truth_bracket(truth_index)
+        if not truth_bracket:
+            return jsonify({'error': f'Could not load truth bracket for index {truth_index}'}), 500
+        
+        # Get users list with scores
+        users_list = get_users_list(truth_bracket)
+        if users_list is None:
+            return jsonify({'error': 'Could not generate users list'}), 500
+        
+        # Wrap users list in 'users' property to match what the JavaScript expects
+        return jsonify({'users': users_list})
+    
+    except Exception as e:
+        app.logger.error(f"Error in api_user_scores: {str(e)}")
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+@app.route('/api/update-truth-index', methods=['POST'])
+def api_update_truth_index():
+    """API endpoint to update the session's selected truth index."""
+    try:
+        # Get truth index from query param
+        truth_index = request.args.get('index', type=int, default=0)
+        
+        # Get all truth files to validate index
+        all_truth_files = get_sorted_truth_files()
+        if not all_truth_files:
+            return jsonify({'error': 'No truth bracket files found'}), 404
+            
+        # Validate index
+        if truth_index < 0 or truth_index >= len(all_truth_files):
+            return jsonify({'error': f'Invalid truth index: {truth_index}. Valid range is 0-{len(all_truth_files)-1}'}), 400
+        
+        # Update session
+        session['selected_truth_index'] = truth_index
+        
+        return jsonify({'success': True, 'message': f'Truth index updated to {truth_index}'})
+    
+    except Exception as e:
+        app.logger.error(f"Error in api_update_truth_index: {str(e)}")
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 80))
