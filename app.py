@@ -9,6 +9,7 @@ import re
 import sys
 import argparse
 import glob  # For finding truth bracket files
+import traceback
 
 # Add command-line argument parsing
 parser = argparse.ArgumentParser(description='March Madness Bracket Application')
@@ -525,80 +526,103 @@ def auto_save_bracket(bracket):
 @app.route('/')
 def index():
     # When in read-only mode, redirect to users list instead of login
-    if READ_ONLY_MODE and 'username' not in session:
-        return redirect(url_for('users_list'))
+    try:
+        if READ_ONLY_MODE and 'username' not in session:
+            return redirect('/users-list')
         
-    # Regular behavior: check if user is logged in
-    if 'username' not in session:
-        return redirect(url_for('show_login'))
-    
-    # Use the global read-only setting instead of URL parameter
-    read_only = READ_ONLY_MODE
-    
-    # Check if there's a username parameter for viewing another user's bracket
-    view_username = request.args.get('username')
-    if view_username and view_username != session.get('username'):
-        # Try to load the latest bracket for this user
-        try:
-            # Find latest bracket for the specified username
-            latest_bracket = None
-            latest_timestamp = None
+        if 'username' not in session:
+            return redirect('/login')
             
-            for file in os.listdir('saved_brackets'):
-                if file.endswith('.json') and file.startswith(f"bracket_{view_username}_"):
-                    file_path = os.path.join('saved_brackets', file)
-                    timestamp = extract_timestamp_from_filename(file)
-                    
-                    if timestamp and (latest_timestamp is None or timestamp > latest_timestamp):
-                        latest_timestamp = timestamp
-                        latest_bracket = file
+        # Get username from URL query param if provided (for viewing other users' brackets)
+        display_username = request.args.get('username')
+        
+        if not display_username:
+            display_username = session['username']
+            viewing_own_bracket = True
+        else:
+            viewing_own_bracket = (display_username == session['username'])
             
-            if latest_bracket:
-                # Set read-only mode when viewing another user's bracket, regardless of global setting
-                read_only = True
+        # Get truth files for timeline
+        all_truth_files = get_sorted_truth_files()
+        
+        # Get the selected truth file index
+        selected_index = request.args.get('truth_index', None)
+        
+        # If a specific index was requested in the URL, use it
+        if selected_index is not None:
+            try:
+                selected_index = int(selected_index)
+                if selected_index < 0 or selected_index >= len(all_truth_files):
+                    selected_index = 0
+            except ValueError:
+                selected_index = 0
                 
-                # Load the bracket
-                file_path = os.path.join('saved_brackets', latest_bracket)
-                with open(file_path, 'r') as f:
-                    loaded_bracket = json.load(f)
+            # Store in session for subsequent requests
+            session['selected_truth_index'] = selected_index
+        # Otherwise use the value from session, defaulting to 0 (newest)
+        else:
+            selected_index = session.get('selected_truth_index', 0)
+            
+            # Validate the index is still in range
+            if selected_index < 0 or selected_index >= len(all_truth_files):
+                selected_index = 0
+                session['selected_truth_index'] = selected_index
                 
-                # Store original username
-                original_username = session.get('username')
+        # Get the truth bracket based on the selected index
+        truth_bracket = get_most_recent_truth_bracket(selected_index)
+        
+        # Format truth filenames for display
+        truth_file_names = []
+        for file_path in all_truth_files:
+            # Extract just the filename without the directory path
+            filename = os.path.basename(file_path)
+            truth_file_names.append(filename)
+        
+        # Get read-only flag from session
+        is_read_only = session.get('read_only', False)
+        
+        # Get user bracket data
+        if viewing_own_bracket and not is_read_only:
+            user_bracket = get_user_bracket()
+        else:
+            # Load another user's bracket
+            # Find the most recent bracket file for the requested user
+            bracket_files = [f for f in os.listdir('saved_brackets') if f.startswith(f'bracket_{display_username}_') and f.endswith('.json')]
+            
+            if not bracket_files:
+                return render_template('error.html', error=f"No bracket found for user {display_username}")
                 
-                # Temporarily set session username to viewed user
-                session['username'] = view_username
+            # Sort by timestamp (newest first)
+            bracket_files.sort(key=lambda x: extract_timestamp_from_filename(x), reverse=True)
+            newest_file = bracket_files[0]
+            
+            try:
+                with open(os.path.join('saved_brackets', newest_file), 'r') as f:
+                    user_bracket = json.load(f)
+            except Exception as e:
+                return render_template('error.html', error=f"Error loading bracket: {str(e)}")
                 
-                # Update the user's bracket in session
-                update_user_bracket(loaded_bracket)
-                
-                # Ensure winners are updated
-                updated_bracket = update_winners(session['bracket'])
-                update_user_bracket(updated_bracket)
-                
-                # Set bracket status
-                formatted_timestamp = latest_timestamp.strftime("%Y-%m-%d %I:%M %p") if latest_timestamp else "Unknown time"
-                session['bracket_status'] = {
-                    'type': 'viewed',
-                    'timestamp': formatted_timestamp,
-                    'original_username': original_username  # Keep track of original user
-                }
-                
-                # Set read-only flag
-                session['read_only'] = True
-                
-                print(f"Viewing {view_username}'s bracket from {formatted_timestamp} in read-only mode")
-        except Exception as e:
-            print(f"Error loading bracket for username {view_username}: {str(e)}")
-    
-    # Store read_only state in session
-    session['read_only'] = read_only
-    
-    # Initialize user's bracket if needed
-    if 'bracket' not in session:
-        session['bracket'] = initialize_bracket()
-    
-    current_time = datetime.now().strftime("%B %d, %Y %I:%M %p")
-    return render_template('index.html', current_time=current_time, username=session.get('username'))
+        # Compare user bracket with truth data
+        if truth_bracket:
+            # Create a copy of the user's bracket to avoid modifying the original
+            compared_bracket = copy.deepcopy(user_bracket)
+            
+            # Mark correct and incorrect picks
+            compared_bracket = compare_with_truth(compared_bracket, truth_bracket)
+            
+            # Use the compared bracket for display
+            user_bracket = compared_bracket
+            
+        return render_template('index.html', 
+                             username=display_username, 
+                             viewing_own=viewing_own_bracket,
+                             truth_file_names=truth_file_names,
+                             selected_index=selected_index,
+                             current_truth_file=truth_file_names[selected_index] if truth_file_names else None)
+    except Exception as e:
+        print(f"Error in index route: {str(e)}")
+        traceback.print_exc()
+        return render_template('error.html', error=str(e))
 
 @app.route('/login', methods=['GET', 'POST'])
 def show_login():

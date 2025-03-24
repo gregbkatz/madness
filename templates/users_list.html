@@ -404,23 +404,6 @@
         Total Users: {{ users|length }}
     </div>
 
-    {% if truth_file_names %}
-    <div class="truth-slider-container">
-        <div class="slider-header">
-            <span>Tournament Timeline</span>
-            <span id="current-truth-file">{{ current_truth_file }}</span>
-        </div>
-        <div class="slider-controls">
-            <button id="prev-truth-file" class="timeline-btn">←</button>
-            <div class="slider-with-label">
-                <input type="range" id="truth-file-slider" min="0" max="{{ truth_file_names|length - 1 }}"
-                    value="{{ truth_file_names|length - 1 - selected_index }}" class="slider">
-            </div>
-            <button id="next-truth-file" class="timeline-btn">→</button>
-        </div>
-    </div>
-    {% endif %}
-
     <div class="sorting-help" style="text-align: center; color: #555; margin-bottom: 15px;">
         Click on any column header to sort. Click again to reverse the sort order.
     </div>
@@ -482,40 +465,44 @@
                         {% endif %}
                     </td>
                     <td>{% if user.champion %}{{ user.champion }}{% else %}<span class="empty">-</span>{% endif %}</td>
-                    <td class="round-col hidden-round numeric-column" data-round="round_1"><span
-                            class="correct-picks-value">{{
-                            user.correct_picks.round_1_score }}</span></td>
-                    <td class="round-col hidden-round numeric-column" data-round="round_2"><span
-                            class="correct-picks-value">{{
-                            user.correct_picks.round_2_score }}</span></td>
-                    <td class="round-col hidden-round numeric-column" data-round="round_3"><span
-                            class="correct-picks-value">{{
-                            user.correct_picks.round_3_score }}</span></td>
-                    <td class="round-col hidden-round numeric-column" data-round="final_four"><span
-                            class="correct-picks-value">{{
-                            user.correct_picks.final_four_score }}</span></td>
-                    <td class="round-col hidden-round numeric-column" data-round="championship"><span
-                            class="correct-picks-value">{{
-                            user.correct_picks.championship_score }}</span></td>
-                    <td class="round-col hidden-round numeric-column" data-round="champion"><span
-                            class="correct-picks-value">{{
-                            user.correct_picks.champion_score }}</span></td>
-                    <td class="numeric-column"><span class="correct-picks-value">{{ user.correct_picks.total_score
-                            }}</span></td>
-                    <td class="numeric-column"><span class="correct-picks-value">{{ user.correct_picks.total_bonus
-                            }}</span></td>
-                    <td class="numeric-column total-column"><span class="correct-picks-value">{{
-                            user.correct_picks.total_with_bonus
-                            }}</span></td>
-                    <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_base_remaining
-                            }}</span>
+                    <td class="round-col hidden-round numeric-column" data-round="round_1">
+                        <span class="correct-picks-value">{{ user.correct_picks.round_1_score }}</span>
                     </td>
-                    <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_bonus_remaining
-                            }}</span>
+                    <td class="round-col hidden-round numeric-column" data-round="round_2">
+                        <span class="correct-picks-value">{{ user.correct_picks.round_2_score }}</span>
                     </td>
-                    <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_base }}</span>
+                    <td class="round-col hidden-round numeric-column" data-round="round_3">
+                        <span class="correct-picks-value">{{ user.correct_picks.round_3_score }}</span>
                     </td>
-                    <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_total }}</span>
+                    <td class="round-col hidden-round numeric-column" data-round="final_four">
+                        <span class="correct-picks-value">{{ user.correct_picks.final_four_score }}</span>
+                    </td>
+                    <td class="round-col hidden-round numeric-column" data-round="championship">
+                        <span class="correct-picks-value">{{ user.correct_picks.championship_score }}</span>
+                    </td>
+                    <td class="round-col hidden-round numeric-column" data-round="champion">
+                        <span class="correct-picks-value">{{ user.correct_picks.champion_score }}</span>
+                    </td>
+                    <td class="numeric-column">
+                        <span class="correct-picks-value">{{ user.correct_picks.total_score }}</span>
+                    </td>
+                    <td class="numeric-column">
+                        <span class="correct-picks-value">{{ user.correct_picks.total_bonus }}</span>
+                    </td>
+                    <td class="numeric-column total-column">
+                        <span class="correct-picks-value">{{ user.correct_picks.total_with_bonus }}</span>
+                    </td>
+                    <td class="numeric-column">
+                        <span class="correct-picks-value">{{ user.max_possible_base_remaining }}</span>
+                    </td>
+                    <td class="numeric-column">
+                        <span class="correct-picks-value">{{ user.max_possible_bonus_remaining }}</span>
+                    </td>
+                    <td class="numeric-column">
+                        <span class="correct-picks-value">{{ user.max_possible_base }}</span>
+                    </td>
+                    <td class="numeric-column">
+                        <span class="correct-picks-value">{{ user.max_possible_total }}</span>
                     </td>
                     </tr>
                     {% endfor %}
@@ -523,6 +510,23 @@
     </table>
     {% else %}
     <p>No users found.</p>
+    {% endif %}
+
+    {% if truth_file_names %}
+    <div class="truth-slider-container">
+        <div class="slider-header">
+            <span>Tournament Timeline</span>
+            <span id="current-truth-file">{{ current_truth_file }}</span>
+        </div>
+        <div class="slider-controls">
+            <button id="prev-truth-file" class="timeline-btn">←</button>
+            <div class="slider-with-label">
+                <input type="range" id="truth-file-slider" min="0" max="{{ truth_file_names|length - 1 }}"
+                    value="{{ truth_file_names|length - 1 - selected_index }}" class="slider">
+            </div>
+            <button id="next-truth-file" class="timeline-btn">→</button>
+        </div>
+    </div>
     {% endif %}
 
     <a href="/" class="back-link">← Back to Bracket</a>
@@ -596,6 +600,13 @@
 
                 // Sort the rows
                 rows.sort((a, b) => {
+                    // Special case for PERFECT/Maximum Possible row - always at the top
+                    const isAPerfect = a.classList.contains('perfect-row');
+                    const isBPerfect = b.classList.contains('perfect-row');
+
+                    if (isAPerfect) return -1;  // Changed from 1
+                    if (isBPerfect) return 1;   // Changed from -1
+
                     let valA, valB;
 
                     if (sortKey === 'rank' || sortKey === 'username' || sortKey === 'champion') {
@@ -627,58 +638,20 @@
                         valB = parseInt(cellB.textContent) || 0;
                     }
 
-                    // Special case for PERFECT/Maximum Possible row - always at the bottom
-                    const isAPerfect = a.classList.contains('perfect-row');
-                    const isBPerfect = b.classList.contains('perfect-row');
-
-                    if (isAPerfect && !isBPerfect) return 1;
-                    if (!isAPerfect && isBPerfect) return -1;
-
                     // Compare values based on direction
                     if (valA < valB) return direction === 'asc' ? -1 : 1;
                     if (valA > valB) return direction === 'asc' ? 1 : -1;
                     return 0;
                 });
 
-                // If not initial load, animate the changes
-                if (!initial) {
-                    // Remove rows with animation
-                    rows.forEach(row => {
-                        row.style.transition = 'opacity 0.3s';
-                        row.style.opacity = '0';
-                    });
-
-                    // Wait for animation to complete
-                    setTimeout(() => {
-                        // Remove all rows
-                        while (tbody.firstChild) {
-                            tbody.removeChild(tbody.firstChild);
-                        }
-
-                        // Add sorted rows
-                        rows.forEach(row => {
-                            row.style.opacity = '0';
-                            tbody.appendChild(row);
-                        });
-
-                        // Trigger reflow
-                        void tbody.offsetHeight;
-
-                        // Fade rows back in
-                        rows.forEach(row => {
-                            row.style.opacity = '1';
-                        });
-                    }, 300);
-                } else {
-                    // Initial load - just append rows without animation
-                    while (tbody.firstChild) {
-                        tbody.removeChild(tbody.firstChild);
-                    }
-
-                    rows.forEach(row => {
-                        tbody.appendChild(row);
-                    });
+                // Remove all rows and add them back in sorted order without animation
+                while (tbody.firstChild) {
+                    tbody.removeChild(tbody.firstChild);
                 }
+
+                rows.forEach(row => {
+                    tbody.appendChild(row);
+                });
             }
 
             // Helper function to get column index based on sort key
@@ -798,14 +771,10 @@
                     // Set a new timer to update the data
                     sliderTimer = setTimeout(function () {
                         try {
-                            // Show loading overlay immediately
-                            loadingOverlay.classList.add('visible');
-
                             console.log(`Slider moved to ${sliderValue}, fetching index ${index}`);
                             fetchAndUpdateData(index);
                         } catch (error) {
                             console.error('Error in slider handler:', error);
-                            loadingOverlay.classList.remove('visible');
                             alert('Error updating data: ' + error.message);
                         }
                     }, 300); // 300ms delay to avoid too many requests
@@ -814,8 +783,8 @@
                 // Add event listeners for the prev/next buttons
                 prevButton.addEventListener('click', function () {
                     const currentValue = parseInt(truthSlider.value);
-                    if (currentValue < maxSliderValue) {
-                        truthSlider.value = currentValue + 1;
+                    if (currentValue > 0) {  // Changed from < maxSliderValue
+                        truthSlider.value = currentValue - 1;  // Changed from + 1
 
                         // Trigger the input event to update everything
                         truthSlider.dispatchEvent(new Event('input'));
@@ -824,8 +793,8 @@
 
                 nextButton.addEventListener('click', function () {
                     const currentValue = parseInt(truthSlider.value);
-                    if (currentValue > 0) {
-                        truthSlider.value = currentValue - 1;
+                    if (currentValue < maxSliderValue) {  // Changed from > 0
+                        truthSlider.value = currentValue + 1;  // Changed from - 1
 
                         // Trigger the input event to update everything
                         truthSlider.dispatchEvent(new Event('input'));
@@ -835,9 +804,6 @@
 
             // Function to fetch updated data with AJAX and update the table
             function fetchAndUpdateData(index) {
-                // Show loading indicator
-                loadingOverlay.classList.add('visible');
-
                 // Store current scroll position
                 const scrollPos = window.scrollY;
 
@@ -880,20 +846,7 @@
                             tbody.appendChild(row);
                         });
 
-                        // Update the session's selected truth index
-                        return fetch(`/api/update-truth-index?index=${index}`, { method: 'POST' });
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error on index update! Status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(() => {
-                        // Hide loading overlay
-                        loadingOverlay.classList.remove('visible');
-
-                        // Restore sort state
+                        // Sort the table immediately with the current sort settings
                         sortTable(sortColumn, sortDirection, false);
 
                         // Restore rounds visibility
@@ -908,10 +861,17 @@
 
                         // Restore scroll position
                         window.scrollTo(0, scrollPos);
+
+                        // Update the session's selected truth index in the background
+                        return fetch(`/api/update-truth-index?index=${index}`, { method: 'POST' });
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            console.error(`HTTP error on index update! Status: ${response.status}`);
+                        }
                     })
                     .catch(error => {
                         console.error('Error fetching updated data:', error);
-                        loadingOverlay.classList.remove('visible');
                         alert('Error updating data: ' + error.message + '. Please try again or reload the page.');
                     });
             }

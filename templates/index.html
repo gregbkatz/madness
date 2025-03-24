@@ -63,6 +63,24 @@
         </div>
     </header>
     <div id="root"></div>
+
+    {% if truth_file_names %}
+    <div class="truth-slider-container" style="margin-top: 20px;">
+        <div class="slider-header">
+            <span>Tournament Timeline</span>
+            <span id="current-truth-file">{{ current_truth_file }}</span>
+        </div>
+        <div class="slider-controls">
+            <button id="prev-truth-file" class="timeline-btn">←</button>
+            <div class="slider-with-label">
+                <input type="range" id="truth-file-slider" min="0" max="{{ truth_file_names|length - 1 }}"
+                    value="{{ truth_file_names|length - 1 - selected_index }}" class="slider">
+            </div>
+            <button id="next-truth-file" class="timeline-btn">→</button>
+        </div>
+    </div>
+    {% endif %}
+
     <script type="text/babel" src="{{ url_for('static', filename='js/bracket.js') }}"></script>
     <!-- Force bottom content to be scrollable -->
     <div style="height: 100px;"></div>
@@ -94,6 +112,73 @@
                     }, 0);
                 }
             });
+
+            // Timeline slider functionality for bracket page
+            const truthSlider = document.getElementById('truth-file-slider');
+            const currentTruthFile = document.getElementById('current-truth-file');
+            const prevButton = document.getElementById('prev-truth-file');
+            const nextButton = document.getElementById('next-truth-file');
+
+            if (truthSlider && currentTruthFile) {
+                // Get the max slider value
+                const maxSliderValue = parseInt(truthSlider.max);
+
+                // Update button states
+                function updateButtonStates(sliderValue) {
+                    prevButton.disabled = sliderValue >= maxSliderValue;
+                    nextButton.disabled = sliderValue <= 0;
+                }
+
+                // Initialize button states
+                updateButtonStates(parseInt(truthSlider.value));
+
+                // Slider to index conversion
+                function sliderValueToIndex(value) {
+                    return maxSliderValue - value;
+                }
+
+                // Add event listeners
+                let sliderTimer;
+                truthSlider.addEventListener('input', function () {
+                    // Update displayed filename
+                    const fileNames = JSON.parse('{{ truth_file_names|tojson|safe }}');
+                    const sliderValue = parseInt(this.value);
+                    const index = sliderValueToIndex(sliderValue);
+
+                    if (fileNames && index >= 0 && index < fileNames.length) {
+                        currentTruthFile.textContent = fileNames[index];
+                    }
+
+                    // Update button states
+                    updateButtonStates(sliderValue);
+
+                    // Clear existing timer
+                    clearTimeout(sliderTimer);
+
+                    // Set new timer to update bracket
+                    sliderTimer = setTimeout(function () {
+                        // Redirect to the same page with the selected truth index
+                        window.location.href = `/?username={{ username }}&truth_index=${index}`;
+                    }, 300);
+                });
+
+                // Add event listeners for prev/next buttons
+                prevButton.addEventListener('click', function () {
+                    const currentValue = parseInt(truthSlider.value);
+                    if (currentValue > 0) {
+                        truthSlider.value = currentValue - 1;
+                        truthSlider.dispatchEvent(new Event('input'));
+                    }
+                });
+
+                nextButton.addEventListener('click', function () {
+                    const currentValue = parseInt(truthSlider.value);
+                    if (currentValue < maxSliderValue) {
+                        truthSlider.value = currentValue + 1;
+                        truthSlider.dispatchEvent(new Event('input'));
+                    }
+                });
+            }
         });
     </script>
 </body>
