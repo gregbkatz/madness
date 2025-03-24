@@ -43,7 +43,15 @@ def get_most_recent_truth_bracket():
             return None
             
         # Sort by modification time, most recent first
-        truth_files.sort(key=os.path.getmtime, reverse=True)
+        def extract_round_game(filename):
+            match = re.search(r'round_(\d+)_game_(\d+)', filename)
+            if match:
+                round_num = int(match.group(1))
+                game_num = int(match.group(2))
+                return (round_num, game_num)
+            return (0, 0)  # Default for non-matching files
+            
+        truth_files.sort(key=extract_round_game, reverse=True)
         
         # Load the most recent file
         with open(truth_files[0], 'r') as f:
