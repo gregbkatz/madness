@@ -62,24 +62,27 @@
             {% endif %}
         </div>
     </header>
-    <div id="root"></div>
 
     {% if truth_file_names %}
-    <div class="truth-slider-container" style="margin-top: 20px;">
+    <div class="truth-slider-container" style="margin: 15px auto;">
         <div class="slider-header">
             <span>Tournament Timeline</span>
             <span id="current-truth-file">{{ current_truth_file }}</span>
         </div>
         <div class="slider-controls">
+            <button id="jump-start" class="timeline-btn" title="Jump to beginning">⏮</button>
             <button id="prev-truth-file" class="timeline-btn">←</button>
             <div class="slider-with-label">
                 <input type="range" id="truth-file-slider" min="0" max="{{ truth_file_names|length - 1 }}"
-                    value="{{ truth_file_names|length - 1 - selected_index }}" class="slider">
+                    value="{{ selected_index }}" class="slider">
             </div>
             <button id="next-truth-file" class="timeline-btn">→</button>
+            <button id="jump-end" class="timeline-btn" title="Jump to end">⏭</button>
         </div>
     </div>
     {% endif %}
+
+    <div id="root"></div>
 
     <script type="text/babel" src="{{ url_for('static', filename='js/bracket.js') }}"></script>
     <!-- Force bottom content to be scrollable -->
@@ -118,6 +121,8 @@
             const currentTruthFile = document.getElementById('current-truth-file');
             const prevButton = document.getElementById('prev-truth-file');
             const nextButton = document.getElementById('next-truth-file');
+            const jumpStartButton = document.getElementById('jump-start');
+            const jumpEndButton = document.getElementById('jump-end');
 
             if (truthSlider && currentTruthFile) {
                 // Get the max slider value
@@ -125,17 +130,12 @@
 
                 // Update button states
                 function updateButtonStates(sliderValue) {
-                    prevButton.disabled = sliderValue >= maxSliderValue;
-                    nextButton.disabled = sliderValue <= 0;
+                    prevButton.disabled = sliderValue <= 0;
+                    nextButton.disabled = sliderValue >= maxSliderValue;
                 }
 
                 // Initialize button states
                 updateButtonStates(parseInt(truthSlider.value));
-
-                // Slider to index conversion
-                function sliderValueToIndex(value) {
-                    return maxSliderValue - value;
-                }
 
                 // Add event listeners
                 let sliderTimer;
@@ -143,7 +143,7 @@
                     // Update displayed filename
                     const fileNames = JSON.parse('{{ truth_file_names|tojson|safe }}');
                     const sliderValue = parseInt(this.value);
-                    const index = sliderValueToIndex(sliderValue);
+                    const index = sliderValue;
 
                     if (fileNames && index >= 0 && index < fileNames.length) {
                         currentTruthFile.textContent = fileNames[index];
@@ -155,11 +155,11 @@
                     // Clear existing timer
                     clearTimeout(sliderTimer);
 
-                    // Set new timer to update bracket
+                    // Set new timer to update bracket - use a shorter timeout for faster response
                     sliderTimer = setTimeout(function () {
                         // Redirect to the same page with the selected truth index
                         window.location.href = `/?username={{ username }}&truth_index=${index}`;
-                    }, 300);
+                    }, 100); // Reduced from 300ms to 100ms for faster updates
                 });
 
                 // Add event listeners for prev/next buttons
@@ -177,6 +177,17 @@
                         truthSlider.value = currentValue + 1;
                         truthSlider.dispatchEvent(new Event('input'));
                     }
+                });
+
+                // Add handlers for jump-start and jump-end buttons
+                jumpStartButton.addEventListener('click', function () {
+                    truthSlider.value = 0;
+                    truthSlider.dispatchEvent(new Event('input'));
+                });
+
+                jumpEndButton.addEventListener('click', function () {
+                    truthSlider.value = maxSliderValue;
+                    truthSlider.dispatchEvent(new Event('input'));
                 });
             }
         });

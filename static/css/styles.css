@@ -971,3 +971,36 @@ div.incorrect {
     background-color: #cccccc;
     cursor: not-allowed;
 }
+
+/* Toggle Rounds Button */
+.toggle-btn {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #333;
+    transition: all 0.2s ease;
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+.toggle-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.toggle-btn:active {
+    background-color: #d0d0d0;
+    transform: translateY(1px);
+}
+
+/* User list container */
+.users-list-container {
+    margin: 10px 0;
+}
+
+.controls {
+    text-align: right;
+    margin: 5px 0;
+}
