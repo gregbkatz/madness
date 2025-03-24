@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Consistently convert between slider value and index
-        // Our model: Slider shows newest (index 0) on right, oldest on left
+        // Our model: Slider shows oldest (highest index) on left, newest (index 0) on right
         // This means slider value 0 = oldest file (highest index), and maxSliderValue = newest file (index 0)
         function sliderValueToIndex(value) {
             return maxSliderValue - parseInt(value);
@@ -67,28 +67,28 @@ document.addEventListener('DOMContentLoaded', function () {
         // Add handlers for previous and next buttons
         prevButton.addEventListener('click', function () {
             let currentValue = parseInt(truthSlider.value);
-            if (currentValue < maxSliderValue) {
-                truthSlider.value = currentValue + 1;
-                truthSlider.dispatchEvent(new Event('input'));
-            }
-        });
-
-        nextButton.addEventListener('click', function () {
-            let currentValue = parseInt(truthSlider.value);
             if (currentValue > 0) {
                 truthSlider.value = currentValue - 1;
                 truthSlider.dispatchEvent(new Event('input'));
             }
         });
 
+        nextButton.addEventListener('click', function () {
+            let currentValue = parseInt(truthSlider.value);
+            if (currentValue < maxSliderValue) {
+                truthSlider.value = currentValue + 1;
+                truthSlider.dispatchEvent(new Event('input'));
+            }
+        });
+
         // Add handlers for jump-start and jump-end buttons
         jumpStartButton.addEventListener('click', function () {
-            truthSlider.value = maxSliderValue; // Set to beginning (newest files on right)
+            truthSlider.value = 0; // Set to beginning (oldest files on left)
             truthSlider.dispatchEvent(new Event('input'));
         });
 
         jumpEndButton.addEventListener('click', function () {
-            truthSlider.value = 0; // Set to end (oldest files on left)
+            truthSlider.value = maxSliderValue; // Set to end (newest files on right)
             truthSlider.dispatchEvent(new Event('input'));
         });
     }
