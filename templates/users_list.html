@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>March Madness Bracket Users</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -269,78 +270,6 @@
             /* border: 2px solid #000000; */
         }
 
-        /* Truth bracket slider styles */
-        .truth-slider-container {
-            margin: 20px auto;
-            max-width: 600px;
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .slider-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
-            font-size: 14px;
-            color: #666;
-        }
-
-        .slider-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .slider-with-label {
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-        }
-
-        .slider {
-            width: 100%;
-            margin: 0;
-            height: 8px;
-        }
-
-        .timeline-btn {
-            background-color: #003478;
-            color: white;
-            border: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.2s;
-        }
-
-        .timeline-btn:hover {
-            background-color: #002355;
-        }
-
-        .timeline-btn:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-
-        #current-truth-file {
-            font-size: 14px;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        #truth-file-name {
-            font-weight: bold;
-            color: #003478;
-        }
-
         /* Loading overlay styles */
         .loading-overlay {
             position: fixed;
@@ -389,6 +318,24 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* Toggle button for rounds */
+        .toggle-btn {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .toggle-btn:hover {
+            background-color: #e8e8e8;
+        }
+
+        .toggle-btn:active {
+            background-color: #d8d8d8;
+        }
     </style>
 </head>
 
@@ -408,11 +355,13 @@
             <button id="prev-truth-file" class="timeline-btn">←</button>
             <div class="slider-with-label">
                 <input type="range" id="truth-file-slider" min="0" max="{{ truth_file_names|length - 1 }}"
-                    value="{{ selected_index }}" class="slider">
+                    value="{{ truth_file_names|length - 1 - selected_index }}" class="slider">
             </div>
             <button id="next-truth-file" class="timeline-btn">→</button>
             <button id="jump-end" class="timeline-btn" title="Jump to end">⏭</button>
         </div>
+        <!-- Hidden element to store filenames data for JavaScript -->
+        <div id="timeline-data" style="display: none;" data-filenames='{{ truth_file_names|tojson }}'></div>
     </div>
 
     <div class="users-list-container">
@@ -526,6 +475,7 @@
     <a href="/" class="back-link">← Back to Bracket</a>
     <a href="/scores" class="back-link" style="margin-left: 20px;">View Live Scores</a>
 
+    <script src="{{ url_for('static', filename='js/timeline-slider.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const table = document.getElementById('usersTable');
@@ -708,95 +658,11 @@
                 return colIndex;
             }
 
-            // Truth file slider functionality
-            const truthSlider = document.getElementById('truth-file-slider');
-            const currentTruthFile = document.getElementById('current-truth-file');
-            const loadingOverlay = document.getElementById('loading-overlay');
-            const prevButton = document.getElementById('prev-truth-file');
-            const nextButton = document.getElementById('next-truth-file');
-
             // Variables to track sorting state and round visibility
             let showingAllRounds = false;
 
-            // Get the max slider value (for reversed scale)
-            const maxSliderValue = parseInt(truthSlider.max);
-
-            // Convert from slider value (reversed) to actual index
-            function sliderValueToIndex(value) {
-                return maxSliderValue - value;
-            }
-
-            // Convert from actual index to slider value (reversed)
-            function indexToSliderValue(index) {
-                return maxSliderValue - index;
-            }
-
-            // Update button states based on current position
-            function updateButtonStates(sliderValue) {
-                prevButton.disabled = sliderValue <= 0;
-                nextButton.disabled = sliderValue >= maxSliderValue;
-            }
-
-            // Timer for debouncing slider updates
-            let sliderTimer;
-
-            if (truthSlider && currentTruthFile) {
-                // Set initial button states
-                updateButtonStates(parseInt(truthSlider.value));
-
-                // Update filename display as slider moves
-                truthSlider.addEventListener('input', function () {
-                    // Update the displayed filename immediately
-                    const fileNames = JSON.parse('{{ truth_file_names|tojson|safe }}');
-                    const sliderValue = parseInt(this.value);
-                    const index = sliderValueToIndex(sliderValue);
-
-                    if (fileNames && index >= 0 && index < fileNames.length) {
-                        currentTruthFile.textContent = fileNames[index];
-                    }
-
-                    // Update button states
-                    updateButtonStates(sliderValue);
-
-                    // Clear any existing timer
-                    clearTimeout(sliderTimer);
-
-                    // Set a new timer to update the data
-                    sliderTimer = setTimeout(function () {
-                        try {
-                            console.log(`Slider moved to ${sliderValue}, fetching index ${index}`);
-                            fetchAndUpdateData(index);
-                        } catch (error) {
-                            console.error('Error in slider handler:', error);
-                            alert('Error updating data: ' + error.message);
-                        }
-                    }, 300); // 300ms delay to avoid too many requests
-                });
-
-                // Add event listeners for the prev/next buttons
-                prevButton.addEventListener('click', function () {
-                    const currentValue = parseInt(truthSlider.value);
-                    if (currentValue > 0) {  // Changed from < maxSliderValue
-                        truthSlider.value = currentValue - 1;  // Changed from + 1
-
-                        // Trigger the input event to update everything
-                        truthSlider.dispatchEvent(new Event('input'));
-                    }
-                });
-
-                nextButton.addEventListener('click', function () {
-                    const currentValue = parseInt(truthSlider.value);
-                    if (currentValue < maxSliderValue) {  // Changed from > 0
-                        truthSlider.value = currentValue + 1;  // Changed from - 1
-
-                        // Trigger the input event to update everything
-                        truthSlider.dispatchEvent(new Event('input'));
-                    }
-                });
-            }
-
             // Function to fetch updated data with AJAX and update the table
-            function fetchAndUpdateData(index) {
+            window.fetchAndUpdateData = function (index) {
                 // Store current scroll position
                 const scrollPos = window.scrollY;
 
@@ -867,7 +733,7 @@
                         console.error('Error fetching updated data:', error);
                         alert('Error updating data: ' + error.message + '. Please try again or reload the page.');
                     });
-            }
+            };
 
             // Function to create a new table row from user data
             function createTableRow(user) {
@@ -961,18 +827,6 @@
 
                 return row;
             }
-
-            // Add handlers for jump-start and jump-end buttons
-            document.getElementById('jump-start').addEventListener('click', function () {
-                document.getElementById('truth-file-slider').value = 0;
-                document.getElementById('truth-file-slider').dispatchEvent(new Event('input'));
-            });
-
-            document.getElementById('jump-end').addEventListener('click', function () {
-                const slider = document.getElementById('truth-file-slider');
-                slider.value = slider.max;
-                slider.dispatchEvent(new Event('input'));
-            });
         });
     </script>
 </body>
