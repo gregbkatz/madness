@@ -525,7 +525,7 @@ def auto_save_bracket(bracket):
 
 @app.route('/')
 def index():
-    # When in read-only mode, redirect to users list instead of login
+    # When in read-only mode, redirect to leaderboard instead of login
     try:
         if READ_ONLY_MODE and 'username' not in session:
             return redirect('/users-list')
@@ -1782,7 +1782,7 @@ def get_users_list(truth_bracket):
 
 @app.route('/users-list')
 def users_list():
-    """Show a list of all users who have created brackets."""
+    """Show the leaderboard with all users who have created brackets."""
     try:
         # In read-only mode, ensure there's a session username for viewing brackets
         if READ_ONLY_MODE and 'username' not in session:
