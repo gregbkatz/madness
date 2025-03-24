@@ -199,10 +199,10 @@ def compare_with_truth(bracket, truth_bracket=None):
                                     bonus = seed_diff * UPSET_BONUS_MULTIPLIERS[f"round_{round_idx}"]
                                     team["bonus"] = int(bonus)  # Ensure it's an integer
                                     bonus_count += 1
-                                    print(f"Added bonus of {bonus} to {team['name']} in {region} round {round_idx} position {i}")
+                                    # print(f"Added bonus of {bonus} to {team['name']} in {region} round {round_idx} position {i}")
                                 else:
                                     team["bonus"] = 0  # Explicitly set to zero instead of None
-                                    print(f"Set bonus to 0 for {team['name']} in {region} round {round_idx} (no upset)")
+                                    # print(f"Set bonus to 0 for {team['name']} in {region} round {round_idx} (no upset)")
                         
                         # If truth team is None (future round), we're done with this team
                         if not truth_team:
@@ -211,7 +211,7 @@ def compare_with_truth(bracket, truth_bracket=None):
                                 team["classes"] += " incorrect"
                                 team["correct"] = False
                                 team["isEliminated"] = True
-                                print(f"Marked future pick {team['name']} in {region} round {round_idx} as eliminated")
+                                # print(f"Marked future pick {team['name']} in {region} round {round_idx} as eliminated")
                             continue
 
                         # Compare teams by name and seed
