@@ -74,7 +74,7 @@
             <button id="prev-truth-file" class="timeline-btn">←</button>
             <div class="slider-with-label">
                 <input type="range" id="truth-file-slider" min="0" max="{{ truth_file_names|length - 1 }}"
-                    value="{{ selected_index }}" class="slider">
+                    value="{{ truth_file_names|length - 1 - selected_index }}" class="slider">
             </div>
             <button id="next-truth-file" class="timeline-btn">→</button>
             <button id="jump-end" class="timeline-btn" title="Jump to end">⏭</button>
@@ -137,13 +137,18 @@
                 // Initialize button states
                 updateButtonStates(parseInt(truthSlider.value));
 
+                // Slider to index conversion (since slider is reversed)
+                function sliderValueToIndex(value) {
+                    return maxSliderValue - value;
+                }
+
                 // Add event listeners
                 let sliderTimer;
                 truthSlider.addEventListener('input', function () {
                     // Update displayed filename
                     const fileNames = JSON.parse('{{ truth_file_names|tojson|safe }}');
                     const sliderValue = parseInt(this.value);
-                    const index = sliderValue;
+                    const index = sliderValueToIndex(sliderValue);
 
                     if (fileNames && index >= 0 && index < fileNames.length) {
                         currentTruthFile.textContent = fileNames[index];
@@ -155,16 +160,18 @@
                     // Clear existing timer
                     clearTimeout(sliderTimer);
 
-                    // Set new timer to update bracket - use a shorter timeout for faster response
+                    // Set new timer to update bracket via AJAX instead of page refresh
                     sliderTimer = setTimeout(function () {
-                        // Redirect to the same page with the selected truth index
-                        window.location.href = `/?username={{ username }}&truth_index=${index}`;
-                    }, 100); // Reduced from 300ms to 100ms for faster updates
+                        fetchBracketData(index);
+                    }, 100);
                 });
 
-                // Add event listeners for prev/next buttons
+                // Add handlers for previous and next buttons
+                // Note: Since the timeline slider is reversed (newest on left, oldest on right),
+                // the previous button (←) decreases the index value (going to newer files)
+                // and the next button (→) increases the index value (going to older files)
                 prevButton.addEventListener('click', function () {
-                    const currentValue = parseInt(truthSlider.value);
+                    let currentValue = parseInt(truthSlider.value);
                     if (currentValue > 0) {
                         truthSlider.value = currentValue - 1;
                         truthSlider.dispatchEvent(new Event('input'));
@@ -172,7 +179,7 @@
                 });
 
                 nextButton.addEventListener('click', function () {
-                    const currentValue = parseInt(truthSlider.value);
+                    let currentValue = parseInt(truthSlider.value);
                     if (currentValue < maxSliderValue) {
                         truthSlider.value = currentValue + 1;
                         truthSlider.dispatchEvent(new Event('input'));
@@ -180,15 +187,72 @@
                 });
 
                 // Add handlers for jump-start and jump-end buttons
+                // Note: Since the timeline slider is reversed (newest on left, oldest on right),
+                // the jump-start button should go to the newest (index 0) which is value = 0
+                // and the jump-end button should go to the oldest (max index) which is value = maxSliderValue
                 jumpStartButton.addEventListener('click', function () {
-                    truthSlider.value = 0;
+                    truthSlider.value = 0; // Set to beginning (newest files)
                     truthSlider.dispatchEvent(new Event('input'));
                 });
 
                 jumpEndButton.addEventListener('click', function () {
-                    truthSlider.value = maxSliderValue;
+                    truthSlider.value = maxSliderValue; // Set to end (oldest files)
                     truthSlider.dispatchEvent(new Event('input'));
                 });
+
+                // Function to fetch bracket data via AJAX
+                function fetchBracketData(truthIndex) {
+                    // Show loading indicator
+                    const root = document.getElementById('root');
+                    if (root) {
+                        root.style.opacity = '0.6';
+                    }
+
+                    // Get current URL parameters (like username)
+                    const currentParams = new URLSearchParams(window.location.search);
+                    const username = currentParams.get('username');
+
+                    // Build query string for API call
+                    let apiUrl = `/api/bracket?truth_index=${truthIndex}`;
+                    if (username) {
+                        apiUrl += `&username=${username}`;
+                    }
+
+                    console.log(`Fetching bracket data with URL: ${apiUrl}`);
+
+                    fetch(apiUrl)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! Status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Bracket data received from API:', data);
+                            // Wait for React to update bracket
+                            if (window.updateBracketData && typeof window.updateBracketData === 'function') {
+                                window.updateBracketData(data);
+                                console.log('Bracket data updated via updateBracketData function');
+                            } else {
+                                console.error('updateBracketData function not available');
+                            }
+
+                            // Restore visibility
+                            if (root) {
+                                root.style.opacity = '1';
+                            }
+
+                            // Update the session's truth index in the background
+                            return fetch(`/api/update-truth-index?index=${truthIndex}`, { method: 'POST' });
+                        })
+                        .catch(error => {
+                            console.error('Error fetching bracket data:', error);
+                            // Restore visibility
+                            if (root) {
+                                root.style.opacity = '1';
+                            }
+                        });
+                }
             }
         });
     </script>

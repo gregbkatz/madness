@@ -199,10 +199,10 @@ def compare_with_truth(bracket, truth_bracket=None):
                                     bonus = seed_diff * UPSET_BONUS_MULTIPLIERS[f"round_{round_idx}"]
                                     team["bonus"] = int(bonus)  # Ensure it's an integer
                                     bonus_count += 1
-                                    # print(f"Added bonus of {bonus} to {team['name']} in {region} round {round_idx} position {i}")
+                                    print(f"Added bonus of {bonus} to {team['name']} in {region} round {round_idx} position {i}")
                                 else:
                                     team["bonus"] = 0  # Explicitly set to zero instead of None
-                                    # print(f"Set bonus to 0 for {team['name']} in {region} round {round_idx} (no upset)")
+                                    print(f"Set bonus to 0 for {team['name']} in {region} round {round_idx} (no upset)")
                         
                         # If truth team is None (future round), we're done with this team
                         if not truth_team:
@@ -211,7 +211,7 @@ def compare_with_truth(bracket, truth_bracket=None):
                                 team["classes"] += " incorrect"
                                 team["correct"] = False
                                 team["isEliminated"] = True
-                                # print(f"Marked future pick {team['name']} in {region} round {round_idx} as eliminated")
+                                print(f"Marked future pick {team['name']} in {region} round {round_idx} as eliminated")
                             continue
 
                         # Compare teams by name and seed
@@ -834,7 +834,88 @@ def load_bracket(filename):
 
 @app.route('/api/bracket', methods=['GET', 'POST'])
 def manage_bracket():
-    if request.method == 'POST':
+    """
+    API endpoint for managing bracket data.
+    GET: Return the current user's bracket or the selected user's bracket
+    POST: Update the current user's bracket
+    """
+    # For GET requests, return the current bracket
+    if request.method == 'GET':
+        try:
+            # Check if we're in read-only mode
+            read_only = session.get('read_only', False)
+            
+            # Get the username from the query parameters
+            username = request.args.get('username')
+            
+            # Check if truth_index is provided for AJAX requests
+            truth_index_str = request.args.get('truth_index')
+            if truth_index_str:
+                try:
+                    truth_index = int(truth_index_str)
+                    # Store the correct index in the session
+                    session['selected_truth_index'] = truth_index
+                    print(f"Updated selected truth index to {truth_index}")
+                except ValueError:
+                    truth_index = session.get('selected_truth_index', 0)
+                    print(f"Invalid truth index provided, using {truth_index}")
+            else:
+                truth_index = session.get('selected_truth_index', 0)
+                print(f"Using existing truth index: {truth_index}")
+                
+            # Get the truth bracket for comparison
+            truth_bracket = get_most_recent_truth_bracket(truth_index)
+            
+            # Log which truth file is being loaded
+            truth_files = get_sorted_truth_files()
+            if truth_files and truth_index < len(truth_files):
+                print(f"Loading truth bracket file: {truth_index}, {truth_files[truth_index]}")
+            else:
+                print(f"No truth file found for index {truth_index}")
+            
+            # If username is provided and in read-only mode, load that user's bracket
+            viewing_own_bracket = True
+            if username and read_only:
+                try:
+                    user_bracket = get_user_bracket_for_user(username)
+                    viewing_own_bracket = (username == session.get('username'))
+                    print(f"Loaded bracket for user: {username}")
+                except Exception as e:
+                    print(f"Error loading {username}'s bracket: {str(e)}")
+                    # On error, fall back to current user's bracket
+                    user_bracket = get_user_bracket()
+                    print(f"Falling back to current user bracket")
+            else:
+                # Otherwise, get the current user's bracket
+                user_bracket = get_user_bracket()
+                print(f"Loaded current user bracket")
+                
+            # Compare with truth bracket if available
+            if truth_bracket:
+                comparison_data = compare_with_truth(user_bracket, truth_bracket)
+                print(f"Compared bracket with truth data")
+            else:
+                comparison_data = None
+                print(f"No truth data available for comparison")
+                
+            # Prepare the response data
+            response_data = {
+                'bracket': user_bracket,
+                'truth_data': comparison_data,
+                'viewing_own_bracket': viewing_own_bracket,
+                'read_only': read_only
+            }
+            print('truth_data:',comparison_data)
+            return jsonify(response_data)
+                
+        except Exception as e:
+            import traceback
+            print(f"Error in API bracket GET: {str(e)}")
+            traceback.print_exc()
+            return jsonify({'error': str(e)}), 500
+            
+    # For POST requests, update the bracket
+    elif request.method == 'POST':
         data = request.get_json()
         action = data.get('action')
         
@@ -2007,6 +2088,29 @@ def api_update_truth_index():
     except Exception as e:
         app.logger.error(f"Error in api_update_truth_index: {str(e)}")
         return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+def get_user_bracket_for_user(username):
+    """Load a bracket for a specific user by username"""
+    try:
+        # Find the most recent bracket file for the requested user
+        bracket_files = [f for f in os.listdir('saved_brackets') if f.startswith(f'bracket_{username}_') and f.endswith('.json')]
+        
+        if not bracket_files:
+            print(f"No bracket file found for user: {username}")
+            return None
+        
+        # Sort by timestamp (newest first)
+        bracket_files.sort(key=lambda x: extract_timestamp_from_filename(x), reverse=True)
+        newest_file = bracket_files[0]
+        bracket_file = os.path.join('saved_brackets', newest_file)
+        
+        print(f"Found bracket file for user: {username} - {newest_file}")
+        
+        with open(bracket_file, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading bracket for user {username}: {str(e)}")
+        raise
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 80))
