@@ -388,7 +388,6 @@ def compare_with_truth(bracket, truth_bracket=None):
             pass
     
     # Now check for impossible future picks (teams that have been eliminated)
-    print(f"Eliminated teams: {eliminated_teams}")
     
     # Check regions for future rounds
     for region in ["midwest", "west", "south", "east"]:

@@ -23,7 +23,7 @@ def parse_arguments():
     parser.add_argument(
         '--count', 
         type=int, 
-        default=10,
+        default=1000,
         help='Number of simulations to generate for each truth bracket (default: 1000)'
     )
     parser.add_argument(
