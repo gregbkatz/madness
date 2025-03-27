@@ -52,7 +52,6 @@ def get_most_recent_truth_bracket(index=0):
         if not truth_files:
             return None
         
-        print("index, len", index, len(truth_files))
         # Check if the requested index is valid
         if index < 0 or index >= len(truth_files):
             # If invalid, default to the most recent
@@ -1477,6 +1476,11 @@ def get_users_list(truth_bracket):
             "max_possible_base_remaining": 1680 - perfect_score["total_score"],
             "max_possible_bonus_remaining": "-",
             "max_possible_total_remaining": "-",
+            "monte_carlo_pct_first_place": 0,
+            "monte_carlo_min_rank": 0,
+            "monte_carlo_max_rank": 0,
+            "monte_carlo_min_score": 0,
+            "monte_carlo_max_score": 0,
         }
         
         # Add the perfect entry to the user data
@@ -1744,7 +1748,12 @@ def get_users_list(truth_bracket):
                         "max_possible_total": max_possible_total if 'max_possible_total' in locals() else correct_picks["total_with_bonus"],
                         "max_possible_base_remaining": max_possible_base - correct_picks["total_score"],
                         "max_possible_bonus_remaining": max_possible_bonus - correct_picks["total_bonus"],
-                        "max_possible_total_remaining": max_possible_total - correct_picks["total_with_bonus"]
+                        "max_possible_total_remaining": max_possible_total - correct_picks["total_with_bonus"],
+                        "monte_carlo_pct_first_place": 0,
+                        "monte_carlo_min_rank": 0,
+                        "monte_carlo_max_rank": 0,
+                        "monte_carlo_min_score": 0,
+                        "monte_carlo_max_score": 0
                     })
                     
                     # Add to users set
@@ -1841,15 +1850,18 @@ def users_list():
         
         # Process user data with the extracted function
         user_data = get_users_list(truth_bracket)
-        
         # Add Monte Carlo data to user data if available
-        if monte_carlo_data and 'user_stats' in monte_carlo_data:
+        if monte_carlo_data:
             for user in user_data:
                 username = user['username']
-                if username in monte_carlo_data['user_stats']:
-                    user_stats = monte_carlo_data['user_stats'][username]
+                if username in monte_carlo_data:
+                    user_stats = monte_carlo_data[username]
                     # Add min score from the Monte Carlo data
-                    user['monte_carlo_min_score'] = user_stats.get('min_score', 'N/A')
+                    user['monte_carlo_pct_first_place'] = user_stats.get('pct_first_place', 0)
+                    user['monte_carlo_min_rank'] = user_stats.get('min_rank', 0)
+                    user['monte_carlo_max_rank'] = user_stats.get('max_rank', 0)
+                    user['monte_carlo_min_score'] = user_stats.get('min_score', 0)
+                    user['monte_carlo_max_score'] = user_stats.get('max_score', 0)
         
         return render_template('users_list.html', 
                               users=user_data, 

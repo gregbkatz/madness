@@ -382,9 +382,6 @@
                     <th rowspan="2" class="sortable" data-sort="rank">Rank</th>
                     <th rowspan="2" class="sortable" data-sort="username">Username</th>
                     <th rowspan="2" class="sortable" data-sort="champion">Champion</th>
-                    {% if monte_carlo_available %}
-                    <th rowspan="2" class="sortable" data-sort="monte_carlo_min_score">MC Min Score</th>
-                    {% endif %}
                     <!-- <th colspan="7" style="text-align: center;">Scores (pts)</th> -->
                     <!-- <th colspan="5" style="text-align: center;">Bonus & Total</th> -->
                 </tr>
@@ -411,6 +408,11 @@
                         Remaining</th>
                     <th class="sortable numeric-column" data-sort="max_possible_base">Max Possible Base</th>
                     <th class="sortable numeric-column" data-sort="max_possible_total">Max Possible Total</th>
+                    <th class="sortable numeric-column" data-sort="monte_carlo_pct_first_place">MC Win %</th>
+                    <th class="sortable numeric-column" data-sort="monte_carlo_min_rank">MC Best</th>
+                    <th class="sortable numeric-column" data-sort="monte_carlo_max_rank">MC Worst</th>
+                    <th class="sortable numeric-column" data-sort="monte_carlo_min_score">MC Min Score</th>
+                    <th class="sortable numeric-column" data-sort="monte_carlo_max_score">MC Max Score</th>
                 </tr>
             </thead>
             <tbody>
@@ -427,11 +429,6 @@
                         </td>
                         <td>{% if user.champion %}{{ user.champion }}{% else %}<span class="empty">-</span>{% endif %}
                         </td>
-                        {% if monte_carlo_available %}
-                        <td class="numeric-column">{% if user.monte_carlo_min_score != 'N/A' %}{{
-                            user.monte_carlo_min_score }}{% else %}<span class="empty">-</span>{% endif %}
-                        </td>
-                        {% endif %}
                         <td class="round-col hidden-round numeric-column" data-round="round_1">
                             <span class="correct-picks-value">{{ user.correct_picks.round_1_score }}</span>
                         </td>
@@ -471,6 +468,17 @@
                         <td class="numeric-column">
                             <span class="correct-picks-value">{{ user.max_possible_total }}</span>
                         </td>
+                        <td class="numeric-column">{% if user.monte_carlo_pct_first_place != 'N/A' %}{{
+                            "%.1f"|format(user.monte_carlo_pct_first_place) }}%{% else %}<span class="empty">-</span>{%
+                            endif %}</td>
+                        <td class="numeric-column">{% if user.monte_carlo_min_rank != 'N/A' %}{{
+                            user.monte_carlo_min_rank }}{% else %}<span class="empty">-</span>{% endif %}</td>
+                        <td class="numeric-column">{% if user.monte_carlo_max_rank != 'N/A' %}{{
+                            user.monte_carlo_max_rank }}{% else %}<span class="empty">-</span>{% endif %}</td>
+                        <td class="numeric-column">{% if user.monte_carlo_min_score != 'N/A' %}{{
+                            user.monte_carlo_min_score }}{% else %}<span class="empty">-</span>{% endif %}</td>
+                        <td class="numeric-column">{% if user.monte_carlo_max_score != 'N/A' %}{{
+                            user.monte_carlo_max_score }}{% else %}<span class="empty">-</span>{% endif %}</td>
                         </tr>
                         {% endfor %}
             </tbody>
@@ -659,6 +667,21 @@
                     case 'max_possible_total':
                         colIndex = 16;
                         break;
+                    case 'monte_carlo_pct_first_place':
+                        colIndex = 17;
+                        break;
+                    case 'monte_carlo_min_rank':
+                        colIndex = 18;
+                        break;
+                    case 'monte_carlo_max_rank':
+                        colIndex = 19;
+                        break;
+                    case 'monte_carlo_min_score':
+                        colIndex = 20;
+                        break;
+                    case 'monte_carlo_max_score':
+                        colIndex = 21;
+                        break;
                     default:
                         colIndex = 0;
                 }
@@ -825,6 +848,34 @@
                     // Use correct property based on key
                     if (item.key.startsWith('total_')) {
                         span.textContent = user.correct_picks[item.key];
+                    } else {
+                        span.textContent = user[item.key];
+                    }
+
+                    cell.appendChild(span);
+                    row.appendChild(cell);
+                });
+
+                // Add Monte Carlo statistics cells
+                const monteCarloCells = [
+                    { key: 'monte_carlo_pct_first_place', class: '' },
+                    { key: 'monte_carlo_min_rank', class: '' },
+                    { key: 'monte_carlo_max_rank', class: '' },
+                    { key: 'monte_carlo_min_score', class: '' },
+                    { key: 'monte_carlo_max_score', class: '' }
+                ];
+
+                monteCarloCells.forEach(item => {
+                    const cell = document.createElement('td');
+                    cell.classList.add('numeric-column');
+                    if (item.class) cell.classList.add(item.class);
+
+                    const span = document.createElement('span');
+                    span.classList.add('correct-picks-value');
+
+                    // Use correct property based on key
+                    if (item.key.startsWith('monte_carlo_')) {
+                        span.textContent = user[item.key];
                     } else {
                         span.textContent = user[item.key];
                     }
