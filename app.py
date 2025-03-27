@@ -1817,6 +1817,20 @@ def users_list():
         
         # Get the truth bracket based on the selected index
         truth_bracket = get_most_recent_truth_bracket(selected_index)
+        truth_file = all_truth_files[selected_index] if all_truth_files else None
+        
+        # Load Monte Carlo analysis data if available
+        monte_carlo_data = {}
+        if truth_file:
+            # Find the Monte Carlo analysis file
+            analysis_file = find_monte_carlo_analysis(truth_file)
+            if analysis_file and os.path.exists(analysis_file):
+                try:
+                    with open(analysis_file, 'r') as f:
+                        monte_carlo_data = json.load(f)
+                    print(f"Loaded Monte Carlo data from: {analysis_file}")
+                except Exception as e:
+                    print(f"Error loading Monte Carlo data: {str(e)}")
         
         # Format truth filenames for display in the slider
         truth_file_names = []
@@ -1828,16 +1842,92 @@ def users_list():
         # Process user data with the extracted function
         user_data = get_users_list(truth_bracket)
         
+        # Add Monte Carlo data to user data if available
+        if monte_carlo_data and 'user_stats' in monte_carlo_data:
+            for user in user_data:
+                username = user['username']
+                if username in monte_carlo_data['user_stats']:
+                    user_stats = monte_carlo_data['user_stats'][username]
+                    # Add min score from the Monte Carlo data
+                    user['monte_carlo_min_score'] = user_stats.get('min_score', 'N/A')
+        
         return render_template('users_list.html', 
                               users=user_data, 
                               error=None, 
                               truth_file_names=truth_file_names,
                               selected_index=selected_index,
-                              current_truth_file=truth_file_names[selected_index] if truth_file_names else None)
+                              current_truth_file=truth_file_names[selected_index] if truth_file_names else None,
+                              monte_carlo_available=bool(monte_carlo_data))
     except Exception as e:
         # Log the error and return empty user list
         print(f"Error in users_list route: {str(e)}")
         return render_template('users_list.html', users=[], error=str(e))
+
+def find_monte_carlo_analysis(truth_file):
+    """
+    Find the Monte Carlo analysis file for a given truth file.
+    Selects the file with the largest number of brackets if multiple are available.
+    
+    Args:
+        truth_file (str): Path to the truth file
+        
+    Returns:
+        str: Path to the analysis file, or None if not found
+    """
+    try:
+        # Extract the identifier from the truth file
+        basename = os.path.basename(truth_file)
+        if not basename.startswith("round_") or "_game_" not in basename:
+            return None
+            
+        # Extract the round_X_game_Y part
+        truth_id = os.path.splitext(basename)[0]  # Remove extension
+        
+        # Look for analysis files in data/simulations
+        simulations_dir = "data/simulations"
+        if not os.path.exists(simulations_dir):
+            return None
+            
+        # Check for files with pattern: round_{truth_id}_{count}_brackets.json
+        analysis_files = []
+        for filename in os.listdir(simulations_dir):
+            if filename.startswith(f"{truth_id}_") and filename.endswith("_brackets.json"):
+                filepath = os.path.join(simulations_dir, filename)
+                
+                # Try to extract the count from the filename
+                # Expected pattern: round_X_game_Y_Z_brackets.json where Z is the count
+                count = 0
+                try:
+                    # Split by underscore and extract the part before "_brackets.json"
+                    parts = filename.split('_')
+                    if len(parts) >= 5:  # Should have at least round_X_game_Y_Z
+                        # The count should be the second-to-last part
+                        count_str = parts[-2]
+                        count = int(count_str)
+                except Exception:
+                    # If we can't parse the count, assume it's 0
+                    count = 0
+                
+                # Store the file path, count, and modification time
+                file_info = {
+                    'path': filepath,
+                    'count': count,
+                    'mtime': os.path.getmtime(filepath)
+                }
+                analysis_files.append(file_info)
+                
+        # If we found files, return the one with the largest count
+        # If there are multiple with the same count, choose the most recent
+        if analysis_files:
+            # Sort by count (descending) and then by modification time (descending)
+            analysis_files.sort(key=lambda x: (-x['count'], -x['mtime']))
+            print(f"Using Monte Carlo analysis with {analysis_files[0]['count']} brackets")
+            return analysis_files[0]['path']
+            
+        return None
+    except Exception as e:
+        print(f"Error finding Monte Carlo analysis: {str(e)}")
+        return None
 
 # Add this function after compare_with_truth and before users_list
 def generate_optimal_future_bracket(truth_bracket):
@@ -2110,6 +2200,17 @@ def get_user_bracket_for_user(username):
     except Exception as e:
         print(f"Error loading bracket for user {username}: {str(e)}")
         raise
+
+def save_rankings(rankings, output_file):
+    """
+    Save rankings to a JSON file.
+    
+    Args:
+        rankings (dict): Dictionary of rankings data
+        output_file (str): Path to save the rankings
+    """
+    with open(output_file, 'w') as f:
+        json.dump(rankings, f, indent=2)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 80))

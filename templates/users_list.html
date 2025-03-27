@@ -382,6 +382,9 @@
                     <th rowspan="2" class="sortable" data-sort="rank">Rank</th>
                     <th rowspan="2" class="sortable" data-sort="username">Username</th>
                     <th rowspan="2" class="sortable" data-sort="champion">Champion</th>
+                    {% if monte_carlo_available %}
+                    <th rowspan="2" class="sortable" data-sort="monte_carlo_min_score">MC Min Score</th>
+                    {% endif %}
                     <!-- <th colspan="7" style="text-align: center;">Scores (pts)</th> -->
                     <!-- <th colspan="5" style="text-align: center;">Bonus & Total</th> -->
                 </tr>
@@ -424,6 +427,11 @@
                         </td>
                         <td>{% if user.champion %}{{ user.champion }}{% else %}<span class="empty">-</span>{% endif %}
                         </td>
+                        {% if monte_carlo_available %}
+                        <td class="numeric-column">{% if user.monte_carlo_min_score != 'N/A' %}{{
+                            user.monte_carlo_min_score }}{% else %}<span class="empty">-</span>{% endif %}
+                        </td>
+                        {% endif %}
                         <td class="round-col hidden-round numeric-column" data-round="round_1">
                             <span class="correct-picks-value">{{ user.correct_picks.round_1_score }}</span>
                         </td>

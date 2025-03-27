@@ -27,6 +27,7 @@ ENV/
 # JSON data files that might be generated
 bracket.json
 saved_brackets/
+data/simulations/
 
 # OS specific
 .DS_Store
