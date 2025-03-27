@@ -1263,6 +1263,37 @@ def get_bracket_status():
         print(f"Error getting bracket status: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+def add_mc_data(truth_file, user_data):
+    # Load Monte Carlo analysis data if available
+    monte_carlo_data = {}
+    if truth_file:
+        # Find the Monte Carlo analysis file
+        analysis_file = find_monte_carlo_analysis(truth_file)
+        print("analysis_file", analysis_file)
+        if analysis_file and os.path.exists(analysis_file):
+            try:
+                with open(analysis_file, 'r') as f:
+                    monte_carlo_data = json.load(f)
+                print(f"Loaded Monte Carlo data from: {analysis_file}")
+            except Exception as e:
+                print(f"Error loading Monte Carlo data: {str(e)}")
+        else:
+            print("No Monte Carlo analysis file found")
+    
+    # Add Monte Carlo data to user data if available
+    if monte_carlo_data:
+        for user in user_data:
+            username = user['username']
+            if username in monte_carlo_data:
+                user_stats = monte_carlo_data[username]
+                # Add min score from the Monte Carlo data
+                user['monte_carlo_pct_first_place'] = user_stats.get('pct_first_place', 0)
+                user['monte_carlo_min_rank'] = user_stats.get('min_rank', 0)
+                user['monte_carlo_max_rank'] = user_stats.get('max_rank', 0)
+                user['monte_carlo_min_score'] = user_stats.get('min_score', 0)
+                user['monte_carlo_max_score'] = user_stats.get('max_score', 0)
+    return user_data, bool(monte_carlo_data)
+
 def get_users_list(truth_bracket):
     """
     Process and return user data with scores based on the provided truth bracket.
@@ -1828,22 +1859,6 @@ def users_list():
         truth_bracket = get_most_recent_truth_bracket(selected_index)
         truth_file = all_truth_files[selected_index] if all_truth_files else None
         
-        # Load Monte Carlo analysis data if available
-        monte_carlo_data = {}
-        if truth_file:
-            # Find the Monte Carlo analysis file
-            analysis_file = find_monte_carlo_analysis(truth_file)
-            print("analysis_file", analysis_file)
-            if analysis_file and os.path.exists(analysis_file):
-                try:
-                    with open(analysis_file, 'r') as f:
-                        monte_carlo_data = json.load(f)
-                    print(f"Loaded Monte Carlo data from: {analysis_file}")
-                except Exception as e:
-                    print(f"Error loading Monte Carlo data: {str(e)}")
-            else:
-                print("No Monte Carlo analysis file found")
-        
         # Format truth filenames for display in the slider
         truth_file_names = []
         for file_path in all_truth_files:
@@ -1853,18 +1868,7 @@ def users_list():
         
         # Process user data with the extracted function
         user_data = get_users_list(truth_bracket)
-        # Add Monte Carlo data to user data if available
-        if monte_carlo_data:
-            for user in user_data:
-                username = user['username']
-                if username in monte_carlo_data:
-                    user_stats = monte_carlo_data[username]
-                    # Add min score from the Monte Carlo data
-                    user['monte_carlo_pct_first_place'] = user_stats.get('pct_first_place', 0)
-                    user['monte_carlo_min_rank'] = user_stats.get('min_rank', 0)
-                    user['monte_carlo_max_rank'] = user_stats.get('max_rank', 0)
-                    user['monte_carlo_min_score'] = user_stats.get('min_score', 0)
-                    user['monte_carlo_max_score'] = user_stats.get('max_score', 0)
+        user_data, mc_data_found = add_mc_data(truth_file, user_data)
         
         return render_template('users_list.html', 
                               users=user_data, 
@@ -1872,7 +1876,7 @@ def users_list():
                               truth_file_names=truth_file_names,
                               selected_index=selected_index,
                               current_truth_file=truth_file_names[selected_index] if truth_file_names else None,
-                              monte_carlo_available=bool(monte_carlo_data))
+                              monte_carlo_available=mc_data_found)
     except Exception as e:
         # Log the error and return empty user list
         print(f"Error in users_list route: {str(e)}")
@@ -2158,6 +2162,9 @@ def api_user_scores():
         
         # Get users list with scores
         users_list = get_users_list(truth_bracket)
+        truth_file = all_truth_files[truth_index] if all_truth_files else None
+        users_list, _ = add_mc_data(truth_file, users_list)
+
         if users_list is None:
             return jsonify({'error': 'Could not generate users list'}), 500
         
