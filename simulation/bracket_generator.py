@@ -62,9 +62,73 @@ class BracketGenerator:
         
         return bracket
     
+    def _calculate_win_probability(self, team1, team2):
+        """
+        Calculate the probability of team1 winning based on seed difference.
+        
+        Args:
+            team1 (dict): First team
+            team2 (dict): Second team
+            
+        Returns:
+            float: Probability of team1 winning (between 0.01 and 0.99)
+        """
+        # Default to 50/50 if either team is missing or doesn't have seed
+        if not team1 or not team2 or 'seed' not in team1 or 'seed' not in team2:
+            return 0.5
+            
+        # Extract seeds
+        seed1 = team1['seed']
+        seed2 = team2['seed']
+        
+        # Calculate seed difference (absolute value)
+        seed_diff = abs(seed1 - seed2)
+            
+        # Determine which team has the lower seed (lower is better)
+        lower_seed_is_team1 = seed1 < seed2
+        
+        # Maximum seed difference is 15 (1 vs 16)
+        # At max difference, the better team has 99% chance of winning
+        # Linear interpolation between 50% and 99%
+        max_diff = 15.0
+        min_prob = 0.50  # Minimum probability of better seed (equal seed)
+        max_prob = 0.99  # Maximum probability of better seed (for much better seed)
+        
+        # Calculate probability for the better seeded team
+        # Linear interpolation: prob = min_prob + (seed_diff / max_diff) * (max_prob - min_prob)
+        better_team_prob = min_prob + (seed_diff / max_diff) * (max_prob - min_prob)
+        
+        # Cap probability between min_prob and max_prob
+        assert better_team_prob >= min_prob and better_team_prob <= max_prob, f"Better team probability {better_team_prob} is out of range"
+        
+        # Return probability for team1
+        return better_team_prob if lower_seed_is_team1 else 1.0 - better_team_prob
+    
+    def _weighted_choice(self, team1, team2):
+        """
+        Make a weighted random choice between two teams based on seed.
+        
+        Args:
+            team1 (dict): First team
+            team2 (dict): Second team
+            
+        Returns:
+            dict: The selected team
+        """
+        if not team1:
+            return team2
+        if not team2:
+            return team1
+            
+        # Calculate probability of team1 winning
+        team1_prob = self._calculate_win_probability(team1, team2)
+        
+        # Make a weighted random choice
+        return team1 if random.random() < team1_prob else team2
+
     def _complete_region(self, bracket, region):
         """
-        Complete a single region with random selections.
+        Complete a single region with random selections based on seed probabilities.
         
         Args:
             bracket (dict): The bracket to complete
@@ -91,10 +155,9 @@ class BracketGenerator:
                     team1 = bracket[region][prev_round_idx][team1_idx]
                     team2 = bracket[region][prev_round_idx][team2_idx]
                     
-                    # Randomly choose a winner (50/50 chance for now)
-                    # Could be enhanced later to use seed-based probabilities
+                    # Use weighted choice based on seed differences
                     if team1 and team2:
-                        winner = random.choice([team1, team2])
+                        winner = self._weighted_choice(team1, team2)
                         bracket[region][next_round_idx][game_idx] = winner
                     elif team1:
                         bracket[region][next_round_idx][game_idx] = team1
@@ -103,7 +166,7 @@ class BracketGenerator:
     
     def _complete_final_four(self, bracket):
         """
-        Complete the Final Four round with random selections.
+        Complete the Final Four round with seed-based probability selections.
         
         Args:
             bracket (dict): The bracket to complete
@@ -131,7 +194,7 @@ class BracketGenerator:
             team1 = bracket['finalFour'][0]  # midwest
             team2 = bracket['finalFour'][1]  # west
             if team1 and team2:
-                winner = random.choice([team1, team2])
+                winner = self._weighted_choice(team1, team2)
                 bracket['championship'][0] = winner
         
         # Second semifinal: south vs east (slots 2 and 3)
@@ -139,12 +202,12 @@ class BracketGenerator:
             team1 = bracket['finalFour'][2]  # south
             team2 = bracket['finalFour'][3]  # east
             if team1 and team2:
-                winner = random.choice([team1, team2])
+                winner = self._weighted_choice(team1, team2)
                 bracket['championship'][1] = winner
     
     def _complete_championship(self, bracket):
         """
-        Complete the Championship game with a random selection.
+        Complete the Championship game with a seed-based probability selection.
         
         Args:
             bracket (dict): The bracket to complete
@@ -155,7 +218,7 @@ class BracketGenerator:
             team2 = bracket['championship'][1]
             
             if team1 and team2:
-                champion = random.choice([team1, team2])
+                champion = self._weighted_choice(team1, team2)
                 bracket['champion'] = champion
 
 def generate_random_completion(truth_bracket=None, count=1):
