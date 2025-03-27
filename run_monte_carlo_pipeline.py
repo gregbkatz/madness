@@ -26,8 +26,8 @@ def parse_arguments():
     parser.add_argument(
         '--count', 
         type=int, 
-        default=10000,
-        help='Number of simulations to generate (default: 10000)'
+        default=1000,
+        help='Number of simulations to generate (default: 1000)'
     )
     parser.add_argument(
         '--truth-file',
