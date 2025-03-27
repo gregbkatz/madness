@@ -66,8 +66,11 @@ class BracketAnalyzer:
             if filename.startswith('bracket_') and filename.endswith('.json'):
                 # Extract username from filename format: bracket_username_timestamp.json
                 parts = filename.split('_')
-                if len(parts) >= 2:
-                    username = parts[1]
+                if len(parts) >= 3:  # We need at least 3 parts: bracket, username, timestamp
+                    # The timestamp part is the last two segments (YYYYMMDD_HHMMSS)
+                    # So the username is all parts between 'bracket_' and the timestamp
+                    # This handles usernames with underscores like "MiloPiPi_bandwagon"
+                    username = '_'.join(parts[1:-2])
                     users.add(username)
         
         # For each user, find their most recent bracket
@@ -81,7 +84,17 @@ class BracketAnalyzer:
             
             # Find the most recent bracket for this user
             for filename in os.listdir(user_brackets_dir):
+                # Need to reconstruct proper file pattern for usernames with underscores
+                # e.g. 'bracket_MiloPiPi_bandwagon_20230326_123456.json'
                 if filename.startswith(f'bracket_{username}_') and filename.endswith('.json'):
+                    # Make sure this is the exact username and not a prefix of another username
+                    # by extracting the username from the filename and comparing
+                    parts = filename.split('_')
+                    if len(parts) >= 3:
+                        file_username = '_'.join(parts[1:-2])
+                        if file_username != username:
+                            continue
+                    
                     file_path = os.path.join(user_brackets_dir, filename)
                     file_time = os.path.getmtime(file_path)
                     

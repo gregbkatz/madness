@@ -586,7 +586,15 @@ def index():
         else:
             # Load another user's bracket
             # Find the most recent bracket file for the requested user
-            bracket_files = [f for f in os.listdir('saved_brackets') if f.startswith(f'bracket_{display_username}_') and f.endswith('.json')]
+            bracket_files = []
+            for f in os.listdir('saved_brackets'):
+                if f.startswith(f'bracket_{display_username}_') and f.endswith('.json'):
+                    # Extract the username from the filename to ensure exact match
+                    parts = f.split('_')
+                    if len(parts) >= 4:  # We need at least 4 parts: bracket, username parts, date, time
+                        file_username = '_'.join(parts[1:-2])
+                        if file_username == display_username:
+                            bracket_files.append(f)
             
             if not bracket_files:
                 return render_template('error.html', error=f"No bracket found for user {display_username}")
@@ -2204,7 +2212,15 @@ def get_user_bracket_for_user(username):
     """Load a bracket for a specific user by username"""
     try:
         # Find the most recent bracket file for the requested user
-        bracket_files = [f for f in os.listdir('saved_brackets') if f.startswith(f'bracket_{username}_') and f.endswith('.json')]
+        bracket_files = []
+        for f in os.listdir('saved_brackets'):
+            if f.startswith(f'bracket_{username}_') and f.endswith('.json'):
+                # Extract the username from the filename to ensure exact match
+                parts = f.split('_')
+                if len(parts) >= 4:  # We need at least 4 parts: bracket, username parts, date, time
+                    file_username = '_'.join(parts[1:-2])
+                    if file_username == username:
+                        bracket_files.append(f)
         
         if not bracket_files:
             print(f"No bracket file found for user: {username}")

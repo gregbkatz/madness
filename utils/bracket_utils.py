@@ -98,6 +98,13 @@ def get_user_bracket_for_user(username, brackets_dir="saved_brackets"):
     # Find the most recent bracket for this user
     for filename in os.listdir(brackets_dir):
         if filename.startswith(f'bracket_{username}_') and filename.endswith('.json'):
+            # Extract the username from the filename to ensure exact match (for usernames with underscores)
+            parts = filename.split('_')
+            if len(parts) >= 4:  # We need at least 4 parts: 'bracket', username parts, date, time
+                file_username = '_'.join(parts[1:-2])
+                if file_username != username:
+                    continue
+                    
             file_path = os.path.join(brackets_dir, filename)
             file_time = os.path.getmtime(file_path)
             
@@ -142,8 +149,9 @@ def get_all_user_brackets(brackets_dir="saved_brackets"):
         if filename.startswith('bracket_') and filename.endswith('.json'):
             # Extract username from filename format: bracket_username_timestamp.json
             parts = filename.split('_')
-            if len(parts) >= 2:
-                username = parts[1]
+            if len(parts) >= 4:  # We need at least 4 parts: 'bracket', username parts, date, time
+                # Username is everything between 'bracket_' and the timestamp (date_time)
+                username = '_'.join(parts[1:-2])  # Join all parts except 'bracket', date and time
                 users.add(username)
     
     # For each user, find their most recent bracket
