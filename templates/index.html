@@ -55,15 +55,39 @@
                 {% endif %}
 
                 {% if session.read_only %}
-                <a href="/users-list" class="change-user-button" style="margin-left: 10px;">Users List</a>
+                <a href="/users-list" class="change-user-button" style="margin-left: 10px;">Leaderboard</a>
                 <a href="/scores" class="change-user-button" style="margin-left: 10px;">Live Scores</a>
                 {% endif %}
             </div>
             {% endif %}
         </div>
     </header>
+
+    {% if truth_file_names %}
+    <div class="truth-slider-container" style="margin: 15px auto;">
+        <div class="slider-header">
+            <span>Tournament Timeline</span>
+            <span id="current-truth-file">{{ current_truth_file }}</span>
+        </div>
+        <div class="slider-controls">
+            <button id="jump-start" class="timeline-btn" title="Jump to beginning">⏮</button>
+            <button id="prev-truth-file" class="timeline-btn">←</button>
+            <div class="slider-with-label">
+                <input type="range" id="truth-file-slider" min="0" max="{{ truth_file_names|length - 1 }}"
+                    value="{{ truth_file_names|length - 1 - selected_index }}" class="slider">
+            </div>
+            <button id="next-truth-file" class="timeline-btn">→</button>
+            <button id="jump-end" class="timeline-btn" title="Jump to end">⏭</button>
+        </div>
+        <!-- Hidden element to store filenames data for JavaScript -->
+        <div id="timeline-data" style="display: none;" data-filenames='{{ truth_file_names|tojson }}'></div>
+    </div>
+    {% endif %}
+
     <div id="root"></div>
+
     <script type="text/babel" src="{{ url_for('static', filename='js/bracket.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline-slider.js') }}"></script>
     <!-- Force bottom content to be scrollable -->
     <div style="height: 100px;"></div>
     <script>
@@ -94,6 +118,60 @@
                     }, 0);
                 }
             });
+
+            // Function to fetch bracket data via AJAX
+            window.fetchBracketData = function (truthIndex) {
+                // Show loading indicator
+                const root = document.getElementById('root');
+                if (root) {
+                    root.style.opacity = '0.6';
+                }
+
+                // Get current URL parameters (like username)
+                const currentParams = new URLSearchParams(window.location.search);
+                const username = currentParams.get('username');
+
+                // Build query string for API call
+                let apiUrl = `/api/bracket?truth_index=${truthIndex}`;
+                if (username) {
+                    apiUrl += `&username=${username}`;
+                }
+
+                console.log(`Fetching bracket data with URL: ${apiUrl}`);
+
+                fetch(apiUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Bracket data received from API:', data);
+                        // Wait for React to update bracket
+                        if (window.updateBracketData && typeof window.updateBracketData === 'function') {
+                            window.updateBracketData(data);
+                            console.log('Bracket data updated via updateBracketData function');
+                        } else {
+                            console.error('updateBracketData function not available');
+                        }
+
+                        // Restore visibility
+                        if (root) {
+                            root.style.opacity = '1';
+                        }
+
+                        // Update the session's truth index in the background
+                        return fetch(`/api/update-truth-index?index=${truthIndex}`, { method: 'POST' });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching bracket data:', error);
+                        // Restore visibility
+                        if (root) {
+                            root.style.opacity = '1';
+                        }
+                    });
+            };
         });
     </script>
 </body>

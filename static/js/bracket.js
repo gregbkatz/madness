@@ -62,6 +62,8 @@ function MarchMadnessBracket() {
     const [readOnly, setReadOnly] = React.useState(false);
     // Track bracket status
     const [bracketStatus, setBracketStatus] = React.useState(null);
+    // Add state for truth data
+    const [truthData, setTruthData] = React.useState(null);
 
     // Function to calculate how many games still need to be picked
     const calculateCompletionStatus = (bracketData) => {
@@ -178,6 +180,7 @@ function MarchMadnessBracket() {
         fetch('/api/teams')
             .then(response => response.json())
             .then(data => {
+                console.log('Teams data loaded successfully');
                 setTeams(data);
             })
             .catch(error => console.error('Error fetching teams:', error));
@@ -186,6 +189,7 @@ function MarchMadnessBracket() {
         fetch('/api/bracket-status')
             .then(response => response.json())
             .then(data => {
+                console.log('Bracket status loaded:', data);
                 if (data.success) {
                     setBracketStatus(data.status);
 
@@ -249,18 +253,60 @@ function MarchMadnessBracket() {
             .catch(error => console.error('Error fetching bracket status:', error));
 
         // Fetch current bracket state
-        fetch('/api/bracket')
-            .then(response => response.json())
-            .then(data => {
-                console.log('Bracket fetched:', data);
-                setBracket(data);
+        console.log('Fetching initial bracket data...');
+        // Add query params to include current URL params (like username if present)
+        const queryParams = new URLSearchParams(window.location.search);
+        const apiUrl = queryParams.toString()
+            ? `/api/bracket?${queryParams.toString()}`
+            : '/api/bracket';
 
-                // Calculate and update completion status
-                const status = calculateCompletionStatus(data);
-                setCompletionStatus(status);
-                updateCompletionStatus(status);
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
             })
-            .catch(error => console.error('Error fetching bracket:', error));
+            .then(data => {
+                console.log('Bracket fetched successfully:', data);
+
+                // Update read-only state if provided
+                if (data.read_only !== undefined) {
+                    setReadOnly(data.read_only);
+                }
+
+                // Use the same truth data handling logic as in updateBracketData
+                if (data.truth_data) {
+                    console.log("Truth data received in initial load:", data.truth_data);
+                    setTruthData(data.truth_data);
+                    setBracket(data.truth_data); // Use the truth data with correct/incorrect classes
+
+                    // Calculate and update completion status
+                    const status = calculateCompletionStatus(data.truth_data);
+                    setCompletionStatus(status);
+                    updateCompletionStatus(status);
+                }
+                // Fallback to regular bracket data if no truth data
+                else if (data.bracket) {
+                    console.log("Setting bracket data (no truth data):", data.bracket);
+                    setBracket(data.bracket);
+
+                    // Calculate and update completion status
+                    const status = calculateCompletionStatus(data.bracket);
+                    setCompletionStatus(status);
+                    updateCompletionStatus(status);
+                } else if (data.error) {
+                    console.error('Error in bracket data:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching bracket:', error);
+                // Show error in the bracket area
+                const rootEl = document.getElementById('root');
+                if (rootEl) {
+                    rootEl.innerHTML = `<div style="color: red; padding: 20px;">Error loading bracket: ${error.message}. Please try refreshing the page.</div>`;
+                }
+            });
     }, []);
 
     // Function to handle team selection in regular rounds
@@ -1351,6 +1397,49 @@ function MarchMadnessBracket() {
         */
         // ... existing code ...
     };
+
+    // Add a new method to expose the updateBracketData function globally
+    React.useEffect(() => {
+        // Make updateBracketData available globally
+        window.updateBracketData = (data) => {
+            console.log("Updating bracket data via AJAX", data);
+            if (!data) {
+                console.error("No data received in updateBracketData");
+                return;
+            }
+
+            // Update read-only state if provided
+            if (data.read_only !== undefined) {
+                setReadOnly(data.read_only);
+            }
+
+            // Update truth data if provided and use it to update the bracket
+            if (data.truth_data) {
+                console.log("Truth data received:", data.truth_data);
+                setTruthData(data.truth_data);
+                setBracket(data.truth_data); // Use the truth data which has correct/incorrect classes
+            }
+            // Otherwise use the regular bracket data
+            else if (data.bracket) {
+                console.log("Setting bracket data:", data.bracket);
+                setBracket(data.bracket);
+            } else {
+                console.error("No bracket data found in response");
+            }
+
+            // Calculate and update completion status if needed
+            if (typeof calculateCompletionStatus === 'function' && data.bracket) {
+                const status = calculateCompletionStatus(data.bracket);
+                setCompletionStatus(status);
+                updateCompletionStatus(status);
+            }
+        };
+
+        // Cleanup function to remove the global reference when component unmounts
+        return () => {
+            window.updateBracketData = undefined;
+        };
+    }, []);
 
     // Main render method
     return (

@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>March Madness Bracket Users</title>
+    <title>March Madness Leaderboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -268,320 +269,622 @@
             /* font-size: 1.5em; */
             /* border: 2px solid #000000; */
         }
+
+        /* Loading overlay styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .loading-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+
+        .loading-text {
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Toggle button for rounds */
+        .toggle-btn {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .toggle-btn:hover {
+            background-color: #e8e8e8;
+        }
+
+        .toggle-btn:active {
+            background-color: #d8d8d8;
+        }
     </style>
 </head>
 
 <body>
-    <h1>March Madness Bracket Users</h1>
-
-    <div class="user-count">
-        Total Users: {{ users|length }}
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Updating data...</div>
     </div>
 
-    <div class="sorting-help" style="text-align: center; color: #555; margin-bottom: 15px;">
-        Click on any column header to sort. Click again to reverse the sort order.
+    <div class="truth-slider-container">
+        <div class="slider-header">
+            <span>Tournament Timeline</span>
+            <span id="current-truth-file">{{ current_truth_file }}</span>
+        </div>
+        <div class="slider-controls">
+            <button id="jump-start" class="timeline-btn" title="Jump to beginning">⏮</button>
+            <button id="prev-truth-file" class="timeline-btn">←</button>
+            <div class="slider-with-label">
+                <input type="range" id="truth-file-slider" min="0" max="{{ truth_file_names|length - 1 }}"
+                    value="{{ truth_file_names|length - 1 - selected_index }}" class="slider">
+            </div>
+            <button id="next-truth-file" class="timeline-btn">→</button>
+            <button id="jump-end" class="timeline-btn" title="Jump to end">⏭</button>
+        </div>
+        <!-- Hidden element to store filenames data for JavaScript -->
+        <div id="timeline-data" style="display: none;" data-filenames='{{ truth_file_names|tojson }}'></div>
     </div>
 
-    <div class="toggle-container">
-        <button id="toggleRounds" class="toggle-button">Show Rounds</button>
-    </div>
+    <div class="users-list-container">
+        <div class="controls" style="margin: 10px 0;">
+            <button id="toggle-rounds" class="toggle-btn">Show/Hide Rounds</button>
+        </div>
 
-    {% if error %}
-    <div class="error">
-        Error: {{ error }}
-    </div>
-    {% endif %}
+        {% if error %}
+        <div class="error">
+            Error: {{ error }}
+        </div>
+        {% endif %}
 
-    {% if users %}
-    <table id="usersTable">
-        <thead>
-            <tr>
-                <th rowspan="2" class="sortable" data-sort="rank">Rank</th>
-                <th rowspan="2" class="sortable" data-sort="username">Username</th>
-                <th rowspan="2" class="sortable" data-sort="champion">Champion</th>
-                <!-- <th colspan="7" style="text-align: center;">Scores (pts)</th> -->
-                <!-- <th colspan="5" style="text-align: center;">Bonus & Total</th> -->
-            </tr>
-            <tr>
-                <th class="sortable round-col hidden-round numeric-column" data-sort="round_1_score"
-                    data-round="round_1">Round of 32</th>
-                <th class="sortable round-col hidden-round numeric-column" data-sort="round_2_score"
-                    data-round="round_2">Sweet 16</th>
-                <th class="sortable round-col hidden-round numeric-column" data-sort="round_3_score"
-                    data-round="round_3">Elite 8</th>
-                <th class="sortable round-col hidden-round numeric-column" data-sort="final_four_score"
-                    data-round="final_four">Final Four</th>
-                <th class="sortable round-col hidden-round numeric-column" data-sort="championship_score"
-                    data-round="championship">Final</th>
-                <th class="sortable round-col hidden-round numeric-column" data-sort="champion_score"
-                    data-round="champion">Champion</th>
-                <th class="sortable numeric-column" data-sort="total_score">Base</th>
-                <th class="sortable numeric-column" data-sort="total_bonus">Bonus</th>
-                <th class="sortable numeric-column total-column" data-sort="total_with_bonus">Total</th>
-                <th class="sortable numeric-column" data-sort="max_possible_base_remaining">Max Possible Base Remaining
-                </th>
-                <th class="sortable numeric-column" data-sort="max_possible_bonus_remaining">Max Possible Bonus
-                    Remaining</th>
-                <th class="sortable numeric-column" data-sort="max_possible_base">Max Possible Base</th>
-                <th class="sortable numeric-column" data-sort="max_possible_total">Max Possible Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in users %}
-            <tr{% if user.username=="PERFECT" %} class="perfect-row" {% endif %}>
-                <td{% if user.rank==1 %} class="rank-1" {% elif user.rank==2 %} class="rank-2" {% elif user.rank==3 %}
-                    class="rank-3" {% endif %}>{{ user.rank }}</td>
-                    <td>
-                        {% if user.username == "PERFECT" %}
-                        <strong>Maximum Possible</strong>
-                        {% else %}
-                        <a href="/?username={{ user.username }}">{{ user.username }}</a>
-                        {% endif %}
-                    </td>
-                    <td>{% if user.champion %}{{ user.champion }}{% else %}<span class="empty">-</span>{% endif %}</td>
-                    <td class="round-col hidden-round numeric-column" data-round="round_1"><span
-                            class="correct-picks-value">{{
-                            user.correct_picks.round_1_score }}</span></td>
-                    <td class="round-col hidden-round numeric-column" data-round="round_2"><span
-                            class="correct-picks-value">{{
-                            user.correct_picks.round_2_score }}</span></td>
-                    <td class="round-col hidden-round numeric-column" data-round="round_3"><span
-                            class="correct-picks-value">{{
-                            user.correct_picks.round_3_score }}</span></td>
-                    <td class="round-col hidden-round numeric-column" data-round="final_four"><span
-                            class="correct-picks-value">{{
-                            user.correct_picks.final_four_score }}</span></td>
-                    <td class="round-col hidden-round numeric-column" data-round="championship"><span
-                            class="correct-picks-value">{{
-                            user.correct_picks.championship_score }}</span></td>
-                    <td class="round-col hidden-round numeric-column" data-round="champion"><span
-                            class="correct-picks-value">{{
-                            user.correct_picks.champion_score }}</span></td>
-                    <td class="numeric-column"><span class="correct-picks-value">{{ user.correct_picks.total_score
-                            }}</span></td>
-                    <td class="numeric-column"><span class="correct-picks-value">{{ user.correct_picks.total_bonus
-                            }}</span></td>
-                    <td class="numeric-column total-column"><span class="correct-picks-value">{{
-                            user.correct_picks.total_with_bonus
-                            }}</span></td>
-                    <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_base_remaining
-                            }}</span>
-                    </td>
-                    <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_bonus_remaining
-                            }}</span>
-                    </td>
-                    <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_base }}</span>
-                    </td>
-                    <td class="numeric-column"><span class="correct-picks-value">{{ user.max_possible_total }}</span>
-                    </td>
-                    </tr>
-                    {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>No users found.</p>
-    {% endif %}
+        {% if users %}
+        <table id="usersTable">
+            <thead>
+                <tr>
+                    <th rowspan="2" class="sortable" data-sort="rank">Rank</th>
+                    <th rowspan="2" class="sortable" data-sort="username">Username</th>
+                    <th rowspan="2" class="sortable" data-sort="champion">Champion</th>
+                    <!-- <th colspan="7" style="text-align: center;">Scores (pts)</th> -->
+                    <!-- <th colspan="5" style="text-align: center;">Bonus & Total</th> -->
+                </tr>
+                <tr>
+                    <th class="sortable round-col hidden-round numeric-column" data-sort="round_1_score"
+                        data-round="round_1">Round of 32</th>
+                    <th class="sortable round-col hidden-round numeric-column" data-sort="round_2_score"
+                        data-round="round_2">Sweet 16</th>
+                    <th class="sortable round-col hidden-round numeric-column" data-sort="round_3_score"
+                        data-round="round_3">Elite 8</th>
+                    <th class="sortable round-col hidden-round numeric-column" data-sort="final_four_score"
+                        data-round="final_four">Final Four</th>
+                    <th class="sortable round-col hidden-round numeric-column" data-sort="championship_score"
+                        data-round="championship">Final</th>
+                    <th class="sortable round-col hidden-round numeric-column" data-sort="champion_score"
+                        data-round="champion">Champion</th>
+                    <th class="sortable numeric-column" data-sort="total_score">Base</th>
+                    <th class="sortable numeric-column" data-sort="total_bonus">Bonus</th>
+                    <th class="sortable numeric-column total-column" data-sort="total_with_bonus">Total</th>
+                    <th class="sortable numeric-column" data-sort="max_possible_base_remaining">Max Possible Base
+                        Remaining
+                    </th>
+                    <th class="sortable numeric-column" data-sort="max_possible_bonus_remaining">Max Possible Bonus
+                        Remaining</th>
+                    <th class="sortable numeric-column" data-sort="max_possible_base">Max Possible Base</th>
+                    <th class="sortable numeric-column" data-sort="max_possible_total">Max Possible Total</th>
+                    <th class="sortable numeric-column" data-sort="monte_carlo_pct_first_place">MC Win %</th>
+                    <th class="sortable numeric-column" data-sort="monte_carlo_min_rank">MC Best</th>
+                    <th class="sortable numeric-column" data-sort="monte_carlo_max_rank">MC Worst</th>
+                    <th class="sortable numeric-column" data-sort="monte_carlo_min_score">MC Min Score</th>
+                    <th class="sortable numeric-column" data-sort="monte_carlo_max_score">MC Max Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr{% if user.username=="PERFECT" %} class="perfect-row" {% endif %}>
+                    <td{% if user.rank==1 %} class="rank-1" {% elif user.rank==2 %} class="rank-2" {% elif user.rank==3
+                        %} class="rank-3" {% endif %}>{{ user.rank }}</td>
+                        <td>
+                            {% if user.username == "PERFECT" %}
+                            <strong>Maximum Possible</strong>
+                            {% else %}
+                            <a href="/?username={{ user.username }}">{{ user.username }}</a>
+                            {% endif %}
+                        </td>
+                        <td>{% if user.champion %}{{ user.champion }}{% else %}<span class="empty">-</span>{% endif %}
+                        </td>
+                        <td class="round-col hidden-round numeric-column" data-round="round_1">
+                            <span class="correct-picks-value">{{ user.correct_picks.round_1_score }}</span>
+                        </td>
+                        <td class="round-col hidden-round numeric-column" data-round="round_2">
+                            <span class="correct-picks-value">{{ user.correct_picks.round_2_score }}</span>
+                        </td>
+                        <td class="round-col hidden-round numeric-column" data-round="round_3">
+                            <span class="correct-picks-value">{{ user.correct_picks.round_3_score }}</span>
+                        </td>
+                        <td class="round-col hidden-round numeric-column" data-round="final_four">
+                            <span class="correct-picks-value">{{ user.correct_picks.final_four_score }}</span>
+                        </td>
+                        <td class="round-col hidden-round numeric-column" data-round="championship">
+                            <span class="correct-picks-value">{{ user.correct_picks.championship_score }}</span>
+                        </td>
+                        <td class="round-col hidden-round numeric-column" data-round="champion">
+                            <span class="correct-picks-value">{{ user.correct_picks.champion_score }}</span>
+                        </td>
+                        <td class="numeric-column">
+                            <span class="correct-picks-value">{{ user.correct_picks.total_score }}</span>
+                        </td>
+                        <td class="numeric-column">
+                            <span class="correct-picks-value">{{ user.correct_picks.total_bonus }}</span>
+                        </td>
+                        <td class="numeric-column total-column">
+                            <span class="correct-picks-value">{{ user.correct_picks.total_with_bonus }}</span>
+                        </td>
+                        <td class="numeric-column">
+                            <span class="correct-picks-value">{{ user.max_possible_base_remaining }}</span>
+                        </td>
+                        <td class="numeric-column">
+                            <span class="correct-picks-value">{{ user.max_possible_bonus_remaining }}</span>
+                        </td>
+                        <td class="numeric-column">
+                            <span class="correct-picks-value">{{ user.max_possible_base }}</span>
+                        </td>
+                        <td class="numeric-column">
+                            <span class="correct-picks-value">{{ user.max_possible_total }}</span>
+                        </td>
+                        <td class="numeric-column">{% if user.monte_carlo_pct_first_place != 'N/A' %}{{
+                            "%.1f"|format(user.monte_carlo_pct_first_place) }}%{% else %}<span class="empty">-</span>{%
+                            endif %}</td>
+                        <td class="numeric-column">{% if user.monte_carlo_min_rank != 'N/A' %}{{
+                            user.monte_carlo_min_rank }}{% else %}<span class="empty">-</span>{% endif %}</td>
+                        <td class="numeric-column">{% if user.monte_carlo_max_rank != 'N/A' %}{{
+                            user.monte_carlo_max_rank }}{% else %}<span class="empty">-</span>{% endif %}</td>
+                        <td class="numeric-column">{% if user.monte_carlo_min_score != 'N/A' %}{{
+                            user.monte_carlo_min_score }}{% else %}<span class="empty">-</span>{% endif %}</td>
+                        <td class="numeric-column">{% if user.monte_carlo_max_score != 'N/A' %}{{
+                            user.monte_carlo_max_score }}{% else %}<span class="empty">-</span>{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No users found.</p>
+        {% endif %}
+    </div>
 
     <a href="/" class="back-link">← Back to Bracket</a>
     <a href="/scores" class="back-link" style="margin-left: 20px;">View Live Scores</a>
 
+    <script src="{{ url_for('static', filename='js/timeline-slider.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const table = document.getElementById('usersTable');
-            if (!table) return;
+            const headers = table.querySelectorAll('thead th');
+            const toggleButton = document.getElementById('toggle-rounds');
 
-            // Store the original table for resetting
-            const originalTable = table.cloneNode(true);
-
-            // Track current sort state
+            // Current sort state
             let currentSort = {
-                column: 'total_with_bonus',
+                column: null,
                 direction: 'desc'
             };
 
-            // Define sortableHeaders first before using it
-            const sortableHeaders = document.querySelectorAll('th.sortable');
+            // Initial sort by rank
+            currentSort.column = 'rank';
+            sortTable('rank', 'asc', true);
 
-            // Set up toggle functionality
-            const toggleButton = document.getElementById('toggleRounds');
+            // Toggle showing all rounds
             if (toggleButton) {
-                let showingAllRounds = false;
                 toggleButton.addEventListener('click', function () {
-                    showingAllRounds = !showingAllRounds;
                     const roundCols = document.querySelectorAll('.round-col');
+                    const isHidden = roundCols[0].classList.contains('hidden-round');
 
-                    if (showingAllRounds) {
-                        // Show all rounds
-                        roundCols.forEach(col => {
+                    roundCols.forEach(col => {
+                        if (isHidden) {
                             col.classList.remove('hidden-round');
-                        });
-                        toggleButton.textContent = 'Hide Rounds';
-                    } else {
-                        // Hide all rounds
-                        roundCols.forEach(col => {
+                            toggleButton.textContent = 'Hide Rounds';
+                        } else {
                             col.classList.add('hidden-round');
-                        });
-                        toggleButton.textContent = 'Show Rounds';
-                    }
+                            toggleButton.textContent = 'Show Rounds';
+                        }
+                    });
                 });
             }
 
-            // Mark the initial default sort column
-            const initialSortHeader = Array.from(sortableHeaders).find(
-                header => header.getAttribute('data-sort') === currentSort.column
-            );
-            if (initialSortHeader) {
-                initialSortHeader.classList.add(currentSort.direction);
-            }
-
-            // Initialize with default sort
-            sortTable('total_with_bonus', 'desc');
-
-            // Add click event listeners to sortable headers
-            sortableHeaders.forEach(header => {
-                header.addEventListener('click', function () {
-                    const column = this.getAttribute('data-sort');
-                    const direction = currentSort.column === column && currentSort.direction === 'asc' ? 'desc' : 'asc';
-                    sortTable(column, direction);
-                });
+            // Add click event listeners to headers for sorting
+            headers.forEach(header => {
+                const sortKey = header.dataset.sort;
+                if (sortKey) {
+                    header.addEventListener('click', function () {
+                        // Toggle sort direction if clicking on the same column
+                        const direction = (currentSort.column === sortKey && currentSort.direction === 'asc') ? 'desc' : 'asc';
+                        sortTable(sortKey, direction);
+                    });
+                }
             });
 
-            function sortTable(column, direction) {
+            // Sort table function with animation support
+            function sortTable(sortKey, direction, initial = false) {
                 const tbody = table.querySelector('tbody');
                 const rows = Array.from(tbody.querySelectorAll('tr'));
 
-                // Always keep PERFECT row at the top
-                const perfectRow = rows.find(row => row.classList.contains('perfect-row'));
-                const otherRows = rows.filter(row => !row.classList.contains('perfect-row'));
+                // Update sort state
+                currentSort.column = sortKey;
+                currentSort.direction = direction;
 
-                // Sort the rows (excluding the PERFECT row)
-                otherRows.sort((a, b) => {
-                    let aValue, bValue;
-
-                    if (column === 'rank') {
-                        // Handle rank specially since it's the first column
-                        aValue = a.cells[0].textContent.trim();
-                        bValue = b.cells[0].textContent.trim();
-
-                        // Convert to numbers for numerical sorting
-                        aValue = aValue === '-' ? Infinity : parseInt(aValue);
-                        bValue = bValue === '-' ? Infinity : parseInt(bValue);
-                    }
-                    else if (column === 'username') {
-                        // For username text, get from the link text or content
-                        aValue = a.cells[1].textContent.trim().toLowerCase();
-                        bValue = b.cells[1].textContent.trim().toLowerCase();
-
-                        // String comparison for usernames
-                        if (direction === 'asc') {
-                            return aValue.localeCompare(bValue);
-                        } else {
-                            return bValue.localeCompare(aValue);
-                        }
-                    }
-                    else if (column === 'champion') {
-                        // For champion, get the text content
-                        aValue = a.cells[2].textContent.trim();
-                        bValue = b.cells[2].textContent.trim();
-
-                        // Handle "Not selected" values
-                        aValue = aValue === 'Not selected' ? '' : aValue;
-                        bValue = bValue === 'Not selected' ? '' : bValue;
-
-                        // String comparison for champion names
-                        if (direction === 'asc') {
-                            return aValue.localeCompare(bValue);
-                        } else {
-                            return bValue.localeCompare(aValue);
-                        }
-                    }
-                    else {
-                        // For score columns, find the right cell index based on visible columns
-                        // This is more complex now that columns can be hidden
-                        let cellIndex = findCellIndexForColumn(a, column);
-
-                        if (cellIndex !== -1) {
-                            // Extract the numerical value
-                            aValue = parseInt(a.cells[cellIndex].textContent.trim());
-                            bValue = parseInt(b.cells[cellIndex].textContent.trim());
-
-                            // Handle non-numeric values
-                            if (isNaN(aValue)) aValue = 0;
-                            if (isNaN(bValue)) bValue = 0;
-
-                            // Numeric comparison
-                            if (direction === 'asc') {
-                                return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
-                            } else {
-                                return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
-                            }
-                        }
-
-                        // Fallback if cell index not found
-                        return 0;
-                    }
+                // Remove sorting indicators from all headers
+                headers.forEach(header => {
+                    header.classList.remove('sort-asc', 'sort-desc');
                 });
 
-                // Clear the table
+                // Add sorting indicator to current header
+                const currentHeader = Array.from(headers).find(header => header.dataset.sort === sortKey);
+                if (currentHeader) {
+                    currentHeader.classList.add(direction === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+
+                // Sort the rows
+                rows.sort((a, b) => {
+                    // Special case for PERFECT/Maximum Possible row - always at the top
+                    const isAPerfect = a.classList.contains('perfect-row');
+                    const isBPerfect = b.classList.contains('perfect-row');
+
+                    if (isAPerfect) return -1;  // Changed from 1
+                    if (isBPerfect) return 1;   // Changed from -1
+
+                    let valA, valB;
+
+                    if (sortKey === 'rank' || sortKey === 'username' || sortKey === 'champion') {
+                        // Text content for rank, username, and champion
+                        const cellA = a.querySelector(`td:nth-child(${getColumnIndex(sortKey)})`);
+                        const cellB = b.querySelector(`td:nth-child(${getColumnIndex(sortKey)})`);
+
+                        if (sortKey === 'username') {
+                            // For username, get the text content from the link
+                            valA = cellA.textContent.trim().toLowerCase();
+                            valB = cellB.textContent.trim().toLowerCase();
+                        } else {
+                            valA = cellA.textContent.trim();
+                            valB = cellB.textContent.trim();
+
+                            // Convert to numbers for rank
+                            if (sortKey === 'rank') {
+                                valA = parseInt(valA) || 9999;
+                                valB = parseInt(valB) || 9999;
+                            }
+                        }
+                    } else {
+                        // Numeric values for score columns
+                        const colIndex = getColumnIndex(sortKey);
+                        const cellA = a.querySelector(`td:nth-child(${colIndex}) .correct-picks-value`);
+                        const cellB = b.querySelector(`td:nth-child(${colIndex}) .correct-picks-value`);
+
+                        valA = parseInt(cellA.textContent) || 0;
+                        valB = parseInt(cellB.textContent) || 0;
+                    }
+
+                    // Compare values based on direction
+                    if (valA < valB) return direction === 'asc' ? -1 : 1;
+                    if (valA > valB) return direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+
+                // Remove all rows and add them back in sorted order without animation
                 while (tbody.firstChild) {
                     tbody.removeChild(tbody.firstChild);
                 }
 
-                // Add PERFECT row first, then sorted rows
-                if (perfectRow) {
-                    tbody.appendChild(perfectRow);
-                }
-
-                // Add the sorted rows
-                otherRows.forEach(row => {
+                rows.forEach(row => {
                     tbody.appendChild(row);
-                    // Add a brief highlight effect
-                    row.classList.add('highlight');
-                    setTimeout(() => {
-                        row.classList.remove('highlight');
-                    }, 1000); // Remove after 1 second
                 });
-
-                // Update sort indicators
-                sortableHeaders.forEach(header => {
-                    header.classList.remove('asc', 'desc');
-                    if (header.getAttribute('data-sort') === column) {
-                        header.classList.add(direction);
-                    }
-                });
-
-                // Update current sort state
-                currentSort.column = column;
-                currentSort.direction = direction;
             }
 
-            // Function to find the cell index for a column based on sort type
-            function findCellIndexForColumn(row, column) {
-                // Define mappings for each column to potential indexes
-                const columnMappings = {
-                    'rank': 0,
-                    'username': 1,
-                    'champion': 2,
-                    'round_1_score': 3,
-                    'round_2_score': 4,
-                    'round_3_score': 5,
-                    'final_four_score': 6,
-                    'championship_score': 7,
-                    'champion_score': 8,
-                    'total_score': 9,
-                    'total_bonus': 10,
-                    'total_with_bonus': 11,
-                    'max_possible_base_remaining': 12,
-                    'max_possible_bonus_remaining': 13,
-                    'max_possible_base': 14,
-                    'max_possible_total': 15
-                };
+            // Helper function to get column index based on sort key
+            function getColumnIndex(sortKey) {
+                let colIndex;
 
-                // Adjust mappings based on which columns are hidden
-                let adjustedIndex = columnMappings[column];
+                switch (sortKey) {
+                    case 'rank':
+                        colIndex = 1;
+                        break;
+                    case 'username':
+                        colIndex = 2;
+                        break;
+                    case 'champion':
+                        colIndex = 3;
+                        break;
+                    case 'round_1_score':
+                        colIndex = 4;
+                        break;
+                    case 'round_2_score':
+                        colIndex = 5;
+                        break;
+                    case 'round_3_score':
+                        colIndex = 6;
+                        break;
+                    case 'final_four_score':
+                        colIndex = 7;
+                        break;
+                    case 'championship_score':
+                        colIndex = 8;
+                        break;
+                    case 'champion_score':
+                        colIndex = 9;
+                        break;
+                    case 'total_score':
+                        colIndex = 10;
+                        break;
+                    case 'total_bonus':
+                        colIndex = 11;
+                        break;
+                    case 'total_with_bonus':
+                        colIndex = 12;
+                        break;
+                    case 'max_possible_base_remaining':
+                        colIndex = 13;
+                        break;
+                    case 'max_possible_bonus_remaining':
+                        colIndex = 14;
+                        break;
+                    case 'max_possible_base':
+                        colIndex = 15;
+                        break;
+                    case 'max_possible_total':
+                        colIndex = 16;
+                        break;
+                    case 'monte_carlo_pct_first_place':
+                        colIndex = 17;
+                        break;
+                    case 'monte_carlo_min_rank':
+                        colIndex = 18;
+                        break;
+                    case 'monte_carlo_max_rank':
+                        colIndex = 19;
+                        break;
+                    case 'monte_carlo_min_score':
+                        colIndex = 20;
+                        break;
+                    case 'monte_carlo_max_score':
+                        colIndex = 21;
+                        break;
+                    default:
+                        colIndex = 0;
+                }
 
-                // Return the appropriate cell index, adjusted for visible columns
-                return adjustedIndex;
+                return colIndex;
+            }
+
+            // Variables to track sorting state and round visibility
+            let showingAllRounds = false;
+
+            // Function to fetch updated data with AJAX and update the table
+            window.fetchAndUpdateData = function (index) {
+                // Store current scroll position
+                const scrollPos = window.scrollY;
+
+                // Remember if rounds are shown
+                showingAllRounds = document.querySelectorAll('.round-col:not(.hidden-round)').length > 0;
+
+                // Remember current sort state
+                const sortColumn = currentSort.column;
+                const sortDirection = currentSort.direction;
+
+                console.log(`Fetching data for truth index: ${index}`);
+
+                // Fetch updated data with AJAX
+                fetch(`/api/user-scores?truth_index=${index}`)
+                    .then(response => {
+                        console.log('Response received:', response);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Parsed data:', data);
+
+                        // Check if data has the expected structure
+                        if (!data || !data.users) {
+                            console.error('Invalid data structure received:', data);
+                            throw new Error('Invalid data structure received from server');
+                        }
+
+                        // Update the table body with new data
+                        const tbody = table.querySelector('tbody');
+                        tbody.innerHTML = '';
+
+                        console.log(`Updating table with ${data.users.length} users`);
+
+                        // Add the rows in the same order as they were originally sorted
+                        data.users.forEach(user => {
+                            const row = createTableRow(user);
+                            tbody.appendChild(row);
+                        });
+
+                        // Sort the table immediately with the current sort settings
+                        sortTable(sortColumn, sortDirection, false);
+
+                        // Restore rounds visibility
+                        if (showingAllRounds) {
+                            document.querySelectorAll('.round-col').forEach(col => {
+                                col.classList.remove('hidden-round');
+                            });
+                            if (toggleButton) {
+                                toggleButton.textContent = 'Hide Rounds';
+                            }
+                        }
+
+                        // Restore scroll position
+                        window.scrollTo(0, scrollPos);
+
+                        // Update the session's selected truth index in the background
+                        return fetch(`/api/update-truth-index?index=${index}`, { method: 'POST' });
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            console.error(`HTTP error on index update! Status: ${response.status}`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching updated data:', error);
+                        alert('Error updating data: ' + error.message + '. Please try again or reload the page.');
+                    });
+            };
+
+            // Function to create a new table row from user data
+            function createTableRow(user) {
+                const row = document.createElement('tr');
+
+                // Add the perfect-row class if appropriate
+                if (user.username === 'PERFECT') {
+                    row.classList.add('perfect-row');
+                }
+
+                // Add rank cell
+                const rankCell = document.createElement('td');
+                if (user.rank === 1) rankCell.classList.add('rank-1');
+                else if (user.rank === 2) rankCell.classList.add('rank-2');
+                else if (user.rank === 3) rankCell.classList.add('rank-3');
+                rankCell.textContent = user.rank;
+                row.appendChild(rankCell);
+
+                // Add username cell
+                const usernameCell = document.createElement('td');
+                if (user.username === 'PERFECT') {
+                    const strong = document.createElement('strong');
+                    strong.textContent = 'Maximum Possible';
+                    usernameCell.appendChild(strong);
+                } else {
+                    const link = document.createElement('a');
+                    link.href = `/?username=${user.username}`;
+                    link.textContent = user.username;
+                    usernameCell.appendChild(link);
+                }
+                row.appendChild(usernameCell);
+
+                // Add champion cell
+                const championCell = document.createElement('td');
+                if (user.champion) {
+                    championCell.textContent = user.champion;
+                } else {
+                    const span = document.createElement('span');
+                    span.classList.add('empty');
+                    span.textContent = '-';
+                    championCell.appendChild(span);
+                }
+                row.appendChild(championCell);
+
+                // Add round cells (hidden by default)
+                const roundCells = ['round_1_score', 'round_2_score', 'round_3_score',
+                    'final_four_score', 'championship_score', 'champion_score'];
+
+                roundCells.forEach(key => {
+                    const cell = document.createElement('td');
+                    cell.classList.add('round-col', 'hidden-round', 'numeric-column');
+                    cell.dataset.round = key.replace('_score', '');
+
+                    const span = document.createElement('span');
+                    span.classList.add('correct-picks-value');
+                    span.textContent = user.correct_picks[key];
+
+                    cell.appendChild(span);
+                    row.appendChild(cell);
+                });
+
+                // Add other score cells
+                const scoreCells = [
+                    { key: 'total_score', class: '' },
+                    { key: 'total_bonus', class: '' },
+                    { key: 'total_with_bonus', class: 'total-column' },
+                    { key: 'max_possible_base_remaining', class: '' },
+                    { key: 'max_possible_bonus_remaining', class: '' },
+                    { key: 'max_possible_base', class: '' },
+                    { key: 'max_possible_total', class: '' }
+                ];
+
+                scoreCells.forEach(item => {
+                    const cell = document.createElement('td');
+                    cell.classList.add('numeric-column');
+                    if (item.class) cell.classList.add(item.class);
+
+                    const span = document.createElement('span');
+                    span.classList.add('correct-picks-value');
+
+                    // Use correct property based on key
+                    if (item.key.startsWith('total_')) {
+                        span.textContent = user.correct_picks[item.key];
+                    } else {
+                        span.textContent = user[item.key];
+                    }
+
+                    cell.appendChild(span);
+                    row.appendChild(cell);
+                });
+
+                // Add Monte Carlo statistics cells
+                const monteCarloCells = [
+                    { key: 'monte_carlo_pct_first_place', class: '' },
+                    { key: 'monte_carlo_min_rank', class: '' },
+                    { key: 'monte_carlo_max_rank', class: '' },
+                    { key: 'monte_carlo_min_score', class: '' },
+                    { key: 'monte_carlo_max_score', class: '' }
+                ];
+
+                monteCarloCells.forEach(item => {
+                    const cell = document.createElement('td');
+                    cell.classList.add('numeric-column');
+                    if (item.class) cell.classList.add(item.class);
+
+                    const span = document.createElement('span');
+                    span.classList.add('correct-picks-value');
+
+                    // Use correct property based on key
+                    if (item.key.startsWith('monte_carlo_')) {
+                        span.textContent = user[item.key];
+                    } else {
+                        span.textContent = user[item.key];
+                    }
+
+                    cell.appendChild(span);
+                    row.appendChild(cell);
+                });
+
+                return row;
             }
         });
     </script>
