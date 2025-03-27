@@ -1833,6 +1833,7 @@ def users_list():
         if truth_file:
             # Find the Monte Carlo analysis file
             analysis_file = find_monte_carlo_analysis(truth_file)
+            print("analysis_file", analysis_file)
             if analysis_file and os.path.exists(analysis_file):
                 try:
                     with open(analysis_file, 'r') as f:
@@ -1840,6 +1841,8 @@ def users_list():
                     print(f"Loaded Monte Carlo data from: {analysis_file}")
                 except Exception as e:
                     print(f"Error loading Monte Carlo data: {str(e)}")
+            else:
+                print("No Monte Carlo analysis file found")
         
         # Format truth filenames for display in the slider
         truth_file_names = []
@@ -1903,7 +1906,7 @@ def find_monte_carlo_analysis(truth_file):
         # Check for files with pattern: round_{truth_id}_{count}_brackets.json
         analysis_files = []
         for filename in os.listdir(simulations_dir):
-            if filename.startswith(f"{truth_id}_") and filename.endswith("_brackets.json"):
+            if filename.startswith(f"analysis_{truth_id}_") and filename.endswith("_brackets.json"):
                 filepath = os.path.join(simulations_dir, filename)
                 
                 # Try to extract the count from the filename

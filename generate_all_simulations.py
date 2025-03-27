@@ -23,7 +23,7 @@ def parse_arguments():
     parser.add_argument(
         '--count', 
         type=int, 
-        default=1000,
+        default=10,
         help='Number of simulations to generate for each truth bracket (default: 1000)'
     )
     parser.add_argument(
@@ -83,7 +83,7 @@ def main():
                 # Run the analysis
                 truth_basename = os.path.basename(truth_file)
                 truth_id = os.path.splitext(truth_basename)[0]  # Remove extension
-                analysis_file = os.path.join(args.output_dir, f"analysis_{truth_id}.json")
+                analysis_file = os.path.join(args.output_dir, f"analysis_{truth_id}_{args.count}_brackets.json")
                 
                 cmd = f"python analyze_simulations.py --simulation-file {latest_sim_file} --output-dir {args.output_dir} --user-brackets-dir saved_brackets"
                 print(f"\nRunning analysis command: {cmd}")
