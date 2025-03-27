@@ -908,6 +908,13 @@ def get_bracket_status():
         print(f"Error getting bracket status: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+def format_percentage(value):
+    """Format a percentage value to 1 decimal place."""
+    if value > 0 and value < 0.5:
+        return 0.1
+    else: 
+        return round(value, 0)
+
 def add_mc_data(truth_file, user_data):
     # Load Monte Carlo analysis data if available
     monte_carlo_data = {}
@@ -932,7 +939,7 @@ def add_mc_data(truth_file, user_data):
             if username in monte_carlo_data:
                 user_stats = monte_carlo_data[username]
                 # Add min score from the Monte Carlo data
-                user['monte_carlo_pct_first_place'] = user_stats.get('pct_first_place', 0)
+                user['monte_carlo_pct_first_place'] = format_percentage(user_stats.get('pct_first_place', 0))
                 user['monte_carlo_min_rank'] = user_stats.get('min_rank', 0)
                 user['monte_carlo_max_rank'] = user_stats.get('max_rank', 0)
                 user['monte_carlo_min_score'] = user_stats.get('min_score', 0)

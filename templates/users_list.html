@@ -416,73 +416,16 @@
                 </tr>
             </thead>
             <tbody>
-                {% for user in users %}
-                <tr{% if user.username=="PERFECT" %} class="perfect-row" {% endif %}>
-                    <td{% if user.rank==1 %} class="rank-1" {% elif user.rank==2 %} class="rank-2" {% elif user.rank==3
-                        %} class="rank-3" {% endif %}>{{ user.rank }}</td>
-                        <td>
-                            {% if user.username == "PERFECT" %}
-                            <strong>Maximum Possible</strong>
-                            {% else %}
-                            <a href="/?username={{ user.username }}">{{ user.username }}</a>
-                            {% endif %}
-                        </td>
-                        <td>{% if user.champion %}{{ user.champion }}{% else %}<span class="empty">-</span>{% endif %}
-                        </td>
-                        <td class="round-col hidden-round numeric-column" data-round="round_1">
-                            <span class="correct-picks-value">{{ user.correct_picks.round_1_score }}</span>
-                        </td>
-                        <td class="round-col hidden-round numeric-column" data-round="round_2">
-                            <span class="correct-picks-value">{{ user.correct_picks.round_2_score }}</span>
-                        </td>
-                        <td class="round-col hidden-round numeric-column" data-round="round_3">
-                            <span class="correct-picks-value">{{ user.correct_picks.round_3_score }}</span>
-                        </td>
-                        <td class="round-col hidden-round numeric-column" data-round="final_four">
-                            <span class="correct-picks-value">{{ user.correct_picks.final_four_score }}</span>
-                        </td>
-                        <td class="round-col hidden-round numeric-column" data-round="championship">
-                            <span class="correct-picks-value">{{ user.correct_picks.championship_score }}</span>
-                        </td>
-                        <td class="round-col hidden-round numeric-column" data-round="champion">
-                            <span class="correct-picks-value">{{ user.correct_picks.champion_score }}</span>
-                        </td>
-                        <td class="numeric-column">
-                            <span class="correct-picks-value">{{ user.correct_picks.total_score }}</span>
-                        </td>
-                        <td class="numeric-column">
-                            <span class="correct-picks-value">{{ user.correct_picks.total_bonus }}</span>
-                        </td>
-                        <td class="numeric-column total-column">
-                            <span class="correct-picks-value">{{ user.correct_picks.total_with_bonus }}</span>
-                        </td>
-                        <td class="numeric-column">
-                            <span class="correct-picks-value">{{ user.max_possible_base_remaining }}</span>
-                        </td>
-                        <td class="numeric-column">
-                            <span class="correct-picks-value">{{ user.max_possible_bonus_remaining }}</span>
-                        </td>
-                        <td class="numeric-column">
-                            <span class="correct-picks-value">{{ user.max_possible_base }}</span>
-                        </td>
-                        <td class="numeric-column">
-                            <span class="correct-picks-value">{{ user.max_possible_total }}</span>
-                        </td>
-                        <td class="numeric-column">{% if user.monte_carlo_pct_first_place != 'N/A' %}{{
-                            "%.1f"|format(user.monte_carlo_pct_first_place) }}%{% else %}<span class="empty">-</span>{%
-                            endif %}</td>
-                        <td class="numeric-column">{% if user.monte_carlo_min_rank != 'N/A' %}{{
-                            user.monte_carlo_min_rank }}{% else %}<span class="empty">-</span>{% endif %}</td>
-                        <td class="numeric-column">{% if user.monte_carlo_max_rank != 'N/A' %}{{
-                            user.monte_carlo_max_rank }}{% else %}<span class="empty">-</span>{% endif %}</td>
-                        <td class="numeric-column">{% if user.monte_carlo_min_score != 'N/A' %}{{
-                            user.monte_carlo_min_score }}{% else %}<span class="empty">-</span>{% endif %}</td>
-                        <td class="numeric-column">{% if user.monte_carlo_max_score != 'N/A' %}{{
-                            user.monte_carlo_max_score }}{% else %}<span class="empty">-</span>{% endif %}</td>
-                        </tr>
-                        {% endfor %}
+                <!-- Will be populated by JavaScript -->
             </tbody>
         </table>
+
+        <!-- Pass initial data to JavaScript -->
+        <script>
+            // Expose the initial data to JavaScript
+            window.initialUsersData = {{ users | tojson | safe }};
+            window.monteCarloAvailable = {{ monte_carlo_available | tojson | safe }};
+        </script>
         {% else %}
         <p>No users found.</p>
         {% endif %}
@@ -504,9 +447,28 @@
                 direction: 'desc'
             };
 
-            // Initial sort by rank
-            currentSort.column = 'rank';
-            sortTable('rank', 'asc', true);
+            // Initialize table with data on page load
+            function renderInitialTable() {
+                if (!window.initialUsersData || !window.initialUsersData.length) {
+                    console.warn('No initial user data available');
+                    return;
+                }
+
+                const tbody = table.querySelector('tbody');
+
+                // Render each user row
+                window.initialUsersData.forEach(user => {
+                    const row = createTableRow(user);
+                    tbody.appendChild(row);
+                });
+
+                // Apply initial sorting
+                currentSort.column = 'rank';
+                sortTable('rank', 'asc', true);
+            }
+
+            // Call this function to render the table on initial load
+            renderInitialTable();
 
             // Toggle showing all rounds
             if (toggleButton) {
@@ -564,12 +526,37 @@
                     const isAPerfect = a.classList.contains('perfect-row');
                     const isBPerfect = b.classList.contains('perfect-row');
 
-                    if (isAPerfect) return -1;  // Changed from 1
-                    if (isBPerfect) return 1;   // Changed from -1
+                    if (isAPerfect) return -1;
+                    if (isBPerfect) return 1;
 
                     let valA, valB;
 
-                    if (sortKey === 'rank' || sortKey === 'username' || sortKey === 'champion') {
+                    // Handle different column types
+                    if (sortKey.startsWith('monte_carlo_')) {
+                        // Special handling for Monte Carlo columns
+                        const colIndex = getColumnIndex(sortKey);
+
+                        // Get the cells
+                        const cellA = a.querySelector(`td:nth-child(${colIndex})`);
+                        const cellB = b.querySelector(`td:nth-child(${colIndex})`);
+
+                        // Check for N/A values
+                        const isEmptyA = cellA.querySelector('.empty') !== null;
+                        const isEmptyB = cellB.querySelector('.empty') !== null;
+
+                        // Handle empty/N/A values in sorting
+                        if (isEmptyA && isEmptyB) return 0;
+                        if (isEmptyA) return 1;
+                        if (isEmptyB) return -1;
+
+                        // Get values from correct spans
+                        const valueSpanA = cellA.querySelector('.correct-picks-value');
+                        const valueSpanB = cellB.querySelector('.correct-picks-value');
+
+                        // Parse values, removing % if present
+                        valA = valueSpanA ? parseFloat(valueSpanA.textContent.replace('%', '')) || 0 : 0;
+                        valB = valueSpanB ? parseFloat(valueSpanB.textContent.replace('%', '')) || 0 : 0;
+                    } else if (sortKey === 'rank' || sortKey === 'username' || sortKey === 'champion') {
                         // Text content for rank, username, and champion
                         const cellA = a.querySelector(`td:nth-child(${getColumnIndex(sortKey)})`);
                         const cellB = b.querySelector(`td:nth-child(${getColumnIndex(sortKey)})`);
@@ -870,17 +857,18 @@
                     cell.classList.add('numeric-column');
                     if (item.class) cell.classList.add(item.class);
 
-                    const span = document.createElement('span');
-                    span.classList.add('correct-picks-value');
-
-                    // Use correct property based on key
-                    if (item.key.startsWith('monte_carlo_')) {
-                        span.textContent = user[item.key];
+                    if (user[item.key] === 'N/A') {
+                        const span = document.createElement('span');
+                        span.classList.add('empty');
+                        span.textContent = '-';
+                        cell.appendChild(span);
                     } else {
+                        const span = document.createElement('span');
+                        span.classList.add('correct-picks-value');
                         span.textContent = user[item.key];
+                        cell.appendChild(span);
                     }
 
-                    cell.appendChild(span);
                     row.appendChild(cell);
                 });
 
