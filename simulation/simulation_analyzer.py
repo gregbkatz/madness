@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 
 # Import scoring functions
-from utils.scoring import compare_with_truth, calculate_points_for_pick
+from utils.scoring import compare_with_truth, calculate_points_for_pick, get_correct_picks_and_scores
 
 class BracketAnalyzer:
     """Class for analyzing Monte Carlo simulation results"""
@@ -144,7 +144,8 @@ class BracketAnalyzer:
                 
                 # Calculate score using the compare_with_truth function
                 result = compare_with_truth(user_bracket, simulation)
-                scores[user_idx, sim_idx] = result['total_points']
+                correct_picks = get_correct_picks_and_scores(result)
+                scores[user_idx, sim_idx] = correct_picks['total_with_bonus']
         
         self.scores = scores
         self.usernames = usernames
