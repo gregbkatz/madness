@@ -120,10 +120,9 @@ class MonteCarloSimulation:
             if basename.startswith("round_") and "_game_" in basename:
                 truth_id = os.path.splitext(basename)[0]  # Remove extension
         
-        # Generate filename based on timestamp and truth bracket
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # Generate filename without timestamp
         sim_count = len(all_brackets)
-        output_file = f"{self.output_dir}/brackets_{truth_id}_{sim_count}_{timestamp}.bin"
+        output_file = f"{self.output_dir}/brackets_{truth_id}_{sim_count}.bin"
         
         # Save the simulations
         save_simulations(all_brackets, output_file)

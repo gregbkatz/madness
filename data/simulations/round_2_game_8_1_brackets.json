@@ -1,0 +1,152 @@
+{
+  "Blaine": {
+    "avg_rank": 3.0,
+    "median_rank": 3.0,
+    "pct_first_place": 0.0,
+    "pct_last_place": 0.0,
+    "min_rank": 3,
+    "max_rank": 3,
+    "max_score": 260,
+    "min_score": 260
+  },
+  "JohnsonFam": {
+    "avg_rank": 11.0,
+    "median_rank": 11.0,
+    "pct_first_place": 0.0,
+    "pct_last_place": 0.0,
+    "min_rank": 11,
+    "max_rank": 11,
+    "max_score": 216,
+    "min_score": 216
+  },
+  "Quinn4thewin": {
+    "avg_rank": 1.0,
+    "median_rank": 1.0,
+    "pct_first_place": 100.0,
+    "pct_last_place": 0.0,
+    "min_rank": 1,
+    "max_rank": 1,
+    "max_score": 306,
+    "min_score": 306
+  },
+  "Greg": {
+    "avg_rank": 5.0,
+    "median_rank": 5.0,
+    "pct_first_place": 0.0,
+    "pct_last_place": 0.0,
+    "min_rank": 5,
+    "max_rank": 5,
+    "max_score": 244,
+    "min_score": 244
+  },
+  "Johnny": {
+    "avg_rank": 14.0,
+    "median_rank": 14.0,
+    "pct_first_place": 0.0,
+    "pct_last_place": 0.0,
+    "min_rank": 14,
+    "max_rank": 14,
+    "max_score": 208,
+    "min_score": 208
+  },
+  "Ruyi": {
+    "avg_rank": 8.0,
+    "median_rank": 8.0,
+    "pct_first_place": 0.0,
+    "pct_last_place": 0.0,
+    "min_rank": 8,
+    "max_rank": 8,
+    "max_score": 232,
+    "min_score": 232
+  },
+  "Jenn": {
+    "avg_rank": 8.0,
+    "median_rank": 8.0,
+    "pct_first_place": 0.0,
+    "pct_last_place": 0.0,
+    "min_rank": 8,
+    "max_rank": 8,
+    "max_score": 232,
+    "min_score": 232
+  },
+  "Ruth": {
+    "avg_rank": 7.0,
+    "median_rank": 7.0,
+    "pct_first_place": 0.0,
+    "pct_last_place": 0.0,
+    "min_rank": 7,
+    "max_rank": 7,
+    "max_score": 236,
+    "min_score": 236
+  },
+  "jmomma": {
+    "avg_rank": 13.0,
+    "median_rank": 13.0,
+    "pct_first_place": 0.0,
+    "pct_last_place": 0.0,
+    "min_rank": 13,
+    "max_rank": 13,
+    "max_score": 210,
+    "min_score": 210
+  },
+  "RickyDaddy": {
+    "avg_rank": 10.0,
+    "median_rank": 10.0,
+    "pct_first_place": 0.0,
+    "pct_last_place": 0.0,
+    "min_rank": 10,
+    "max_rank": 10,
+    "max_score": 226,
+    "min_score": 226
+  },
+  "MiloPiPi": {
+    "avg_rank": 4.0,
+    "median_rank": 4.0,
+    "pct_first_place": 0.0,
+    "pct_last_place": 0.0,
+    "min_rank": 4,
+    "max_rank": 4,
+    "max_score": 246,
+    "min_score": 246
+  },
+  "DebzDoodle": {
+    "avg_rank": 6.0,
+    "median_rank": 6.0,
+    "pct_first_place": 0.0,
+    "pct_last_place": 0.0,
+    "min_rank": 6,
+    "max_rank": 6,
+    "max_score": 242,
+    "min_score": 242
+  },
+  "Laura": {
+    "avg_rank": 2.0,
+    "median_rank": 2.0,
+    "pct_first_place": 0.0,
+    "pct_last_place": 0.0,
+    "min_rank": 2,
+    "max_rank": 2,
+    "max_score": 276,
+    "min_score": 276
+  },
+  "ryuu": {
+    "avg_rank": 12.0,
+    "median_rank": 12.0,
+    "pct_first_place": 0.0,
+    "pct_last_place": 0.0,
+    "min_rank": 12,
+    "max_rank": 12,
+    "max_score": 214,
+    "min_score": 214
+  },
+  "Ellie": {
+    "avg_rank": 15.0,
+    "median_rank": 15.0,
+    "pct_first_place": 0.0,
+    "pct_last_place": 100.0,
+    "min_rank": 15,
+    "max_rank": 15,
+    "max_score": 200,
+    "min_score": 200
+  }
+}

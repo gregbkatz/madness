@@ -32,6 +32,11 @@ def parse_arguments():
         help='Directory to save analysis results (default: data/simulations)'
     )
     parser.add_argument(
+        '--output-file',
+        type=str,
+        help='Specific filename for the analysis results (will be placed in output-dir)'
+    )
+    parser.add_argument(
         '--user-brackets-dir',
         type=str,
         default='saved_brackets',
@@ -60,11 +65,14 @@ def main():
     print(f"Analyzing simulations from file: {args.simulation_file}")
     print(f"Loading user brackets from: {args.user_brackets_dir}")
     
-    # Generate timestamp for output files
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    
     # Prepare output files
-    analysis_file = os.path.join(args.output_dir, f"analysis_{timestamp}.json")
+    if args.output_file:
+        # Use the specified output filename
+        analysis_file = os.path.join(args.output_dir, args.output_file)
+    else:
+        # Generate timestamp for output files
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        analysis_file = os.path.join(args.output_dir, f"analysis_{timestamp}.json")
     
     # Run the analysis
     try:

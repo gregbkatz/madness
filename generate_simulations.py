@@ -89,15 +89,14 @@ def main():
             if args.count == 1:
                 simulations = [simulations]
                 
-            # Generate filename 
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            # Generate filename without timestamp
             basename = os.path.basename(truth_file)
             if basename.startswith("round_") and "_game_" in basename:
                 truth_id = os.path.splitext(basename)[0]  # Remove extension
             else:
                 truth_id = "custom"
                 
-            output_file = f"{args.output_dir}/brackets_{truth_id}_{args.count}_{timestamp}.bin"
+            output_file = f"{args.output_dir}/brackets_{truth_id}_{args.count}.bin"
             
             # Save the simulations
             save_simulations(simulations, output_file)
