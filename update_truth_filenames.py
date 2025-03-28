@@ -15,6 +15,15 @@ from datetime import datetime
 
 from utils.bracket_utils import get_sorted_truth_files
 
+# Team name shortcuts for more concise filenames
+TEAM_NAME_SHORTCUTS = {
+    "UNC Wilmington": "UNC Wilm.",
+    "Texas/Xavier": "Xavier",
+    "AL St/St Francis U": "AL St",
+    "AU/Mt St Mary's": "Mt St Mary's",
+    "San Diego St/NC": "UNC",
+    "Mississppi St": "Miss. St",
+}
 
 def parse_arguments():
     """Parse command line arguments."""
@@ -186,9 +195,15 @@ def generate_new_filename(old_filename, difference):
     if original_game_idx is not None:
         game_idx = original_game_idx
     
-    # Clean team names - handle teams with slashes by replacing with 'or'
-    winner_name = winner_name.replace('/', ' or ').replace('_', ' ').strip()
-    loser_name = loser_name.replace('/', ' or ').replace('_', ' ').strip()
+    # Apply team name shortcuts if available
+    if winner_name in TEAM_NAME_SHORTCUTS:
+        winner_name = TEAM_NAME_SHORTCUTS[winner_name]
+    if loser_name in TEAM_NAME_SHORTCUTS:
+        loser_name = TEAM_NAME_SHORTCUTS[loser_name]
+        
+    # Clean team names - remove slashes, underscores, periods, and apostrophes
+    winner_name = winner_name.replace('/', ' or ').replace('_', ' ').replace('.', '').replace("'", "").strip()
+    loser_name = loser_name.replace('/', ' or ').replace('_', ' ').replace('.', '').replace("'", "").strip()
     
     # For champion, use a special format
     if region == 'champion':
@@ -209,18 +224,33 @@ def main():
     
     # Get all truth bracket files sorted by time (oldest first)
     all_truth_files = get_sorted_truth_files(args.truth_dir)
-    all_truth_files.reverse()  # Reverse to get oldest first
+    
+    # Sort files by modification time to ensure chronological order
+    all_truth_files.sort(key=os.path.getmtime)
     
     if not all_truth_files:
         print("No truth bracket files found in directory:", args.truth_dir)
         return 1
     
     print(f"Found {len(all_truth_files)} truth bracket files")
+    print("Processing files in chronological order by modification time")
     
     # Process each file
     previous_bracket = None
+    files_processed = 0
+    files_renamed = 0
+    files_skipped = 0
+    
     for i, file_path in enumerate(all_truth_files):
         print(f"\nProcessing file {i+1}/{len(all_truth_files)}: {file_path}")
+        files_processed += 1
+        
+        # Skip files that already have the new naming format
+        basename = os.path.basename(file_path)
+        if ' defeats ' in basename and any(str(seed) in basename for seed in range(1, 17)):
+            print(f"  Skipping file already in new format: {basename}")
+            files_skipped += 1
+            continue
         
         try:
             # Load the current bracket
@@ -231,6 +261,7 @@ def main():
             if previous_bracket is None:
                 previous_bracket = copy.deepcopy(current_bracket)
                 print("  Skipping first file (no previous bracket to compare)")
+                files_skipped += 1
                 continue
             
             # Find the difference between this bracket and the previous one
@@ -240,6 +271,7 @@ def main():
             if not difference:
                 print("  No new game results found in this bracket")
                 previous_bracket = copy.deepcopy(current_bracket)
+                files_skipped += 1
                 continue
             
             # Generate new filename
@@ -263,6 +295,9 @@ def main():
                 else:
                     os.rename(file_path, new_filename)
                     print(f"  Renamed file successfully")
+                    files_renamed += 1
+            else:
+                files_renamed += 1  # Count as renamed for dry run
             
             # Update previous bracket for next iteration
             previous_bracket = copy.deepcopy(current_bracket)
@@ -270,7 +305,13 @@ def main():
         except Exception as e:
             print(f"  Error processing file: {str(e)}")
     
+    # Print summary
     print("\nProcessing complete!")
+    print(f"Total files: {len(all_truth_files)}")
+    print(f"Files processed: {files_processed}")
+    print(f"Files renamed: {files_renamed}")
+    print(f"Files skipped: {files_skipped}")
+    
     return 0
 
 
