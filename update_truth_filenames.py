@@ -219,10 +219,8 @@ def main():
     
     # Get all truth bracket files sorted by time (oldest first)
     all_truth_files = get_sorted_truth_files(args.truth_dir)
-    
-    # Sort files by modification time to ensure chronological order
-    all_truth_files.sort(key=os.path.getmtime)
-    
+    all_truth_files.reverse()
+        
     if not all_truth_files:
         print("No truth bracket files found in directory:", args.truth_dir)
         return 1

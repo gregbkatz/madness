@@ -3,6 +3,7 @@ from data.teams import teams
 from datetime import datetime
 from bracket_logic import initialize_bracket, select_team, auto_fill_bracket, pretty_print_bracket, update_winners, random_fill_bracket, reset_team_completely
 from utils.scoring import compare_with_truth, calculate_points_for_pick, get_correct_picks_and_scores
+from utils.bracket_utils import get_sorted_truth_files
 import json
 import os
 import copy
@@ -65,31 +66,6 @@ def get_most_recent_truth_bracket(index=0):
     except Exception as e:
         print(f"Error loading truth bracket: {str(e)}")
         return None
-
-def get_sorted_truth_files():
-    """
-    Get all truth bracket files sorted by round and game number (newest first).
-    
-    Returns:
-        list: Sorted list of truth file paths
-    """
-    # Get all bracket files in the truth_brackets directory
-    truth_files = glob.glob('truth_brackets/*.json')
-    
-    if not truth_files:
-        return []
-        
-    # Sort by round and game numbers, newest first
-    def extract_round_game(filename):
-        match = re.search(r'round_(\d+)_game_(\d+)', filename)
-        if match:
-            round_num = int(match.group(1))
-            game_num = int(match.group(2))
-            return (round_num, game_num)
-        return (0, 0)  # Default for non-matching files
-        
-    truth_files.sort(key=extract_round_game, reverse=True)
-    return truth_files
 
 # Helper function to validate username contains only filename-safe characters
 def is_valid_username(username):

@@ -8,25 +8,33 @@ including loading, saving, and manipulating bracket data.
 import os
 import json
 import glob
+import re
 from datetime import datetime
 
 def get_sorted_truth_files(truth_dir="truth_brackets"):
     """
-    Get a sorted list of truth bracket files from newest to oldest.
+    Get all truth bracket files sorted by round and game number (newest first).
     
-    Args:
-        truth_dir (str): Directory containing truth bracket files
-        
     Returns:
-        list: Sorted list of truth bracket file paths (newest first)
+        list: Sorted list of truth file paths
     """
-    # Get all JSON files in the truth_brackets directory
-    json_files = glob.glob(os.path.join(truth_dir, "*.json"))
+    # Get all bracket files in the truth_brackets directory
+    truth_files = glob.glob('truth_brackets/*.json')
     
-    # Sort files by modification time (newest first)
-    sorted_files = sorted(json_files, key=os.path.getmtime, reverse=True)
-    
-    return sorted_files
+    if not truth_files:
+        return []
+        
+    # Sort by round and game numbers, newest first
+    def extract_round_game(filename):
+        match = re.search(r'round_(\d+)_game_(\d+)', filename)
+        if match:
+            round_num = int(match.group(1))
+            game_num = int(match.group(2))
+            return (round_num, game_num)
+        return (0, 0)  # Default for non-matching files
+        
+    truth_files.sort(key=extract_round_game, reverse=True)
+    return truth_files
 
 def get_most_recent_truth_bracket(truth_dir="truth_brackets"):
     """
