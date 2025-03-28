@@ -150,6 +150,12 @@ def find_recent_game_difference(current_bracket, previous_bracket):
     
     return None
 
+def _canonicalize_team_name(team_name):
+    """
+    Canonicalize a team name by removing slashes, underscores, periods, and apostrophes.
+    """
+    team_name = TEAM_NAME_SHORTCUTS.get(team_name, team_name)
+    return team_name.replace('_', ' ').replace('.', '').replace("'", "").strip()
 
 def generate_new_filename(old_filename, difference):
     """
@@ -195,21 +201,10 @@ def generate_new_filename(old_filename, difference):
     if original_game_idx is not None:
         game_idx = original_game_idx
     
-    # Apply team name shortcuts if available
-    if winner_name in TEAM_NAME_SHORTCUTS:
-        winner_name = TEAM_NAME_SHORTCUTS[winner_name]
-    if loser_name in TEAM_NAME_SHORTCUTS:
-        loser_name = TEAM_NAME_SHORTCUTS[loser_name]
-        
-    # Clean team names - remove slashes, underscores, periods, and apostrophes
-    winner_name = winner_name.replace('/', ' or ').replace('_', ' ').replace('.', '').replace("'", "").strip()
-    loser_name = loser_name.replace('/', ' or ').replace('_', ' ').replace('.', '').replace("'", "").strip()
-    
-    # For champion, use a special format
-    if region == 'champion':
-        new_filename = f"round_{round_idx}_champion {winner_seed} {winner_name} defeats {loser_seed} {loser_name}.json"
-    else:
-        new_filename = f"round_{round_idx}_game_{game_idx} {winner_seed} {winner_name} defeats {loser_seed} {loser_name}.json"
+    winner_name = _canonicalize_team_name(winner_name)
+    loser_name = _canonicalize_team_name(loser_name)
+
+    new_filename = f"round_{round_idx}_game_{game_idx} {winner_seed} {winner_name} defeats {loser_seed} {loser_name}.json"
     
     return os.path.join(dirname, new_filename)
 
@@ -252,58 +247,56 @@ def main():
             files_skipped += 1
             continue
         
-        try:
-            # Load the current bracket
-            with open(file_path, 'r') as f:
-                current_bracket = json.load(f)
-            
-            # Skip if this is the first file (no previous bracket to compare)
-            if previous_bracket is None:
-                previous_bracket = copy.deepcopy(current_bracket)
-                print("  Skipping first file (no previous bracket to compare)")
-                files_skipped += 1
-                continue
-            
-            # Find the difference between this bracket and the previous one
-            difference = find_recent_game_difference(current_bracket, previous_bracket)
-            
-            # If no difference found, skip this file
-            if not difference:
-                print("  No new game results found in this bracket")
-                previous_bracket = copy.deepcopy(current_bracket)
-                files_skipped += 1
-                continue
-            
-            # Generate new filename
-            new_filename = generate_new_filename(file_path, difference)
-            
-            print(f"  Found result: {difference[4]} {difference[3]} defeats {difference[6]} {difference[5]}")
-            print(f"  Old filename: {os.path.basename(file_path)}")
-            print(f"  New filename: {os.path.basename(new_filename)}")
-            
-            # Update the file
-            if not args.dry_run:
-                # Backup the original file if requested
-                if args.backup_dir:
-                    backup_path = os.path.join(args.backup_dir, os.path.basename(file_path))
-                    shutil.copy2(file_path, backup_path)
-                    print(f"  Created backup: {backup_path}")
-                
-                # Rename the file
-                if os.path.exists(new_filename):
-                    print(f"  Warning: File already exists: {new_filename}")
-                else:
-                    os.rename(file_path, new_filename)
-                    print(f"  Renamed file successfully")
-                    files_renamed += 1
-            else:
-                files_renamed += 1  # Count as renamed for dry run
-            
-            # Update previous bracket for next iteration
-            previous_bracket = copy.deepcopy(current_bracket)
+        # Load the current bracket
+        with open(file_path, 'r') as f:
+            current_bracket = json.load(f)
         
-        except Exception as e:
-            print(f"  Error processing file: {str(e)}")
+        # Skip if this is the first file (no previous bracket to compare)
+        if previous_bracket is None:
+            previous_bracket = copy.deepcopy(current_bracket)
+            print("  Skipping first file (no previous bracket to compare)")
+            files_skipped += 1
+            continue
+        
+        # Find the difference between this bracket and the previous one
+        difference = find_recent_game_difference(current_bracket, previous_bracket)
+        
+        # If no difference found, skip this file
+        if not difference:
+            print("  No new game results found in this bracket")
+            previous_bracket = copy.deepcopy(current_bracket)
+            files_skipped += 1
+            continue
+        
+        # Generate new filename
+        new_filename = generate_new_filename(file_path, difference)
+        
+        print(f"  Found result: {difference[4]} {difference[3]} defeats {difference[6]} {difference[5]}")
+        print(f"  Old filename: {os.path.basename(file_path)}")
+        print(f"  New filename: {os.path.basename(new_filename)}")
+        
+        # Update the file
+        if not args.dry_run:
+            # Backup the original file if requested
+            if args.backup_dir:
+                backup_path = os.path.join(args.backup_dir, os.path.basename(file_path))
+                shutil.copy2(file_path, backup_path)
+                print(f"  Created backup: {backup_path}")
+            
+            # Rename the file
+            if os.path.exists(new_filename):
+                print(f"  Warning: File already exists: {new_filename}")
+            else:
+                os.rename(file_path, new_filename)
+                print(f"  Renamed file successfully")
+                files_renamed += 1
+        else:
+            files_renamed += 1  # Count as renamed for dry run
+        
+        # Update previous bracket for next iteration
+        previous_bracket = copy.deepcopy(current_bracket)
+        
+
     
     # Print summary
     print("\nProcessing complete!")
