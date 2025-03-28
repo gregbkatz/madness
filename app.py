@@ -1414,30 +1414,44 @@ def find_monte_carlo_analysis(truth_file):
     try:
         # Extract the identifier from the truth file
         basename = os.path.basename(truth_file)
-        if not basename.startswith("round_") or "_game_" not in basename:
+        
+        # Handle new format "round_x_game_y - {seed} {winner} defeats {seed} {loser}.json"
+        if ' defeats ' in basename:
+            # Extract just the round_X_game_Y part
+            match = re.search(r'(round_\d+_game_\d+)', basename)
+            if match:
+                truth_id = match.group(1)
+            else:
+                return None
+        # Handle old format "round_x_game_y.json"
+        elif basename.startswith("round_") and "_game_" in basename:
+            # Extract the round_X_game_Y part
+            truth_id = os.path.splitext(basename)[0]  # Remove extension
+            # If there are additional parts after game_Y, remove them
+            if '_' in truth_id[truth_id.index('_game_') + 6:]:
+                parts = truth_id.split('_')
+                truth_id = f"{parts[0]}_{parts[1]}_{parts[2]}_{parts[3]}"
+        else:
             return None
             
-        # Extract the round_X_game_Y part
-        truth_id = os.path.splitext(basename)[0]  # Remove extension
-        
         # Look for analysis files in data/simulations
         simulations_dir = "data/simulations"
         if not os.path.exists(simulations_dir):
             return None
             
-        # Check for files with pattern: round_{truth_id}_{count}_brackets.json
+        # Check for files with pattern: analysis_{truth_id}_{count}_brackets.json
         analysis_files = []
         for filename in os.listdir(simulations_dir):
             if filename.startswith(f"analysis_{truth_id}_") and filename.endswith("_brackets.json"):
                 filepath = os.path.join(simulations_dir, filename)
                 
                 # Try to extract the count from the filename
-                # Expected pattern: round_X_game_Y_Z_brackets.json where Z is the count
+                # Expected pattern: analysis_round_X_game_Y_Z_brackets.json where Z is the count
                 count = 0
                 try:
                     # Split by underscore and extract the part before "_brackets.json"
                     parts = filename.split('_')
-                    if len(parts) >= 5:  # Should have at least round_X_game_Y_Z
+                    if len(parts) >= 5:  # Should have at least analysis_round_X_game_Y_Z
                         # The count should be the second-to-last part
                         count_str = parts[-2]
                         count = int(count_str)
@@ -1464,6 +1478,7 @@ def find_monte_carlo_analysis(truth_file):
         return None
     except Exception as e:
         print(f"Error finding Monte Carlo analysis: {str(e)}")
+        traceback.print_exc()  # Print traceback for easier debugging
         return None
 
 # Add this function after compare_with_truth and before users_list

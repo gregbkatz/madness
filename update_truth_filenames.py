@@ -204,7 +204,7 @@ def generate_new_filename(old_filename, difference):
     winner_name = _canonicalize_team_name(winner_name)
     loser_name = _canonicalize_team_name(loser_name)
 
-    new_filename = f"round_{round_idx}_game_{game_idx} {winner_seed} {winner_name} defeats {loser_seed} {loser_name}.json"
+    new_filename = f"round_{round_idx}_game_{game_idx} - {winner_seed} {winner_name} defeats {loser_seed} {loser_name}.json"
     
     return os.path.join(dirname, new_filename)
 
