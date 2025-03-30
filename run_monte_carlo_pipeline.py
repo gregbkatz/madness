@@ -124,8 +124,8 @@ def run_analysis(args, simulation_file):
         basename = os.path.basename(args.truth_file)
         if basename.startswith("round_") and "_game_" in basename:
             # If it's using the round_X_game_Y format
-            desc_part = os.path.splitext(basename)[0]  # Remove extension
-            file_name = f"{desc_part}_{args.count}_brackets.json"
+            desc_part = basename.split(" ")[0]
+            file_name = f"analysis_{desc_part}_{args.count}_brackets.json"
         else:
             # For non-standard truth files, use the timestamp
             timestamp = datetime.now().strftime("%Y%m%d")
