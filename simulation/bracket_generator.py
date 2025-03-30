@@ -56,10 +56,7 @@ class BracketGenerator:
         # Complete the Final Four and Championship
         self._complete_final_four(bracket)
         self._complete_championship(bracket)
-        
-        # Update winners for rendering
-        bracket = update_winners(bracket)
-        
+                
         return bracket
     
     def _calculate_win_probability(self, team1, team2):
@@ -115,11 +112,6 @@ class BracketGenerator:
         Returns:
             dict: The selected team
         """
-        if not team1:
-            return team2
-        if not team2:
-            return team1
-            
         # Calculate probability of team1 winning
         team1_prob = self._calculate_win_probability(team1, team2)
         
@@ -140,7 +132,7 @@ class BracketGenerator:
             if round_idx == 0:
                 continue
                 
-            games_in_round = 2 ** (3 - round_idx)
+            games_in_round = 2 ** (4 - round_idx)
             next_round_idx = round_idx
             
             # For each game in the current round
@@ -184,23 +176,21 @@ class BracketGenerator:
             # Check if this Final Four slot is already filled in the truth bracket
             if bracket['finalFour'][ff_idx] is None:
                 # Get the Elite Eight winner for this region
-                elite_eight_winner = bracket[region][3][0] if bracket[region][3] and len(bracket[region][3]) > 0 else None
-                if elite_eight_winner:
-                    bracket['finalFour'][ff_idx] = elite_eight_winner
+                bracket['finalFour'][ff_idx] = self._weighted_choice(bracket[region][3][0], bracket[region][3][1])
         
         # Now complete the Championship matchups
-        # First semifinal: midwest vs west (slots 0 and 1)
+        # First semifinal: south vs west
         if bracket['championship'][0] is None:
-            team1 = bracket['finalFour'][0]  # midwest
-            team2 = bracket['finalFour'][1]  # west
+            team1 = bracket['finalFour'][region_to_ff['south']]  
+            team2 = bracket['finalFour'][region_to_ff['west']]  
             if team1 and team2:
                 winner = self._weighted_choice(team1, team2)
                 bracket['championship'][0] = winner
         
-        # Second semifinal: south vs east (slots 2 and 3)
+        # Second semifinal: east vs midwest
         if bracket['championship'][1] is None:
-            team1 = bracket['finalFour'][2]  # south
-            team2 = bracket['finalFour'][3]  # east
+            team1 = bracket['finalFour'][region_to_ff['east']]  
+            team2 = bracket['finalFour'][region_to_ff['midwest']]  
             if team1 and team2:
                 winner = self._weighted_choice(team1, team2)
                 bracket['championship'][1] = winner
