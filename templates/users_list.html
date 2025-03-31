@@ -25,6 +25,12 @@
             margin-top: 20px;
         }
 
+        /* Table width adjustment based on view mode */
+        .users-list-container.basic-view table {
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
         th,
         td {
             padding: 8px 12px;
@@ -234,6 +240,10 @@
             background-color: #00255a;
         }
 
+        .toggle-button:active {
+            background-color: #d8d8d8;
+        }
+
         /* Column visibility classes */
         .hidden-round {
             display: none;
@@ -241,13 +251,35 @@
 
         /* Add a new CSS class for numeric columns */
         .numeric-column {
-            width: 90px;
+            width: 80px;
+            /* Reduced from 90px */
+            max-width: 80px;
             text-align: center;
         }
 
         .numeric-column .correct-picks-value {
             display: block;
             text-align: center;
+        }
+
+        /* Width constraints for rank and username columns */
+        th[data-sort="rank"],
+        td:first-child {
+            width: 50px;
+            /* Reduced from 60px */
+            max-width: 50px;
+            text-align: center;
+        }
+
+        th[data-sort="username"],
+        td:nth-child(2) {
+            width: 140px;
+            /* Reduced from 150px */
+            max-width: 180px;
+            /* Reduced from 200px */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         /* Update the sortable header styles for numeric columns */
@@ -478,6 +510,10 @@
             // Set initial button text to match default state
             if (toggleButton) {
                 toggleButton.textContent = 'Detailed View';
+
+                // Set initial container class
+                const container = document.querySelector('.users-list-container');
+                container.classList.add('basic-view');
             }
 
             // Toggle showing additional info
@@ -485,6 +521,7 @@
                 toggleButton.addEventListener('click', function () {
                     // Get all elements with 'hidden-round' class
                     const additionalCols = document.querySelectorAll('.hidden-round');
+                    const container = document.querySelector('.users-list-container');
 
                     // Check if elements are currently hidden
                     const shouldShow = additionalCols.length > 0;
@@ -495,6 +532,7 @@
                             col.classList.remove('hidden-round');
                         });
                         toggleButton.textContent = 'Basic View';
+                        container.classList.remove('basic-view');
                     } else {
                         // Hide additional info - need to select all elements that should be hidden
                         const columnsToHide = document.querySelectorAll(
@@ -514,6 +552,7 @@
                             col.classList.add('hidden-round');
                         });
                         toggleButton.textContent = 'Detailed View';
+                        container.classList.add('basic-view');
                     }
                 });
             }
@@ -777,7 +816,13 @@
                             });
 
                             if (toggleButton) {
-                                toggleButton.textContent = 'Default View';
+                                toggleButton.textContent = 'Basic View';
+                                document.querySelector('.users-list-container').classList.remove('basic-view');
+                            }
+                        } else {
+                            if (toggleButton) {
+                                toggleButton.textContent = 'Detailed View';
+                                document.querySelector('.users-list-container').classList.add('basic-view');
                             }
                         }
 
