@@ -103,6 +103,36 @@ body {
     color: #ccc;
 }
 
+/* User metrics in header */
+.user-metrics {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin: 6px 0;
+    font-size: 0.9em;
+    display: block;
+}
+
+.metrics-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.metric {
+    display: inline-block;
+    font-weight: bold;
+}
+
+.metric span {
+    font-weight: normal;
+    background-color: rgba(255, 255, 255, 0.25);
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 4px;
+}
+
+/* Header info */
 .header-info {
     display: flex;
     flex-direction: column;

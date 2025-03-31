@@ -49,6 +49,14 @@
             <div id="save-status" class="save-status">📋 No changes yet</div>
             <div id="completion-status" class="completion-status">⚠️ 63 picks remaining</div>
             {% endif %}
+            <div id="user-metrics" class="user-metrics">
+                <div class="metrics-row">
+                    <span class="metric">Score: <span id="current-score">-</span></span>
+                    <span class="metric">Max Base: <span id="max-base">-</span></span>
+                    <span class="metric">Max Total: <span id="max-total">-</span></span>
+                    <span class="metric">Win %: <span id="win-pct">-</span>%</span>
+                </div>
+            </div>
             <div class="change-user">
                 {% if not session.read_only %}
                 <a href="/logout" class="change-user-button">Change User</a>
@@ -119,7 +127,15 @@
                 }
             });
 
-            // Function to fetch bracket data via AJAX
+            // Initialize metrics on page load by fetching current bracket data
+            window.addEventListener('load', function () {
+                const truthSlider = document.getElementById('truth-file-slider');
+                if (truthSlider) {
+                    const currentIndex = truthSlider.value;
+                    window.fetchBracketData(currentIndex);
+                }
+            });
+
             window.fetchBracketData = function (truthIndex) {
                 // Show loading indicator
                 const root = document.getElementById('root');
@@ -154,6 +170,57 @@
                             console.log('Bracket data updated via updateBracketData function');
                         } else {
                             console.error('updateBracketData function not available');
+                        }
+
+                        // Update user metrics in the header using data already in the response
+                        // This assumes the data needed is returned from the API, which should include:
+                        // - current score
+                        // - max possible base score
+                        // - max possible total score
+                        // - win percentage
+                        try {
+                            if (data.truth_data) {
+                                const userMetricsDiv = document.getElementById('user-metrics');
+                                const currentScoreSpan = document.getElementById('current-score');
+                                const maxBaseSpan = document.getElementById('max-base');
+                                const maxTotalSpan = document.getElementById('max-total');
+                                const winPctSpan = document.getElementById('win-pct');
+
+                                if (userMetricsDiv && currentScoreSpan && maxBaseSpan && maxTotalSpan && winPctSpan) {
+                                    // Calculate correct picks counts from the truth_data
+                                    let correctPicksCount = 0;
+                                    let totalScore = 0;
+                                    let maxPossibleBase = 0;
+                                    let maxPossibleTotal = 0;
+
+                                    // Fetch the user data from the leaderboard API to get the win percentage
+                                    fetch('/api/user-scores?truth_index=' + truthIndex)
+                                        .then(response => response.json())
+                                        .then(scoreData => {
+                                            if (scoreData && scoreData.users) {
+                                                // Get current username from URL or session
+                                                const urlParams = new URLSearchParams(window.location.search);
+                                                const viewingUsername = urlParams.get('username') || '{{ username }}';
+
+                                                // Find the current user in the data
+                                                const userData = scoreData.users.find(user => user.username === viewingUsername);
+
+                                                if (userData) {
+                                                    // Update all fields using the data from the users list
+                                                    currentScoreSpan.textContent = userData.correct_picks.total_with_bonus;
+                                                    maxBaseSpan.textContent = userData.max_possible_base;
+                                                    maxTotalSpan.textContent = userData.max_possible_total;
+                                                    winPctSpan.textContent = userData.monte_carlo_pct_first_place.toFixed(1);
+                                                }
+                                            }
+                                        })
+                                        .catch(error => {
+                                            console.error('Error fetching user scores:', error);
+                                        });
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error updating metrics:', error);
                         }
 
                         // Restore visibility
