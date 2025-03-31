@@ -878,7 +878,19 @@
                 const championCell = document.createElement('td');
                 championCell.classList.add('hidden-round');
                 if (user.champion) {
-                    championCell.textContent = user.champion;
+                    // Use styling for eliminated champion teams instead of asterisk
+                    if (user.champion_eliminated) {
+                        // Create a styled span for eliminated champion
+                        const eliminatedSpan = document.createElement('span');
+                        eliminatedSpan.style.fontWeight = 'bold';
+                        eliminatedSpan.style.textDecoration = 'line-through';
+                        eliminatedSpan.style.color = '#D32F2F'; // Red color
+                        eliminatedSpan.style.opacity = '0.8';
+                        eliminatedSpan.textContent = user.champion;
+                        championCell.appendChild(eliminatedSpan);
+                    } else {
+                        championCell.textContent = user.champion;
+                    }
                 } else {
                     const span = document.createElement('span');
                     span.classList.add('empty');

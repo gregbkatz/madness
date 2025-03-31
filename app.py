@@ -1230,6 +1230,11 @@ def get_users_list(truth_bracket):
 
                             correct_picks = get_correct_picks_and_scores(compared_bracket) 
                                
+                            # Check if champion is eliminated
+                            champion_eliminated = False
+                            if compared_bracket.get("champion") and compared_bracket["champion"].get("isEliminated", False):
+                                champion_eliminated = True
+
                             # Calculate maximum possible points (current + potential)
                             max_possible_base = correct_picks["total_score"]  # Start with current score
                             max_possible_bonus = correct_picks["total_bonus"]  # Start with current bonus
@@ -1281,6 +1286,7 @@ def get_users_list(truth_bracket):
                         "bracket_count": len(user_brackets),
                         "picks_remaining": picks_remaining,
                         "champion": champion,
+                        "champion_eliminated": champion_eliminated if 'champion_eliminated' in locals() else False,
                         "correct_picks": correct_picks if 'correct_picks' in locals() else {
                             "round_1": 0, "round_2": 0, "round_3": 0,
                             "final_four": 0, "championship": 0, "champion": 0,
