@@ -55,6 +55,7 @@
                     <span class="metric">Max Base: <span id="max-base">-</span></span>
                     <span class="metric">Max Total: <span id="max-total">-</span></span>
                     <span class="metric">Win %: <span id="win-pct">-</span>%</span>
+                    <span class="metric">Best Rank: <span id="best-rank">-</span></span>
                 </div>
             </div>
             <div class="change-user">
@@ -185,8 +186,9 @@
                                 const maxBaseSpan = document.getElementById('max-base');
                                 const maxTotalSpan = document.getElementById('max-total');
                                 const winPctSpan = document.getElementById('win-pct');
+                                const bestRankSpan = document.getElementById('best-rank');
 
-                                if (userMetricsDiv && currentScoreSpan && maxBaseSpan && maxTotalSpan && winPctSpan) {
+                                if (userMetricsDiv && currentScoreSpan && maxBaseSpan && maxTotalSpan && winPctSpan && bestRankSpan) {
                                     // Calculate correct picks counts from the truth_data
                                     let correctPicksCount = 0;
                                     let totalScore = 0;
@@ -211,6 +213,7 @@
                                                     maxBaseSpan.textContent = userData.max_possible_base;
                                                     maxTotalSpan.textContent = userData.max_possible_total;
                                                     winPctSpan.textContent = userData.monte_carlo_pct_first_place.toFixed(1);
+                                                    bestRankSpan.textContent = userData.monte_carlo_min_rank || "-";
                                                 }
                                             }
                                         })
