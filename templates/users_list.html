@@ -366,7 +366,7 @@
 
     <div class="users-list-container">
         <div class="controls" style="margin: 10px 0;">
-            <button id="toggle-rounds" class="toggle-btn">Show/Hide Rounds</button>
+            <button id="toggle-rounds" class="toggle-btn">Basic View/Detailed View</button>
         </div>
 
         {% if error %}
@@ -381,7 +381,7 @@
                 <tr>
                     <th rowspan="2" class="sortable" data-sort="rank">Rank</th>
                     <th rowspan="2" class="sortable" data-sort="username">Username</th>
-                    <th rowspan="2" class="sortable" data-sort="champion">Champion</th>
+                    <th rowspan="2" class="sortable hidden-round" data-sort="champion">Champion</th>
                     <!-- <th colspan="7" style="text-align: center;">Scores (pts)</th> -->
                     <!-- <th colspan="5" style="text-align: center;">Bonus & Total</th> -->
                 </tr>
@@ -398,21 +398,26 @@
                         data-round="championship">Final</th>
                     <th class="sortable round-col hidden-round numeric-column" data-sort="champion_score"
                         data-round="champion">Champion</th>
-                    <th class="sortable numeric-column" data-sort="total_score">Base</th>
-                    <th class="sortable numeric-column" data-sort="total_bonus">Bonus</th>
+                    <th class="sortable numeric-column hidden-round" data-sort="total_score">Base</th>
+                    <th class="sortable numeric-column hidden-round" data-sort="total_bonus">Bonus</th>
                     <th class="sortable numeric-column total-column" data-sort="total_with_bonus">Total</th>
-                    <th class="sortable numeric-column" data-sort="max_possible_base_remaining">Max Possible Base
+                    <th class="sortable numeric-column hidden-round" data-sort="max_possible_base_remaining">Max
+                        Possible Base
                         Remaining
                     </th>
-                    <th class="sortable numeric-column" data-sort="max_possible_bonus_remaining">Max Possible Bonus
+                    <th class="sortable numeric-column hidden-round" data-sort="max_possible_bonus_remaining">Max
+                        Possible Bonus
                         Remaining</th>
-                    <th class="sortable numeric-column" data-sort="max_possible_base">Max Possible Base</th>
+                    <th class="sortable numeric-column hidden-round" data-sort="max_possible_base">Max Possible Base
+                    </th>
                     <th class="sortable numeric-column" data-sort="max_possible_total">Max Possible Total</th>
                     <th class="sortable numeric-column" data-sort="monte_carlo_pct_first_place">Win %</th>
-                    <th class="sortable numeric-column" data-sort="monte_carlo_min_rank">Best Rank</th>
-                    <th class="sortable numeric-column" data-sort="monte_carlo_max_rank">Worst Rank</th>
-                    <th class="sortable numeric-column" data-sort="monte_carlo_min_score">Sim Min Score</th>
-                    <th class="sortable numeric-column" data-sort="monte_carlo_max_score">Sim Max Score</th>
+                    <th class="sortable numeric-column hidden-round" data-sort="monte_carlo_min_rank">Best Rank</th>
+                    <th class="sortable numeric-column hidden-round" data-sort="monte_carlo_max_rank">Worst Rank</th>
+                    <th class="sortable numeric-column hidden-round" data-sort="monte_carlo_min_score">Sim Min Score
+                    </th>
+                    <th class="sortable numeric-column hidden-round" data-sort="monte_carlo_max_score">Sim Max Score
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -470,21 +475,46 @@
             // Call this function to render the table on initial load
             renderInitialTable();
 
-            // Toggle showing all rounds
+            // Set initial button text to match default state
+            if (toggleButton) {
+                toggleButton.textContent = 'Detailed View';
+            }
+
+            // Toggle showing additional info
             if (toggleButton) {
                 toggleButton.addEventListener('click', function () {
-                    const roundCols = document.querySelectorAll('.round-col');
-                    const isHidden = roundCols[0].classList.contains('hidden-round');
+                    // Get all elements with 'hidden-round' class
+                    const additionalCols = document.querySelectorAll('.hidden-round');
 
-                    roundCols.forEach(col => {
-                        if (isHidden) {
+                    // Check if elements are currently hidden
+                    const shouldShow = additionalCols.length > 0;
+
+                    if (shouldShow) {
+                        // Show additional info
+                        additionalCols.forEach(col => {
                             col.classList.remove('hidden-round');
-                            toggleButton.textContent = 'Hide Rounds';
-                        } else {
+                        });
+                        toggleButton.textContent = 'Basic View';
+                    } else {
+                        // Hide additional info - need to select all elements that should be hidden
+                        const columnsToHide = document.querySelectorAll(
+                            'th[data-sort="champion"], th[data-sort="total_score"], th[data-sort="total_bonus"], ' +
+                            'th[data-sort="max_possible_base_remaining"], th[data-sort="max_possible_bonus_remaining"], ' +
+                            'th[data-sort="max_possible_base"], th[data-sort="monte_carlo_min_rank"], ' +
+                            'th[data-sort="monte_carlo_max_rank"], th[data-sort="monte_carlo_min_score"], ' +
+                            'th[data-sort="monte_carlo_max_score"], th.round-col, ' +
+                            'td:nth-child(3), ' + // Champion column
+                            'td:nth-child(4), td:nth-child(5), td:nth-child(6), td:nth-child(7), td:nth-child(8), td:nth-child(9), ' + // Round columns
+                            'td:nth-child(10), td:nth-child(11), ' + // Base, Bonus
+                            'td:nth-child(13), td:nth-child(14), td:nth-child(15), ' + // Max possible details
+                            'td:nth-child(18), td:nth-child(19), td:nth-child(20), td:nth-child(21)' // Monte Carlo details
+                        );
+
+                        columnsToHide.forEach(col => {
                             col.classList.add('hidden-round');
-                            toggleButton.textContent = 'Show Rounds';
-                        }
-                    });
+                        });
+                        toggleButton.textContent = 'Detailed View';
+                    }
                 });
             }
 
@@ -676,16 +706,16 @@
                 return colIndex;
             }
 
-            // Variables to track sorting state and round visibility
-            let showingAllRounds = false;
+            // Variables to track sorting state and column visibility
+            let showingAdditionalInfo = false;
 
             // Function to fetch updated data with AJAX and update the table
             window.fetchAndUpdateData = function (index) {
                 // Store current scroll position
                 const scrollPos = window.scrollY;
 
-                // Remember if rounds are shown
-                showingAllRounds = document.querySelectorAll('.round-col:not(.hidden-round)').length > 0;
+                // Remember if additional info is shown - check button text instead of elements
+                showingAdditionalInfo = toggleButton.textContent === 'Basic View';
 
                 // Remember current sort state
                 const sortColumn = currentSort.column;
@@ -726,13 +756,28 @@
                         // Sort the table immediately with the current sort settings
                         sortTable(sortColumn, sortDirection, false);
 
-                        // Restore rounds visibility
-                        if (showingAllRounds) {
-                            document.querySelectorAll('.round-col').forEach(col => {
+                        // Restore additional info visibility
+                        if (showingAdditionalInfo) {
+                            // Define the columns to show when Additional Info is active - use the same selector as in the toggle button
+                            const columnsToShow = document.querySelectorAll(
+                                'th[data-sort="champion"], th[data-sort="total_score"], th[data-sort="total_bonus"], ' +
+                                'th[data-sort="max_possible_base_remaining"], th[data-sort="max_possible_bonus_remaining"], ' +
+                                'th[data-sort="max_possible_base"], th[data-sort="monte_carlo_min_rank"], ' +
+                                'th[data-sort="monte_carlo_max_rank"], th[data-sort="monte_carlo_min_score"], ' +
+                                'th[data-sort="monte_carlo_max_score"], th.round-col, ' +
+                                'td:nth-child(3), ' + // Champion column
+                                'td:nth-child(4), td:nth-child(5), td:nth-child(6), td:nth-child(7), td:nth-child(8), td:nth-child(9), ' + // Round columns
+                                'td:nth-child(10), td:nth-child(11), ' + // Base, Bonus
+                                'td:nth-child(13), td:nth-child(14), td:nth-child(15), ' + // Max possible details
+                                'td:nth-child(18), td:nth-child(19), td:nth-child(20), td:nth-child(21)' // Monte Carlo details
+                            );
+
+                            columnsToShow.forEach(col => {
                                 col.classList.remove('hidden-round');
                             });
+
                             if (toggleButton) {
-                                toggleButton.textContent = 'Hide Rounds';
+                                toggleButton.textContent = 'Default View';
                             }
                         }
 
@@ -786,6 +831,7 @@
 
                 // Add champion cell
                 const championCell = document.createElement('td');
+                championCell.classList.add('hidden-round');
                 if (user.champion) {
                     championCell.textContent = user.champion;
                 } else {
@@ -829,6 +875,11 @@
                     cell.classList.add('numeric-column');
                     if (item.class) cell.classList.add(item.class);
 
+                    // Add hidden-round class to all cells except total_with_bonus and max_possible_total
+                    if (item.key !== 'total_with_bonus' && item.key !== 'max_possible_total') {
+                        cell.classList.add('hidden-round');
+                    }
+
                     const span = document.createElement('span');
                     span.classList.add('correct-picks-value');
 
@@ -856,6 +907,11 @@
                     const cell = document.createElement('td');
                     cell.classList.add('numeric-column');
                     if (item.class) cell.classList.add(item.class);
+
+                    // Add hidden-round class to all Monte Carlo cells except Win %
+                    if (item.key !== 'monte_carlo_pct_first_place') {
+                        cell.classList.add('hidden-round');
+                    }
 
                     if (user[item.key] === 'N/A') {
                         const span = document.createElement('span');
