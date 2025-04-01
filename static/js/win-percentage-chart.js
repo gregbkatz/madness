@@ -408,9 +408,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const maxIndex = parseInt(slider.max);
 
-        // Find which indices we need to load
+        // Find which indices we need to load - LOAD ALL INDICES, not just up to current
         const indicesToLoad = [];
-        for (let i = 0; i <= currentIndex; i++) {
+        for (let i = 0; i <= maxIndex; i++) {
             if (!allTimelineData.some(data => data.index === i)) {
                 indicesToLoad.push(i);
             }
@@ -420,6 +420,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (indicesToLoad.length === 0) {
             updateChart(currentIndex);
             return;
+        }
+
+        // Show loading indicator if available
+        const loadingOverlay = document.getElementById('loading-overlay');
+        if (loadingOverlay) {
+            loadingOverlay.classList.add('visible');
         }
 
         // Use Promise.all to load all missing indices in parallel
@@ -463,6 +469,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Update chart with the current index
                 updateChart(currentIndex);
+
+                // Hide loading indicator if available
+                if (loadingOverlay) {
+                    loadingOverlay.classList.remove('visible');
+                }
             });
     }
 
