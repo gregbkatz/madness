@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>March Madness Leaderboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- Add Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Add Chart.js annotation plugin with proper script reference -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -368,6 +372,15 @@
         .toggle-btn:active {
             background-color: #d8d8d8;
         }
+
+        /* Add styling for the chart container */
+        .chart-container {
+            margin-top: 30px;
+            margin-bottom: 30px;
+            width: 100%;
+            height: 400px;
+            position: relative;
+        }
     </style>
 </head>
 
@@ -460,12 +473,17 @@
         <!-- Pass initial data to JavaScript -->
         <script>
             // Expose the initial data to JavaScript
-            window.initialUsersData = {{ users | tojson | safe }};
-            window.monteCarloAvailable = {{ monte_carlo_available | tojson | safe }};
+            window.initialUsersData = JSON.parse('{{ users | tojson | safe }}');
+            window.monteCarloAvailable = JSON.parse('{{ monte_carlo_available | tojson | safe }}');
         </script>
         {% else %}
         <p>No users found.</p>
         {% endif %}
+    </div>
+
+    <!-- Add the chart container below the users list table -->
+    <div class="chart-container">
+        <canvas id="winPercentageChart"></canvas>
     </div>
 
     <a href="/" class="back-link">← Back to Bracket</a>
@@ -989,6 +1007,7 @@
             }
         });
     </script>
+    <script src="{{ url_for('static', filename='js/win-percentage-chart.js') }}"></script>
 </body>
 
 </html>
