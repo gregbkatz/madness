@@ -138,6 +138,11 @@
             });
 
             window.fetchBracketData = function (truthIndex) {
+                // IMPORTANT: The truthIndex passed here is now consistently the data index,
+                // NOT the slider position. The slider position is inverted (0 = oldest, maxValue = newest),
+                // while data index is 0 = newest, maxValue = oldest
+                console.log(`Bracket page: fetchBracketData called with data index (truth_index): ${truthIndex}`);
+
                 // Show loading indicator
                 const root = document.getElementById('root');
                 if (root) {
@@ -148,7 +153,7 @@
                 const currentParams = new URLSearchParams(window.location.search);
                 const username = currentParams.get('username');
 
-                // Build query string for API call
+                // Build query string for API call - pass the data index directly
                 let apiUrl = `/api/bracket?truth_index=${truthIndex}`;
                 if (username) {
                     apiUrl += `&username=${username}`;

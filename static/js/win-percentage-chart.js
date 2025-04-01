@@ -222,6 +222,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateChart(timelineIndex) {
         if (!winChart) return;
 
+        // Store the data index
         currentTimelineIndex = timelineIndex;
 
         // If we don't have data yet, try to initialize with current users data
@@ -236,6 +237,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     }))
             };
             allTimelineData.push(initialData);
+
+            // Log that we're initializing with initial data
+            console.log(`Initializing chart with initial data at index ${timelineIndex}`);
         }
 
         // Check if we have data for this index
@@ -317,13 +321,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Add a simple vertical line marker for the current index
         if (currentTimelineIndex >= 0 && currentTimelineIndex < labels.length) {
-            // Use the currentTimelineIndex directly, which is the slider position
-            // This ensures the dot moves with the slider in the same direction
+            // Now currentTimelineIndex is already the data index, not the slider position
+            // The marker should be positioned at the correct x-axis position in the chart
+            // Since our chart x-axis is reversed compared to the data index (0 = left, max = right),
+            // we need to convert the data index to the chart position
+            const markerIndex = maxIndex - currentTimelineIndex;
+
+            // Log marker positioning for debugging
+            console.log(`Marker positioning - data index: ${currentTimelineIndex}, maxIndex: ${maxIndex}, chart position: ${markerIndex}`);
 
             // Only use the point marker for cleaner visualization
             winChart.data.datasets.push({
                 label: '_hidden_point_',
-                data: labels.map((_, i) => i === currentTimelineIndex ? 50 : null), // Place in middle of y-axis
+                data: labels.map((_, i) => i === markerIndex ? 50 : null), // Place in middle of y-axis
                 borderColor: 'rgba(0, 0, 0, 0)',
                 backgroundColor: 'rgba(0, 0, 0, 0.8)',
                 pointRadius: 6,
@@ -402,6 +412,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Load all timeline data up to a specific index
     function loadAllTimelineData(currentIndex) {
+        // This function expects currentIndex to be a data index (0 = newest, maxValue = oldest)
+        // NOT the slider position. The slider position is inverted (0 = oldest, maxValue = newest)
+        console.log(`Loading timeline data for data index: ${currentIndex}`);
+
         // If we already have all the data loaded, just update the chart
         if (allTimelineData.length > 0) {
             updateChart(currentIndex);
@@ -544,33 +558,41 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Override it with our version that also updates the chart
             window.fetchAndUpdateData = function (index) {
-                // Call the original function
+                // This function now consistently receives 'index' as a data index
+                // (NOT a slider position) where:
+                // - index 0 = newest game (tournament start)
+                // - maxValue = oldest game (tournament end)
+                console.log(`Chart: fetchAndUpdateData called with data index: ${index}`);
+
+                // Call the original function which now consistently expects data index
                 originalFetchAndUpdateData(index);
 
                 // Get maximum index value
                 const slider = document.getElementById('truth-file-slider');
                 const maxValue = slider ? parseInt(slider.max) : 0;
 
-                // Store the slider position (not the reversed index)
+                // Store the data index directly
                 currentTimelineIndex = index;
 
-                // For data loading, we need to use the reversed index
-                const dataIndex = maxValue - index;
-                loadAllTimelineData(dataIndex);
+                // Load timeline data - since we're now consistently working with data indices,
+                // we can pass it directly without conversion
+                loadAllTimelineData(index);
             };
 
             // Initialize with current data
             const slider = document.getElementById('truth-file-slider');
             if (slider) {
-                const currentIndex = parseInt(slider.value);
+                const currentSliderValue = parseInt(slider.value);
                 const maxValue = parseInt(slider.max);
 
-                // Store the slider position
-                currentTimelineIndex = currentIndex;
+                // Convert slider value to data index
+                const dataIndex = maxValue - currentSliderValue;
 
-                // Data loading uses reversed index
-                const dataIndex = maxValue - currentIndex;
-                loadAllTimelineData(dataIndex);
+                // Log debug info about indices
+                console.log(`Chart init - Slider value: ${currentSliderValue}, Max: ${maxValue}, Data index: ${dataIndex}`);
+
+                // Call the update function with the data index
+                window.fetchAndUpdateData(dataIndex);
             }
         } else {
             // If the function doesn't exist yet, try again shortly

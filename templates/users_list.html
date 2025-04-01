@@ -768,6 +768,11 @@
 
             // Function to fetch updated data with AJAX and update the table
             window.fetchAndUpdateData = function (index) {
+                // IMPORTANT: The index passed here is now consistently the data index (truth_index),
+                // NOT the slider position. The slider position is inverted (0 = oldest, maxValue = newest),
+                // while data index is 0 = newest, maxValue = oldest
+                console.log(`Users list: fetchAndUpdateData called with data index (truth_index): ${index}`);
+
                 // Store current scroll position
                 const scrollPos = window.scrollY;
 
@@ -778,9 +783,7 @@
                 const sortColumn = currentSort.column;
                 const sortDirection = currentSort.direction;
 
-                console.log(`Fetching data for truth index: ${index}`);
-
-                // Fetch updated data with AJAX
+                // Fetch updated data with AJAX - pass the data index directly
                 fetch(`/api/user-scores?truth_index=${index}`)
                     .then(response => {
                         console.log('Response received:', response);
