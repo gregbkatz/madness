@@ -40,16 +40,35 @@ document.addEventListener('DOMContentLoaded', function () {
             // Get current slider value
             const currentSliderValue = parseInt(truthSlider.value);
 
-            // If slider value is very small compared to max, it might be a data index 
-            // instead of a proper slider position
-            if (currentSliderValue < maxSliderValue / 2 && currentSliderValue < 10) {
-                console.log(`Timeline slider: Detected possible inverted index. Current: ${currentSliderValue}, Max: ${maxSliderValue}`);
+            // REVISED LOGIC: We need to be much more careful about when to "fix" a slider value
+            // PROBLEM: When the slider value is high (like 52), it was being incorrectly identified
+            // as a data index rather than a valid slider position
 
-                // Get the corresponding data index
-                const suspectedDataIndex = currentSliderValue;
+            console.log(`Timeline slider: Checking for inversion - Current: ${currentSliderValue}, Max: ${maxSliderValue}`);
+
+            // Save the current URL parameters to see if truth_index is present
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlTruthIndex = urlParams.get('truth_index');
+
+            // Calculate what would be the "corrected" value if this was inverted
+            const suspectedDataIndex = currentSliderValue;
+            const correctedSliderValue = maxSliderValue - suspectedDataIndex;
+
+            // Check if we have evidence that this is really inverted:
+            // 1. The slider value must be very small compared to max (less than 10)
+            // 2. We should NOT have a truth_index parameter in the URL (which indicates the value is already correct)
+            const isLikelyInverted =
+                currentSliderValue < 10 &&
+                currentSliderValue < maxSliderValue / 6 && // Must be in the bottom 1/6th of the range
+                urlTruthIndex === null && // No truth_index in URL
+                correctedSliderValue > maxSliderValue / 2; // Corrected value would be in the top half
+
+            console.log(`Timeline slider: Is likely inverted? ${isLikelyInverted} (current=${currentSliderValue}, corrected=${correctedSliderValue})`);
+
+            if (isLikelyInverted) {
+                console.log(`Timeline slider: Detected inverted index. Current: ${currentSliderValue}, Max: ${maxSliderValue}`);
 
                 // Convert to correct slider position
-                const correctedSliderValue = maxSliderValue - suspectedDataIndex;
                 console.log(`Timeline slider: Correcting from ${currentSliderValue} to ${correctedSliderValue}`);
 
                 // Update the slider UI
