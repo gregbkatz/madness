@@ -317,13 +317,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Add a simple vertical line marker for the current index
         if (currentTimelineIndex >= 0 && currentTimelineIndex < labels.length) {
-            // Calculate the display index (reversed from data index)
-            const displayIndex = maxIndex - currentTimelineIndex;
+            // Use the currentTimelineIndex directly, which is the slider position
+            // This ensures the dot moves with the slider in the same direction
 
             // Only use the point marker for cleaner visualization
             winChart.data.datasets.push({
                 label: '_hidden_point_',
-                data: labels.map((_, i) => i === displayIndex ? 50 : null), // Place in middle of y-axis
+                data: labels.map((_, i) => i === currentTimelineIndex ? 50 : null), // Place in middle of y-axis
                 borderColor: 'rgba(0, 0, 0, 0)',
                 backgroundColor: 'rgba(0, 0, 0, 0.8)',
                 pointRadius: 6,
@@ -481,16 +481,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Call the original function
                 originalFetchAndUpdateData(index);
 
-                // Get maximum index value for reversing
+                // Get maximum index value
                 const slider = document.getElementById('truth-file-slider');
-                if (slider) {
-                    const maxValue = parseInt(slider.max);
-                    // Reverse the index for correct data mapping
-                    const actualIndex = maxValue - index;
-                    loadAllTimelineData(actualIndex);
-                } else {
-                    loadAllTimelineData(index);
-                }
+                const maxValue = slider ? parseInt(slider.max) : 0;
+
+                // Store the slider position (not the reversed index)
+                currentTimelineIndex = index;
+
+                // For data loading, we need to use the reversed index
+                const dataIndex = maxValue - index;
+                loadAllTimelineData(dataIndex);
             };
 
             // Initialize with current data
@@ -498,9 +498,13 @@ document.addEventListener('DOMContentLoaded', function () {
             if (slider) {
                 const currentIndex = parseInt(slider.value);
                 const maxValue = parseInt(slider.max);
-                // We still need to reverse the index for correct data mapping
-                const actualIndex = maxValue - currentIndex;
-                loadAllTimelineData(actualIndex);
+
+                // Store the slider position
+                currentTimelineIndex = currentIndex;
+
+                // Data loading uses reversed index
+                const dataIndex = maxValue - currentIndex;
+                loadAllTimelineData(dataIndex);
             }
         } else {
             // If the function doesn't exist yet, try again shortly
