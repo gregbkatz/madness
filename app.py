@@ -12,6 +12,7 @@ import sys
 import argparse
 import glob  # For finding truth bracket files
 import traceback
+import time  # Added import for time.time()
 
 # Add command-line argument parsing
 parser = argparse.ArgumentParser(description='March Madness Bracket Application')
@@ -1712,6 +1713,97 @@ def api_user_scores():
     
     except Exception as e:
         app.logger.error(f"Error in api_user_scores: {str(e)}")
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+@app.route('/api/user-scores-all-truth', methods=['GET'])
+def api_user_scores_all_truth():
+    """
+    API endpoint that returns win probability data for ALL timeline indices at once.
+    Uses server-side caching to improve performance.
+    """
+    try:
+        # Cache file path
+        cache_file = 'user_scores_timeline_cache.json'
+        cache_timeout = 3600  # Cache valid for 1 hour (in seconds)
+        
+        # Check if we have a valid cache file
+        if os.path.exists(cache_file):
+            cache_mtime = os.path.getmtime(cache_file)
+            cache_age = time.time() - cache_mtime
+            
+            # If cache is still valid, serve from cache
+            if cache_age < cache_timeout:
+                try:
+                    with open(cache_file, 'r') as f:
+                        cached_data = json.load(f)
+                    
+                    print(f"Serving timeline data from cache ({len(cached_data.get('timeline_data', []))} timeline points)")
+                    return jsonify(cached_data)
+                except Exception as e:
+                    print(f"Error reading cache file: {str(e)}")
+                    # If there's an error reading the cache, continue to generate new data
+        
+        # No valid cache, generate the data
+        # Get all truth files
+        all_truth_files = get_sorted_truth_files()
+        if not all_truth_files:
+            return jsonify({'error': 'No truth bracket files found'}), 404
+        
+        print(f"Generating timeline data for {len(all_truth_files)} truth files")
+        
+        # Create timeline data array 
+        timeline_data = []
+        
+        # Process each truth file
+        for index, truth_file in enumerate(all_truth_files):
+            # Get truth bracket
+            truth_bracket = get_most_recent_truth_bracket(index)
+            if not truth_bracket:
+                print(f"Warning: Could not load truth bracket for index {index}, skipping")
+                continue
+            
+            # Get users list with scores
+            users_list = get_users_list(truth_bracket)
+            users_list, _ = add_mc_data(truth_file, users_list)
+            
+            if users_list:
+                # Extract just the win probability data for efficiency
+                win_prob_data = {
+                    'index': index,
+                    'users': [
+                        {
+                            'username': user['username'],
+                            'win_probability': user.get('monte_carlo_pct_first_place', 0)
+                        }
+                        for user in users_list
+                    ]
+                }
+                timeline_data.append(win_prob_data)
+                print(f"Processed timeline index {index} with {len(win_prob_data['users'])} users")
+            else:
+                print(f"Warning: No user list data for index {index}, skipping")
+        
+        # Create response data
+        response_data = {
+            'timeline_data': timeline_data,
+            'generated_at': datetime.now().isoformat(),
+            'count': len(timeline_data)
+        }
+        
+        # Save to cache file
+        try:
+            with open(cache_file, 'w') as f:
+                json.dump(response_data, f)
+            print(f"Saved timeline data to cache file ({len(timeline_data)} timeline points)")
+        except Exception as e:
+            print(f"Error saving cache file: {str(e)}")
+        
+        return jsonify(response_data)
+    
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"Error in api_user_scores_all_truth: {str(e)}")
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 @app.route('/api/update-truth-index', methods=['POST'])

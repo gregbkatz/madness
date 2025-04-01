@@ -402,6 +402,61 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Load all timeline data up to a specific index
     function loadAllTimelineData(currentIndex) {
+        // If we already have all the data loaded, just update the chart
+        if (allTimelineData.length > 0) {
+            updateChart(currentIndex);
+            return;
+        }
+
+        // Show loading indicator if available
+        const loadingOverlay = document.getElementById('loading-overlay');
+        if (loadingOverlay) {
+            loadingOverlay.classList.add('visible');
+        }
+
+        // Use the new batch API endpoint to get all timeline data at once
+        fetch('/api/user-scores-all-truth')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data || !data.timeline_data) {
+                    console.error('Invalid data structure received from batch API:', data);
+                    return;
+                }
+
+                // Process and store all timeline data at once
+                allTimelineData = data.timeline_data;
+                console.log(`Loaded data for all ${allTimelineData.length} timeline points`);
+
+                // Update chart with the current index
+                updateChart(currentIndex);
+
+                // Hide loading indicator if available
+                if (loadingOverlay) {
+                    loadingOverlay.classList.remove('visible');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching batch timeline data:', error);
+
+                // Hide loading indicator if available
+                if (loadingOverlay) {
+                    loadingOverlay.classList.remove('visible');
+                }
+
+                // Fall back to the old method if the batch API fails
+                fallbackToIndividualLoading(currentIndex);
+            });
+    }
+
+    // Fallback method using the original individual requests approach
+    function fallbackToIndividualLoading(currentIndex) {
+        console.log("Falling back to individual timeline loading");
+
         // Get the maximum index (oldest data)
         const slider = document.getElementById('truth-file-slider');
         if (!slider) return;
