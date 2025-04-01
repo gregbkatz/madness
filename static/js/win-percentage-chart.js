@@ -51,6 +51,14 @@ document.addEventListener('DOMContentLoaded', function () {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: false, // Disable animations
+                transitions: {
+                    active: {
+                        animation: {
+                            duration: 0 // Disable transitions on hover
+                        }
+                    }
+                },
                 plugins: {
                     title: {
                         display: true,
@@ -61,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     legend: {
                         display: true,
-                        position: 'top',
+                        position: 'right', // Move legend to the right for better visibility
                         labels: {
                             boxWidth: 12,
                             usePointStyle: true,
@@ -72,44 +80,18 @@ document.addEventListener('DOMContentLoaded', function () {
                             }
                         },
                         onClick: function (e, legendItem, legend) {
-                            // Find the index of the clicked dataset
+                            // Get the index in the datasets array
                             const index = legend.chart.data.datasets.findIndex(
                                 d => d.label === legendItem.text
                             );
                             if (index >= 0) {
-                                toggleUserFocus(index);
+                                // Use a direct approach for highlighting a line
+                                highlightLineByIndex(index);
                             }
                         }
                     },
                     tooltip: {
-                        enabled: true,
-                        mode: 'index',
-                        intersect: false,
-                        callbacks: {
-                            title: function (tooltipItems) {
-                                // Get the truth file name from the timeline data
-                                const fileNames = JSON.parse(document.getElementById('timeline-data').dataset.filenames || '[]');
-                                const index = tooltipItems[0].parsed.x;
-                                // Convert chart index to file index (reversed)
-                                const maxIndex = fileNames.length - 1;
-                                const fileIndex = maxIndex - index;
-
-                                if (fileIndex >= 0 && fileIndex < fileNames.length) {
-                                    return fileNames[fileIndex].replace('.json', '');
-                                }
-                                return `Timeline Index: ${index}`;
-                            },
-                            label: function (context) {
-                                // Skip labels for hidden datasets
-                                if (context.dataset.label.startsWith('_hidden_')) {
-                                    return null;
-                                }
-
-                                if (context.raw === null) return context.dataset.label + ': N/A';
-                                return context.dataset.label + ': ' +
-                                    context.raw.toFixed(2) + '%';
-                            }
-                        }
+                        enabled: false // Completely disable tooltips
                     }
                 },
                 interaction: {
@@ -124,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             display: true,
                             text: 'Timeline Index'
                         },
-                        reverse: true // Reverse x-axis so newest (index 0) is on the right
+                        reverse: false // Display normally, index 0 on left increasing to the right
                     },
                     y: {
                         display: true,
@@ -133,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             text: 'Win Probability (%)'
                         },
                         beginAtZero: true, // Always start at 0
-                        // We'll set max dynamically based on data
+                        suggestedMax: 50, // Default upper bound around 50%
                         ticks: {
                             callback: function (value) {
                                 return value + '%';
@@ -148,6 +130,55 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
+        // Direct function to highlight a specific line by index
+        function highlightLineByIndex(datasetIndex) {
+            if (!winChart) return;
+
+            const datasets = winChart.data.datasets;
+            // Filter out hidden datasets
+            const userDatasets = datasets.filter(d => !d.label.startsWith('_hidden_'));
+
+            if (datasetIndex < 0 || datasetIndex >= userDatasets.length) return;
+
+            const targetDataset = userDatasets[datasetIndex];
+            const isAlreadyHighlighted = targetDataset.borderWidth > 2;
+
+            // Reset all lines first
+            userDatasets.forEach(dataset => {
+                // If we're turning off highlight, restore all to normal
+                if (isAlreadyHighlighted) {
+                    dataset.borderWidth = 1.5;
+                    dataset.borderColor = dataset.originalColor;
+                    dataset.backgroundColor = dataset.originalColor;
+                    dataset.z = 0;
+                    dataset.pointRadius = 0;
+                    dataset.pointHoverRadius = 4;
+                } else {
+                    // Otherwise dim all lines except the target
+                    dataset.borderWidth = 1;
+                    dataset.z = 0;
+                    dataset.pointRadius = 0;
+                    dataset.pointHoverRadius = 3;
+                    // Make all lines semi-transparent except the one we're highlighting
+                    if (dataset !== targetDataset) {
+                        dataset.borderColor = dataset.originalColor.replace('1)', '0.15)');
+                    }
+                }
+            });
+
+            // Highlight the selected line (unless turning off)
+            if (!isAlreadyHighlighted) {
+                targetDataset.borderWidth = 3;
+                targetDataset.borderColor = targetDataset.originalColor;
+                targetDataset.backgroundColor = targetDataset.originalColor;
+                targetDataset.pointRadius = 3;
+                targetDataset.pointHoverRadius = 5;
+                targetDataset.z = 10;
+            }
+
+            winChart.update();
+        }
+
         // Add click handler to the chart to focus on a user
         ctx.onclick = function (evt) {
             const points = winChart.getElementsAtEventForMode(evt, 'nearest', { intersect: false }, true);
@@ -156,54 +187,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 const datasetIndex = points[0].datasetIndex;
                 // Only toggle focus if it's not a hidden dataset
                 if (!winChart.data.datasets[datasetIndex].label.startsWith('_hidden_')) {
-                    toggleUserFocus(datasetIndex);
+                    // Get the index among visible datasets
+                    const visibleDatasets = winChart.data.datasets.filter(d => !d.label.startsWith('_hidden_'));
+                    const visibleIndex = visibleDatasets.indexOf(winChart.data.datasets[datasetIndex]);
+                    if (visibleIndex >= 0) {
+                        highlightLineByIndex(visibleIndex);
+                    }
                 }
             }
         };
     }
 
-    // Toggle focus on a specific user's line
+    // Old toggle function will be replaced by the new highlightLineByIndex function
     function toggleUserFocus(datasetIndex) {
-        if (!winChart) return;
-
+        // Find the chart element and call our new function
         const datasets = winChart.data.datasets;
+        const visibleDatasets = datasets.filter(d => !d.label.startsWith('_hidden_'));
 
-        // Find the actual user dataset (filtering out the current position indicator)
-        const userDatasets = datasets.filter(d => !d.label.startsWith('_hidden_'));
-
-        // Make sure the index is valid for user datasets
-        if (datasetIndex >= userDatasets.length) return;
-
-        const focusedDataset = userDatasets[datasetIndex];
-
-        // Check if we're already focusing on this dataset
-        const isAlreadyFocused = focusedDataset.borderWidth === 3;
-
-        // Reset all user datasets to default appearance
-        userDatasets.forEach(dataset => {
-            dataset.borderWidth = 1.5;
-            dataset.borderColor = dataset.originalColor;
-            dataset.backgroundColor = dataset.originalColor;
-            dataset.pointRadius = 0;
-            dataset.pointHoverRadius = 3;
-            dataset.z = 0;
-
-            // Make lines semi-transparent
-            if (!isAlreadyFocused || datasetIndex !== userDatasets.indexOf(dataset)) {
-                dataset.borderColor = dataset.originalColor.replace('1)', '0.3)');
+        // If datasetIndex refers to the actual dataset array index, find the visible index
+        if (datasetIndex < datasets.length) {
+            const dataset = datasets[datasetIndex];
+            const visibleIndex = visibleDatasets.indexOf(dataset);
+            if (visibleIndex >= 0) {
+                highlightLineByIndex(visibleIndex);
+                return;
             }
-        });
-
-        // If not already focused, highlight the selected dataset
-        if (!isAlreadyFocused) {
-            focusedDataset.borderWidth = 3;
-            focusedDataset.borderColor = focusedDataset.originalColor;
-            focusedDataset.pointRadius = 2;
-            focusedDataset.pointHoverRadius = 5;
-            focusedDataset.z = 10;
         }
 
-        winChart.update();
+        // Otherwise assume it's already a visible index
+        highlightLineByIndex(datasetIndex);
     }
 
     // Update the chart with data for a specific timeline index
@@ -264,8 +276,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const color = colors[colorIndex];
 
             // Create data points for this user across all timeline indices
+            // We need to reverse the data points to match the x-axis
             const data = labels.map(index => {
-                const timelineDataForIndex = allTimelineData.find(data => data.index === index);
+                // Reverse the index mapping to get data in correct order
+                const reverseIndex = maxIndex - index;
+                const timelineDataForIndex = allTimelineData.find(data => data.index === reverseIndex);
                 if (!timelineDataForIndex) return null;
 
                 const userData = timelineDataForIndex.users.find(user => user.username === username);
@@ -289,35 +304,26 @@ document.addEventListener('DOMContentLoaded', function () {
             };
         });
 
+        // Remember which dataset was previously highlighted, if any
+        let highlightedDataset = null;
+        if (winChart.data.datasets && winChart.data.datasets.length > 0) {
+            const userDatasets = winChart.data.datasets.filter(d => !d.label.startsWith('_hidden_'));
+            highlightedDataset = userDatasets.find(d => d.borderWidth > 2);
+        }
+
         // Update chart data - start fresh 
         winChart.data.labels = labels;
         winChart.data.datasets = datasets;
 
         // Add a simple vertical line marker for the current index
         if (currentTimelineIndex >= 0 && currentTimelineIndex < labels.length) {
-            // Add vertical line using a special dataset with sparse data
-            const verticalLineData = Array(labels.length).fill(null);
-            verticalLineData[currentTimelineIndex] = 100; // Only set a value at current index
+            // Calculate the display index (reversed from data index)
+            const displayIndex = maxIndex - currentTimelineIndex;
 
-            winChart.data.datasets.push({
-                label: '_hidden_line_', // Hidden from legend
-                data: verticalLineData,
-                borderColor: 'rgba(0, 0, 0, 0.5)',
-                borderWidth: 1.5,
-                borderDash: [5, 3],
-                pointRadius: 0,
-                pointHoverRadius: 0,
-                showLine: true,
-                spanGaps: false, // Don't connect across null values
-                fill: false,
-                tension: 0,
-                z: 5
-            });
-
-            // Add a single point marker dataset for the current index
+            // Only use the point marker for cleaner visualization
             winChart.data.datasets.push({
                 label: '_hidden_point_',
-                data: labels.map((_, i) => i === currentTimelineIndex ? 50 : null), // Place in middle of y-axis
+                data: labels.map((_, i) => i === displayIndex ? 50 : null), // Place in middle of y-axis
                 borderColor: 'rgba(0, 0, 0, 0)',
                 backgroundColor: 'rgba(0, 0, 0, 0.8)',
                 pointRadius: 6,
@@ -328,15 +334,28 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        // Dynamically set the y-axis max based on the data
+        // Dynamically set the y-axis max based on the data with tighter constraints
         const allValues = datasets.flatMap(d => d.data.filter(v => v !== null));
         if (allValues.length > 0) {
             const maxValue = Math.max(...allValues);
-            // Add 10% padding on top, rounded to nearest 5
-            const yMax = Math.ceil((maxValue * 1.1) / 5) * 5;
+            // Upper bound: either 50% or 5% more than max value, whichever is smaller
+            const yMax = Math.min(50, Math.ceil((maxValue * 1.05) / 5) * 5);
             winChart.options.scales.y.max = Math.max(yMax, 10); // At least 10% for visibility
         } else {
-            winChart.options.scales.y.max = 100; // Default if no data
+            winChart.options.scales.y.max = 50; // Default cap at 50%
+        }
+
+        // If we had a highlighted dataset before, restore the highlight
+        if (highlightedDataset) {
+            const matchingNewDataset = datasets.find(d => d.label === highlightedDataset.label);
+            if (matchingNewDataset) {
+                const index = datasets.indexOf(matchingNewDataset);
+                if (index >= 0) {
+                    setTimeout(() => {
+                        highlightLineByIndex(index);
+                    }, 10);
+                }
+            }
         }
 
         winChart.update();
@@ -462,8 +481,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Call the original function
                 originalFetchAndUpdateData(index);
 
-                // Load all timeline data up to this index and update our chart
-                loadAllTimelineData(index);
+                // Get maximum index value for reversing
+                const slider = document.getElementById('truth-file-slider');
+                if (slider) {
+                    const maxValue = parseInt(slider.max);
+                    // Reverse the index for correct data mapping
+                    const actualIndex = maxValue - index;
+                    loadAllTimelineData(actualIndex);
+                } else {
+                    loadAllTimelineData(index);
+                }
             };
 
             // Initialize with current data
@@ -471,6 +498,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (slider) {
                 const currentIndex = parseInt(slider.value);
                 const maxValue = parseInt(slider.max);
+                // We still need to reverse the index for correct data mapping
                 const actualIndex = maxValue - currentIndex;
                 loadAllTimelineData(actualIndex);
             }
