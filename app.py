@@ -239,7 +239,8 @@ def index():
                              viewing_own=viewing_own_bracket,
                              truth_file_names=truth_file_names,
                              selected_index=selected_index,
-                             current_truth_file=truth_file_names[selected_index] if truth_file_names else None)
+                             current_truth_file=truth_file_names[selected_index] if truth_file_names else None,
+                             truth_index=selected_index)  # CRITICAL FIX: Pass truth_index to template explicitly
     except Exception as e:
         print(f"Error in index route: {str(e)}")
         traceback.print_exc()
@@ -1358,6 +1359,7 @@ def users_list():
         all_truth_files = get_sorted_truth_files()
         
         # Get the selected truth file index from the session or request
+        # CRITICAL FIX: Maintain consistent parameter name 'truth_index' across all routes
         selected_index = request.args.get('truth_index', None)
         
         # If a specific index was requested in the URL, use it and store in session
@@ -1401,7 +1403,8 @@ def users_list():
                               truth_file_names=truth_file_names,
                               selected_index=selected_index,
                               current_truth_file=truth_file_names[selected_index] if truth_file_names else None,
-                              monte_carlo_available=mc_data_found)
+                              monte_carlo_available=mc_data_found,
+                              truth_index=selected_index)  # CRITICAL FIX: Pass truth_index to template explicitly
     except Exception as e:
         # Log the error and return empty user list
         print(f"Error in users_list route: {str(e)}")
@@ -1674,7 +1677,11 @@ def scores():
             except (ValueError, TypeError):
                 pass  # Keep original format if parsing fails
         
-        return render_template('scores.html', scores=scores_data)
+        # CRITICAL FIX: Get truth_index from request and pass it to the template
+        # This ensures the scores page has access to the current timeline position
+        truth_index = request.args.get('truth_index')
+        
+        return render_template('scores.html', scores=scores_data, truth_index=truth_index)
     except Exception as e:
         print(f"Error getting scores: {str(e)}")
         return render_template('scores.html', error=str(e))

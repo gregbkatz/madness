@@ -905,6 +905,19 @@
                         currentUrl.searchParams.set('truth_index', index);
                         window.history.replaceState({}, '', currentUrl.toString());
                         console.log(`Updated URL with truth_index=${index}`);
+
+                        // CRITICAL FIX: Update all navigation links with the current truth_index
+                        // This ensures proper timeline position is maintained when navigating between pages
+                        const bracketLink = document.querySelector('a[href="/"]');
+                        const scoresLink = document.querySelector('a[href="/scores"]');
+
+                        if (bracketLink) {
+                            bracketLink.href = `/?truth_index=${index}`;
+                        }
+
+                        if (scoresLink) {
+                            scoresLink.href = `/scores?truth_index=${index}`;
+                        }
                     })
                     .catch(error => {
                         console.error('Error fetching updated data:', error);

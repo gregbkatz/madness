@@ -290,6 +290,19 @@
                         currentUrl.searchParams.set('truth_index', truthIndex);
                         window.history.replaceState({}, '', currentUrl.toString());
                         console.log(`Updated URL with truth_index=${truthIndex}`);
+
+                        // CRITICAL FIX: Update all navigation links with the current truth_index
+                        // This ensures proper timeline position is maintained when navigating between pages
+                        const leaderboardLink = document.querySelector('a[href="/users-list"]');
+                        const scoresLink = document.querySelector('a[href="/scores"]');
+
+                        if (leaderboardLink) {
+                            leaderboardLink.href = `/users-list?truth_index=${truthIndex}`;
+                        }
+
+                        if (scoresLink) {
+                            scoresLink.href = `/scores?truth_index=${truthIndex}`;
+                        }
                     })
                     .catch(error => {
                         console.error('Error fetching bracket data:', error);

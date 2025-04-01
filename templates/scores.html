@@ -77,8 +77,32 @@
 
     {% endif %}
 
-    <a href="/" class="back-link">← Back to Bracket</a>
-    <a href="/users-list" class="back-link" style="margin-left: 20px;">View Leaderboard</a>
+    <a href="/" class="back-link" id="bracket-link">← Back to Bracket</a>
+    <a href="/users-list" class="back-link" id="leaderboard-link" style="margin-left: 20px;">View Leaderboard</a>
+
+    <script>
+        // CRITICAL FIX: Update navigation links with the truth_index from URL if present
+        document.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const truthIndex = urlParams.get('truth_index');
+
+            if (truthIndex !== null) {
+                // Update the navigation links to include the truth_index
+                const bracketLink = document.getElementById('bracket-link');
+                const leaderboardLink = document.getElementById('leaderboard-link');
+
+                if (bracketLink) {
+                    bracketLink.href = `/?truth_index=${truthIndex}`;
+                }
+
+                if (leaderboardLink) {
+                    leaderboardLink.href = `/users-list?truth_index=${truthIndex}`;
+                }
+
+                console.log(`Updated navigation links with truth_index=${truthIndex}`);
+            }
+        });
+    </script>
 </body>
 
 </html>
