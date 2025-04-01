@@ -130,10 +130,50 @@
 
             // Initialize metrics on page load by fetching current bracket data
             window.addEventListener('load', function () {
-                const truthSlider = document.getElementById('truth-file-slider');
-                if (truthSlider) {
-                    const currentIndex = truthSlider.value;
-                    window.fetchBracketData(currentIndex);
+                // CRITICAL FIX: Check if we have a truth_index in the URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlTruthIndex = urlParams.get('truth_index');
+
+                if (urlTruthIndex !== null) {
+                    // If truth_index is in the URL, use it directly (it's already a data index)
+                    const dataIndex = parseInt(urlTruthIndex);
+                    console.log(`Bracket page load - Using truth_index from URL: ${dataIndex}`);
+
+                    // Update the slider to match
+                    const truthSlider = document.getElementById('truth-file-slider');
+                    if (truthSlider) {
+                        const maxValue = parseInt(truthSlider.max);
+                        const sliderValue = maxValue - dataIndex;
+
+                        // Update the slider without triggering the input event
+                        truthSlider.value = sliderValue;
+
+                        // Update the filename display
+                        const fileNames = JSON.parse(document.getElementById('timeline-data').dataset.filenames);
+                        const currentTruthFile = document.getElementById('current-truth-file');
+                        if (fileNames && dataIndex >= 0 && dataIndex < fileNames.length && currentTruthFile) {
+                            const displayName = fileNames[dataIndex].replace('.json', '');
+                            currentTruthFile.textContent = displayName;
+                        }
+                    }
+
+                    // Fetch the bracket data
+                    window.fetchBracketData(dataIndex);
+                } else {
+                    // No truth_index in URL, use the slider value
+                    const truthSlider = document.getElementById('truth-file-slider');
+                    if (truthSlider) {
+                        const sliderValue = parseInt(truthSlider.value);
+                        const maxValue = parseInt(truthSlider.max);
+
+                        // Convert slider value to data index
+                        const dataIndex = maxValue - sliderValue;
+
+                        console.log(`Bracket page load - Slider value: ${sliderValue}, Max: ${maxValue}, Converting to data index: ${dataIndex}`);
+
+                        // Call fetchBracketData with the data index, not the slider value
+                        window.fetchBracketData(dataIndex);
+                    }
                 }
             });
 

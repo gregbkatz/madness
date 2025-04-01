@@ -889,7 +889,19 @@
                     usernameCell.appendChild(strong);
                 } else {
                     const link = document.createElement('a');
-                    link.href = `/?username=${user.username}`;
+
+                    // CRITICAL FIX: Include the current truth index when linking to a user's bracket
+                    // Get the current slider value
+                    const truthSlider = document.getElementById('truth-file-slider');
+                    const maxValue = truthSlider ? parseInt(truthSlider.max) : 0;
+                    const sliderValue = truthSlider ? parseInt(truthSlider.value) : 0;
+
+                    // Convert slider value to data index
+                    const dataIndex = maxValue - sliderValue;
+
+                    // Include both username and truth_index in the URL
+                    link.href = `/?username=${user.username}&truth_index=${dataIndex}`;
+
                     link.textContent = user.username;
                     usernameCell.appendChild(link);
                 }
